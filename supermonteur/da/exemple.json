@@ -1,0 +1,34 @@
+{
+  "_doc": "Fiche DA d'un client. Copier en da/<prenom>.json et remplir au 1er lancement (da/QUESTIONNAIRE.md + da/DA-VISUELLE.md).",
+  "nom": "<Prénom Nom (marque)>",
+  "ambiance": "<l'univers de ses vidéos en 1 phrase>",
+  "rythme": "posé premium | dynamique",
+  "fonts": {
+    "sans": "Montserrat.ttf",
+    "serif": "InstrumentSerif-Italic.ttf"
+  },
+  "_fonts": "2 polices max, fichiers dans fonts/ (licence libre type OFL uniquement).",
+  "colors": {
+    "text": "#FFFFFF",
+    "accent": "<couleur de marque>",
+    "list": [
+      "#161D2F",
+      "#0E1220",
+      "#0B0B0D"
+    ],
+    "halo": "0,0,0",
+    "glow": "0,0,0"
+  },
+  "music": [
+    "<2-3 ambiances : ex. émotion piano, motivation, dark cinématique>"
+  ],
+  "legende": {
+    "tu_vous": "tu",
+    "emojis": "1 max",
+    "cta": "Commente MOT"
+  },
+  "broll": {
+    "principal": "ses vrais plans (bibliothèque), bruts, stables",
+    "prompt_higgsfield": "isolated single object, true real-world colors and shape (use a reference image of the real object), lit to match the scene of the rush: {lumiere_rush}, soft realistic shadow, plain flat background for cut-out, photorealistic, no text"
+  }
+}

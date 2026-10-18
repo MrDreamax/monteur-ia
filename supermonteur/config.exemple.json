@@ -1,0 +1,92 @@
+{
+  "_doc": "Réglages de CETTE machine (client). Rempli à l'installation, jamais écrasé par une mise à jour. Tout chemin absent est ignoré.",
+  "client": "",
+  "_client": "Prénom du client = nom de sa fiche DA (da/<client>.json) et de ses retours (retours-client.md).",
+  "brolls_root": "~/Documents/Montage/B-ROLLS",
+  "brolls_index": "~/Documents/Montage/B-ROLLS/_INDEX.csv",
+  "brolls_min_date": "",
+  "_brolls_min_date": "Facultatif : date sous laquelle on ne prend plus de B-roll (ex. le client a changé de tête).",
+  "music_epidemic": "~/Documents/Montage/MUSIQUE",
+  "_music": "Musique et SFX : Epidemic Sound au nom du CLIENT (sa licence). Jamais la musique d'un autre.",
+  "sfx": {
+    "number": {
+      "volume": 0.318,
+      "src": "~/Documents/Montage/SFX/number.wav"
+    },
+    "list": {
+      "volume": 0.754,
+      "src": "~/Documents/Montage/SFX/list.wav"
+    },
+    "bullet": {
+      "volume": 0.3,
+      "src": "~/Documents/Montage/SFX/bullet.wav"
+    },
+    "broll": {
+      "volume": 0.646,
+      "src": "~/Documents/Montage/SFX/broll.wav"
+    },
+    "impact": {
+      "volume": 0.966,
+      "align": "start",
+      "dur": 2.6,
+      "_quand": "ouverture du hook (guide OPUS : cinematic braam)",
+      "src": "~/Documents/Montage/SFX/impact.wav"
+    },
+    "reverse": {
+      "volume": 0.572,
+      "_quand": "mot géant + sommet de la courbe (aspiration inversée, pic sur le mot)",
+      "src": "~/Documents/Montage/SFX/reverse.wav"
+    },
+    "subdrop": {
+      "volume": 1.417,
+      "align": "start",
+      "dur": 2.0,
+      "_quand": "ouverture d'un plein écran preuve",
+      "src": "~/Documents/Montage/SFX/subdrop.wav"
+    },
+    "tick": {
+      "volume": 0.2,
+      "align": "start",
+      "_quand": "tic-tac de l'horloge qui accélère",
+      "src": "~/Documents/Montage/SFX/tick.wav"
+    },
+    "sheet": {
+      "volume": 0.22,
+      "_quand": "feuille de commentaires qui monte",
+      "src": "~/Documents/Montage/SFX/sheet.wav"
+    },
+    "type": {
+      "volume": 0.22,
+      "align": "start",
+      "_quand": "mot tapé lettre par lettre (dur = durée de frappe)",
+      "src": "~/Documents/Montage/SFX/type.wav"
+    },
+    "publish": {
+      "volume": 0.24,
+      "_quand": "commentaire publié",
+      "src": "~/Documents/Montage/SFX/publish.wav"
+    },
+    "riser": {
+      "volume": 0.67,
+      "_quand": "montée avant LE silence du reel (1 seul), coupée net sur son pic quand la musique se coupe",
+      "src": "~/Documents/Montage/SFX/riser.wav"
+    }
+  },
+  "_sfx": "Kit SFX téléchargé sur Epidemic (compte du client) au 1er lancement : 1 fichier par clé dans ~/Documents/Montage/SFX/<clé>.wav.",
+  "sfx_auto": [
+    "impact",
+    "riser",
+    "subdrop",
+    "list",
+    "number",
+    "sheet"
+  ],
+  "sfx_gap": 1.5,
+  "music_target_lufs": -29,
+  "voice_lufs": -14,
+  "voice_ref": "",
+  "_voice_ref": "Facultatif : 30-40 s de la voix du client au micro (wav) = référence d'EQ de voix_propre.py.",
+  "higgsfield": true,
+  "_higgsfield": "Compte Higgsfield du client (MCP connecté dans SON Claude). Plafond : 20 crédits par reel, essais compris.",
+  "livres": "~/Documents/Montage/LIVRES"
+}

@@ -2,13 +2,13 @@
 
 Quand : 1er lancement chez un client (`mode-client.md`), après les connecteurs et `setup.sh`. Le client vote sur de vrais rendus de lui, ça écrit `da/<prenom>.json` tout seul.
 Durée : ~25 min dont ~10 min de rendu (8 variantes). Coût : ~1 crédit Higgsfield (4 images), 4 musiques Epidemic sur SON compte.
-5 sections, 1 seule variable par carte : **Ton ambiance** (4 images de lui), **Tes polices** (4 couples), **Ta couleur** (2 de sa rush + sa marque + bleu maison), **Ta musique** (4 émotions), **Ton rythme** (posé / nerveux).
+5 sections, 1 seule variable par carte : **Ton ambiance** (4 images de lui), **Tes polices** (4 couples), **Ta couleur** (2 de son rush + sa marque + bleu maison), **Ta musique** (4 émotions), **Ton rythme** (posé / nerveux).
 Le reste est réglé par la maison et ne se vote pas : sous-titres au col, mot fort seul à l'écran, zones mortes Insta, musique émotionnelle Epidemic, zéro néon / chrome.
 
 ## 1. Matière (dossier `~/Documents/Montage/STYLE-LAB/`)
 1. Il glisse sa 1re rush. Étapes 1-3 de `SKILL.md` (cadrage, transcription, dérush) → `clip.mp4` + `words.json`.
 2. Lire `words.json` : choisir un passage de **8-12 s** qui finit sur une phrase entière, avec **1 mot fort** et **1 punchline** de 2-3 lignes (SES mots, dits dans le passage). Noter les corrections Whisper (`fixes`).
-3. **Ambiance** (méthode `da/DA-VISUELLE.md`) : 3 images nettes de son visage tirées de la rush → `media_upload` + `curl PUT` + `media_confirm` → `generate_image_batch`, `gpt_image_2_5`, 9:16, les 3 réfs en `medias`, 4 prompts (Premium sombre, Cinéma chaud, Clair épuré, Énergique coloré). Chaque prompt finit par « Photorealistic, natural skin texture, keep identity exactly. No text, no logos, no floating objects, no neon, no glow. » **Vérifier que c'est son visage sur les 4** (planche), sinon refaire avec d'autres réfs AVANT de lui montrer. Télécharger, réduire en JPG 720 px.
+3. **Ambiance** (méthode `da/DA-VISUELLE.md`) : 3 images nettes de son visage tirées du rush → `media_upload` + `curl PUT` + `media_confirm` → `generate_image_batch`, `gpt_image_2_5`, 9:16, les 3 réfs en `medias`, 4 prompts (Premium sombre, Cinéma chaud, Clair épuré, Énergique coloré). Chaque prompt finit par « Photorealistic, natural skin texture, keep identity exactly. No text, no logos, no floating objects, no neon, no glow. » **Vérifier que c'est son visage sur les 4** (planche), sinon refaire avec d'autres réfs AVANT de lui montrer. Télécharger, réduire en JPG 720 px.
 4. **Musique** : sur SON compte Epidemic, 1 morceau par émotion (motivation qui monte, dark cinématique, cordes cinéma, émotion piano), `vocals: false` → `EditRecording` à la durée du passage (`forceDuration`, WAV) → `DownloadRecordingEdit` → `~/Documents/Montage/MUSIQUE/` + 1 ligne dans `_LICENCE.txt`.
 5. **Sa marque** : demander sa couleur en 1 ligne (code couleur, ou la tirer de son logo / profil). Aucune → la carte devient « Noir et blanc ».
 

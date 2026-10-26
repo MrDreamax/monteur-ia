@@ -3,7 +3,7 @@
 Ensuite, lire `retours-client.md` : les retours de CE client passent avant tout le reste.
 Dans SKILL.md, « Cyril » = le goût de la maison (la règle s'applique), sauf ce qui touche à SA personne (visage, voix, DA, charte, SSD) : là, c'est la fiche du client (`da/<client>.json`, `config.json`).
 
-- **Univers = la rush.** Tout ce qu'on ajoute doit sembler filmé dans la même pièce. Zéro filtre, zéro chrome, zéro néon, zéro glow.
+- **Univers = le rush.** Tout ce qu'on ajoute doit sembler filmé dans la même pièce. Zéro filtre, zéro chrome, zéro néon, zéro glow.
 - **Sous-titres** : police de la DA, blancs, gras, 1 à 3 mots ; mot fort en serif italique, seul à l'écran ; au niveau du col, jamais sur le menton.
 - **Zones mortes Instagram** : rien au-dessus de 270 px, rien sous 1 480 px, 65 px des bords (sous-titres entre 120 et 960 px en largeur).
 - **2 polices max.** Pas de bandes noires.

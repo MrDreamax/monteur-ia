@@ -5,7 +5,7 @@ Réf : VSL Creator College de Jun Yuh (`creatorcollege.com/c/sts-live-webinar-v2
 Beaucoup d'air, zéro transition : ça apparaît net, ça disparaît net, jamais de rebond.
 
 - Socle de `SKILL.md` : étapes 1-3, SES sous-titres verrouillés (jamais changés), musique Epidemic accordée à la vidéo, étape 7.
-- **Couleurs = celles de SA rush** (Cyril 16/10), jamais la crème / bordeaux de la réf (proche de la charte papier rejetée le 13/10). Dégradé des cartons = `plan.colors.grad` : `[haut gauche sombre, haut droite vif, bas gauche, bas droite clair, fond]` ; défaut = studio de Cyril (nuit + LED bleue).
+- **Couleurs = celles de SON rush** (Cyril 16/10), jamais la crème / bordeaux de la réf (proche de la charte papier rejetée le 13/10). Dégradé des cartons = `plan.colors.grad` : `[haut gauche sombre, haut droite vif, bas gauche, bas droite clair, fond]` ; défaut = studio de Cyril (nuit + LED bleue).
 - **Dosage** (réf mesurée : 1 élément toutes les 3 à 6 s) : 1 phrase = 1 visuel max. Cartons sur les punchlines (1 toutes les 10-20 s, 1 à 3 lignes de 1-3 mots, SES mots à lui, condensés). Icônes sur les noms concrets (temps = horloge, argent = billet, visibilité = œil). Captures = vraies preuves (profil, stats, commentaires) avec un cercle sur LA chose dite.
 - Pas de chiffre géant, mot géant, B-roll, REC, image générée ni preuve plein écran (c'est le high prod). Zoom lent du moteur gardé. Titre-question / CTA : seulement si la vidéo le demande, demander à Cyril.
 - Sons : 1 whoosh à l'entrée de chaque carton (auto, `list`), rien sur les icônes et captures.

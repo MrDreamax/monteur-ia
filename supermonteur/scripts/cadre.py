@@ -1,8 +1,8 @@
-"""Recadrage fixe d'une face cam filmée trop large, vers le cadre serré de la rush « vidéos virales » (reel validé 7,75/10 le 12/10 :
+"""Recadrage fixe d'une face cam filmée trop large, vers le cadre serré du rush « vidéos virales » (reel validé 7,75/10 le 12/10 :
 yeux à 34,5 % de la hauteur, visage = 33 % de la largeur). Le monteur humain, lui, ne recadre pas (mesuré 13/10).
   python3 cadre.py rush.mp4 --apply [--eyes 35] [--face 33] [--max 1.5]   -> clip.mp4 (étape 1 du SKILL) + cadre.json
-Choix de Cyril (13/10) : AUTOMATIQUE. Rush déjà serrée (yeux <= 40 % et visage >= 28 % de la largeur) = simple mise au format.
-Mesure les yeux et la largeur du visage sur la rush (médiane de 16 images), calcule UN cadre fixe (pas de mouvement : ton posé),
+Choix de Cyril (13/10) : AUTOMATIQUE. Rush déjà serré (yeux <= 40 % et visage >= 28 % de la largeur) = simple mise au format.
+Mesure les yeux et la largeur du visage sur le rush (médiane de 16 images), calcule UN cadre fixe (pas de mouvement : ton posé),
 recadré dans la source puis réduit en 1080x1920 : net tant que la source est assez grande (4K = jusqu'à x 2).
 Zoom plafonné à 1,10 si la source fait 1080 de large (au-delà on agrandit des pixels = flou ; experts cadrage R8 : 4K obligatoire).
 Experts : Kellan (yeux au tiers haut, visage centré), Víctor Heras mesuré (cadrage-9-16.md). À utiliser seulement si Cyril l'a validé.

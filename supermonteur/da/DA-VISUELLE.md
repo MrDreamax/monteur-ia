@@ -2,7 +2,7 @@
 
 Le client ne remplit rien : on lui MONTRE 4 DA avec son propre visage, il clique sur celle qu'il préfère.
 
-1. **Refsheet** depuis sa rush face cam (déjà envoyée) : 3 images nettes, expressions différentes.
+1. **Refsheet** depuis son rush face cam (déjà envoyée) : 3 images nettes, expressions différentes.
    `ffmpeg -ss <t> -i <rush> -frames:v 1 -vf "crop=...,scale=1024:-1" ref/refN.jpg` (le visage bien centré, pas flou).
    Une face cam ne donne que la face : ça suffit, le visage a bien tenu au test (3 réfs de face).
 2. **Upload** Higgsfield : `media_upload` (3 fichiers) → `curl PUT` → `media_confirm`.

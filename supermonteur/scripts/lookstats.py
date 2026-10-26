@@ -1,4 +1,4 @@
-"""Mesure le « look » d'une rush, d'un b-roll ou d'une image (experts colorimétrie 13/10 : mesurer AVANT de toucher).
+"""Mesure le « look » d'un rush, d'un b-roll ou d'une image (experts colorimétrie 13/10 : mesurer AVANT de toucher).
   python3 lookstats.py clip.mp4 [--json look.json] [--face]
 Sort : noirs (P1), médiane (P50), hautes lumières (P95, P99) de la luminance 0-255, couleur de la lumière (rouge/bleu des
 hautes lumières), % de pixels « néon », netteté, palette de 5 couleurs ; avec --face : joue, yeux et visage dans le cadre.

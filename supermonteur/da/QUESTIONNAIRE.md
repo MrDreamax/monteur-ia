@@ -1,6 +1,6 @@
 # Questionnaire client : seulement ce qui ne se voit pas (3 clics, en QCM AskUserQuestion, option recommandée en 1er)
 
-Depuis le 16/10, la DA de montage (ambiance, polices, couleur, musique, rythme) se choisit dans le **Style Lab** sur SA rush (`outils/style-lab/STYLE-LAB.md`). Ici, seulement la légende, puis l'écrire dans `da/<prenom>.json` → `legende`.
+Depuis le 16/10, la DA de montage (ambiance, polices, couleur, musique, rythme) se choisit dans le **Style Lab** sur SON rush (`outils/style-lab/STYLE-LAB.md`). Ici, seulement la légende, puis l'écrire dans `da/<prenom>.json` → `legende`.
 
 1. **Tu ou vous** dans les légendes : tu (recommandé pour Instagram) / vous
 2. **Emojis** : 1 max (recommandé) / aucun / plusieurs

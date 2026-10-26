@@ -10,7 +10,7 @@ MONTEUR IA STRATOSPHÈRE
    - Claude installe Cut Notes et le teste avec toi : une page où tu tapes tes retours directement sur l'image
      de la vidéo. Tu poses une note test, Claude vérifie qu'il la reçoit.
    - Claude range tes B-rolls.
-4. Ensuite : glisse ta vidéo dans le chat et écris « Monte-moi cette rush ».
+4. Ensuite : glisse ta vidéo dans le chat et écris « Monte-moi ce rush ».
 
 À avoir avant : un Mac, l'abonnement Claude Pro, un compte Epidemic Sound et un compte Higgsfield à ton nom.
 Tes vidéos montées arrivent dans Documents/Montage/LIVRES.

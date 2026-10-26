@@ -54,5 +54,5 @@ if [[ -d "$PSRC" ]]; then
 fi
 
 bash "$DEST/scripts/setup.sh"
-echo "Monteur IA installé (version $(cat "$DEST/VERSION")). Dans Claude, onglet Code : « Monte-moi cette rush » + glisse ta vidéo."
+echo "Monteur IA installé (version $(cat "$DEST/VERSION")). Dans Claude, onglet Code : « Monte-moi ce rush » + glisse ta vidéo."
 if [[ -d "$PDEST" ]]; then echo "Publieur installé. Dans Claude : « Programme ma semaine »."; fi

@@ -2,9 +2,9 @@
 
 Lu après `SKILL.md`. Tout l'arsenal : chiffres géants, mots géants, listes, preuves, B-rolls, images, CTA. On peut couvrir la tête : B-rolls et/ou motion design plein écran pendant qu'il parle. La tête n'a pas besoin d'être à l'écran tout le temps.
 Brief en plus : **Style** Sobre / Dynamique (plans plus courts, plus de B-rolls et zooms).
-Étalon : la version de son monteur humain quand elle existe (`/Volumes/SSD Dreamax/Montage/INSTA/FINAL BUSINESS/<titre>.mp4`), sinon `ref/FINAL.mp4`. Le but : faire mieux que lui.
+Étalon : la version de son monteur humain quand elle existe (`/Volumes/SSD Dreamax/1 - Contenu/2 - Vidéos finies/Reels business/<titre>.mp4`), sinon `ref/FINAL.mp4`. Le but : faire mieux que lui.
 
-## 1 bis. Fiche univers (après l'étape 1 de SKILL.md ; Bruce Block, Deakins : l'univers du reel = celui de la rush)
+## 1 bis. Fiche univers (après l'étape 1 de SKILL.md ; Bruce Block, Deakins : l'univers du reel = celui du rush)
 ```bash
 python3 $S/univers_check.py fiche clip.mp4      # univers.json + univers.jpg : palette, couleur de la lumière, noirs / hautes lumières, cadre
 ```
@@ -57,7 +57,7 @@ python3 $S/gemini_image.py "<prompt + broll.prompt_higgsfield de la DA>" ins/x.p
 ```
 Pas de clé → le script affiche le lien + la commande trousseau à donner au client. Détourage d'un PNG Gemini : `remove_background` Higgsfield ou rembg local.
 
-## 5 ter. Caler les ajouts sur la rush, puis test « 5 sur 7 » (avant tout rendu)
+## 5 ter. Caler les ajouts sur le rush, puis test « 5 sur 7 » (avant tout rendu)
 ```bash
 python3 $S/match_look.py clip.mp4 ins/*.png broll/*.mp4 --w 400 --fix   # objet : exposition baissée s'il brille plus que la pièce, couleur JAMAIS touchée ; b-roll : brut, seulement blancs brûlés / voile gris
 python3 $S/univers_check.py check plan.json                             # couleur, ton, mouvement, rythme mesurés + univers-check.jpg

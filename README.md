@@ -13,7 +13,7 @@ Monte tes vidéos en reels Instagram 9:16, directement dans Claude.
 À avoir avant : un Mac, l'abonnement Claude Pro, un compte Epidemic Sound et un compte Higgsfield à ton nom.
 
 ## Monter une vidéo
-Glisse ta vidéo dans le chat et écris : « Monte-moi cette rush ».
+Glisse ta vidéo dans le chat et écris : « Monte-moi ce rush ».
 Le reel arrive dans `Documents/Montage/LIVRES`.
 
 ## Pour Claude (installation)

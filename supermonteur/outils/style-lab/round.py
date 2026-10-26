@@ -8,7 +8,7 @@ puis `lock` écrit da/<prenom>.json tout seul.
       --card "*en revanche|gagner en|*crédibilité" --card-at 3.07 --card-end 6.15 \\
       --music m1.wav m2.wav m3.wav m4.wav --music-labels "Motivation|Dark cinématique|Espoir|Émotion piano" \\
       --da-images d1.png d2.png d3.png d4.png [--da-labels "..."] [--brand "#E4572E"] [--fixes '{"a": "b"}'] --out style-lab
-     clip/words = la rush APRÈS les étapes 1-3 de SKILL.md ; passage de 8-12 s qui finit sur une phrase entière ;
+     clip/words = le rush APRÈS les étapes 1-3 de SKILL.md ; passage de 8-12 s qui finit sur une phrase entière ;
      keyword = 1 mot fort dit dans le passage ; card = 1 punchline dite dans le passage (« * » = ligne en serif).
      -> style-lab/round.json + un dossier par carte (full.mp4 avec le son, preview.mp4 muet < 2 Mo, ou image)
   python3 round.py db --round style-lab/round.json --assets assets.json [--handle pseudo]
@@ -76,7 +76,7 @@ def palette(c):
 
 
 def rush_colors(clip, a, b):
-    """Les 2 teintes saturées qui dominent la rush (décor, lumière), peau écartée. Univers = la RUSH (Cyril 13/10)."""
+    """Les 2 teintes saturées qui dominent le rush (décor, lumière), peau écartée. Univers = le RUSH (Cyril 13/10)."""
     from PIL import Image
     tmp = tempfile.mkdtemp()
     sh(["ffmpeg", "-v", "error", "-ss", str(a), "-to", str(b), "-i", clip, "-vf", "fps=0.8,scale=160:-1", os.path.join(tmp, "f%02d.png")])
@@ -164,10 +164,10 @@ def build(a):
     froms = a.music_from or [0] * len(a.music)
     MUS = [{"src": os.path.abspath(m), "from": float(f)} for m, f in zip(a.music, froms)]
 
-    # couleurs : 2 de SA rush + sa marque (ou noir et blanc) + le bleu de la maison, sans doublon de teinte
-    rc = [(c, f"De ta rush ({hue_name(*hsv_of(c)[:2])})", "Tirée du décor et de la lumière de ta vidéo.") for c in rush_colors(a.clip, a.start, a.end)]
+    # couleurs : 2 de SON rush + sa marque (ou noir et blanc) + le bleu de la maison, sans doublon de teinte
+    rc = [(c, f"De ton rush ({hue_name(*hsv_of(c)[:2])})", "Tirée du décor et de la lumière de ta vidéo.") for c in rush_colors(a.clip, a.start, a.end)]
     brand = (a.brand, f"Ta marque ({a.brand})", "La couleur de ta marque.") if a.brand else ("#FFFFFF", "Noir et blanc", "Aucune couleur : blanc sur noir, très sobre.")
-    cols = rc[:1] + [brand] + rc[1:] + [("#2F74FF", "Bleu nuit", "Le bleu des montages de la maison.")]   # la marque passe avant la 2e teinte de la rush
+    cols = rc[:1] + [brand] + rc[1:] + [("#2F74FF", "Bleu nuit", "Le bleu des montages de la maison.")]   # la marque passe avant la 2e teinte du rush
     seen, COLS = [], []
     for c, lab, desc in cols:
         h, s, _ = hsv_of(c)

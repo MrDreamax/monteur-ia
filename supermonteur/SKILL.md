@@ -1,11 +1,11 @@
 ---
 name: supermonteur
-description: Le Monteur. Monte une rush en reel 9:16 Instagram prêt à poster pour Cyril ou un client - 8 styles (face caméra en 3 degrés, à plusieurs, voix off, green screen, montage viral, B-roll + texte), mode client. Use when "monte-moi cette rush", "monte ce reel", "sous-titre cette vidéo", "sous-titres", "montage", "face cam", "podcast", "visio", "voix off", "green screen", "tier list", "comparaison en T", "à faire / à ne pas faire", "mauvais bien excellent", "B-roll + texte", "texte sur b-roll", "lis la légende", "monteur", "supermonteur".
+description: Le Monteur. Monte un rush en reel 9:16 Instagram prêt à poster pour Cyril ou un client - 8 styles (face caméra en 3 degrés, à plusieurs, voix off, green screen, montage viral, B-roll + texte), mode client. Use when "monte-moi ce rush", "monte ce reel", "sous-titre cette vidéo", "sous-titres", "montage", "face cam", "podcast", "visio", "voix off", "green screen", "tier list", "comparaison en T", "à faire / à ne pas faire", "mauvais bien excellent", "B-roll + texte", "texte sur b-roll", "lis la légende", "monteur", "supermonteur".
 ---
 
 # SUPERMONTEUR : rush → reel premium
 
-Référence de qualité : le reel monté par un vrai monteur, validé par Cyril le 12/10/2026 (rush test `/Volumes/SSD Dreamax/Montage/INSTA/FINAL BUSINESS/RUSH VIDÉOS VIRALES.mp4`, réf monteur copiée dans `~/.claude/skills/supermonteur/ref/FINAL.mp4`). Chaque montage doit tenir la comparaison.
+Référence de qualité : le reel monté par un vrai monteur, validé par Cyril le 12/10/2026 (rush test `/Volumes/SSD Dreamax/1 - Contenu/2 - Vidéos finies/2026-08-26 Reels business - Rush vidéos virales.mp4`, réf monteur copiée dans `~/.claude/skills/supermonteur/ref/FINAL.mp4`). Chaque montage doit tenir la comparaison.
 
 ```bash
 export PATH="$HOME/.local/bin:$HOME/.local/node/bin:$PATH"
@@ -36,18 +36,18 @@ Annoncer la durée au lancement et à la fin (~5 min pour 40 s de vidéo).
 
 ## 0. BRIEF AVANT TOUT MONTAGE (obligatoire, en boutons QCM via AskUserQuestion, option recommandée en 1er)
 Toujours premium. Ne monter qu'après les réponses.
-1. **Style** : proposer les 4 styles qui collent à la rush (4 boutons max, le reste via « Autre ») parmi Face caméra / À plusieurs / Voix off / Green screen / Montage viral / B-roll + texte. Le montage viral se décide au script (la vidéo doit être écrite pour). Selfie (= minimaliste) et démo filmée : SUPPRIMÉS par Cyril le 16/10, ne plus les proposer.
+1. **Style** : proposer les 4 styles qui collent au rush (4 boutons max, le reste via « Autre ») parmi Face caméra / À plusieurs / Voix off / Green screen / Montage viral / B-roll + texte. Le montage viral se décide au script (la vidéo doit être écrite pour). Selfie (= minimaliste) et démo filmée : SUPPRIMÉS par Cyril le 16/10, ne plus les proposer.
 2. **Degré** (face caméra, Cyril 16/10) : option recommandée = celle qui colle à la vidéo.
    - **Sous-titres** → dérush + sous-titres + musique, rien d'autre. Conseil court, volume (7 → 14 reels/sem).
    - **Minimaliste** → cartons typo mot par mot, icônes au trait, captures + cercle à la main. Explication avec chiffres, preuves, captures.
    - **High prod** → chiffres géants, B-rolls, preuves, CTA. Reel phare. + question **Style** : Sobre / Dynamique.
 3. **DA** : seulement chez un nouveau client (DA existante `da/<prenom>.json` / nouvelle DA). Cyril = `da/cyril.json`, ne pas demander.
-- **Format** : 9:16 seulement, ne pas poser la question. 16:9 PAS GÉRÉ (Cyril « plus tard » le 12/10) : si la rush est en 16:9 (hors podcast / visio), le dire et monter en 9:16.
+- **Format** : 9:16 seulement, ne pas poser la question. 16:9 PAS GÉRÉ (Cyril « plus tard » le 12/10) : si le rush est en 16:9 (hors podcast / visio), le dire et monter en 9:16.
 - **Images générées** : Higgsfield, sans demander, SEULEMENT là où le style en prévoit (high prod, green screen, icônes de tier list). Jamais en sous-titres, minimaliste, à plusieurs, voix off ; B-roll + texte : jamais avec un visage. Modèles Gemini (Nano Banana) inclus dans Higgsfield : pas d'outil Gemini séparé (sauf client sans Higgsfield, `mode-client.md`).
 
 ## LE PROCESS (refondu le 13/10 après un 4/10 : « la DA n'est pas en cohérence avec la vidéo, on regarde le montage au lieu de l'idée »)
-Étalon : la version de son monteur humain quand elle existe (`/Volumes/SSD Dreamax/Montage/INSTA/FINAL BUSINESS/<titre>.mp4`, Meta Verified = 7,5/10 pour Cyril : animations, SFX et tracking bons ; musique pas adaptée, sous-titres un peu gros, assez basique). Le but : faire mieux que lui.
-1. **Univers = la RUSH.** Regarder la rush d'abord : décor, lumière, couleurs, tenue. Tout ce qu'on ajoute doit sembler filmé dans CETTE pièce (`plan.colors` pour coller). La charte Quiet Luxury (champ `charte`) sert au TOURNAGE et au branding, jamais plaquée au montage sur une rush d'un autre univers.
+Étalon : la version de son monteur humain quand elle existe (`/Volumes/SSD Dreamax/1 - Contenu/2 - Vidéos finies/Reels business/<titre>.mp4`, Meta Verified = 7,5/10 pour Cyril : animations, SFX et tracking bons ; musique pas adaptée, sous-titres un peu gros, assez basique). Le but : faire mieux que lui.
+1. **Univers = le RUSH.** Regarder le rush d'abord : décor, lumière, couleurs, tenue. Tout ce qu'on ajoute doit sembler filmé dans CETTE pièce (`plan.colors` pour coller). La charte Quiet Luxury (champ `charte`) sert au TOURNAGE et au branding, jamais plaquée au montage sur un rush d'un autre univers.
 2. **Illustrations DANS la scène, accrochées aux gestes** (tracking `track.py`) : badge au bout du doigt quand il pointe, logos à côté de la tête sur « réseaux », mot derrière la tête. Objets réels = vraie forme et vraie couleur, détourés, éclairés comme la scène. Jamais une scène séparée (bureau noyer, papier crème... = 4/10).
 3. **B-rolls = ses vrais plans, BRUTS, STABLES, courts** (1-2,5 s, `broll.py steady` / `"from": "auto"`), jamais de filtre. Peu de temps hors de son plan (monteur : ~8 s sur 39 s). Preuves = vrais objets (vraie capture de commentaires, vrai profil).
 4. **Sous-titres** (verrouillés dans Style Lab le 13/10, détail `~/Documents/Stratosphere/style-lab/STYLE.md`) : police de la DA (`fonts.sub`, `subSize`, `subTrack` si fournis ; Cyril = Montserrat 700, 52 px, espacement 0,5 px, Oswald testé et rejeté le 13/10) ; **mot fort = serif italique blanc 132 px, SEUL à l'écran** (la phrase s'efface, il arrive seul quand il est dit, jamais de mot normal à côté), groupe de 1 à 3 mots possible ; entrée fondu + petite montée ; hauteur **au niveau du col, jamais sur le cou ni le menton** (`subzone.py` : menton + 0,41 x visage, Meta Verified = 1310 px).
@@ -60,7 +60,7 @@ Toujours premium. Ne monter qu'après les réponses.
 - Couper silences et répétitions. **Jamais de coupe au milieu d'une phrase.** Enlever la respiration en début de phrase.
 - **Zéro silence audible** (Cyril 17/10 v2 : pire qu'une coupe) : pas de `--pause`, une hésitation sous un B-roll se coupe, une reprise hésitante = prendre la prise fluide.
 - **Zéro micro-cut** (Cyril 17/10, Tesla : « micro rush inutile qui saccade ») : aucun bout de face cam < 0,6 s entre deux coupes, aucune coupe qui ne gagne que 0,1-0,3 s (derush.py le fait seul : MINSEG / MINCUT). Chaque début / fin de B-roll se cale à 0,02 s sur la coupe de dérush voisine (`cut.segments.json`) : sinon on voit la tête 0,1 s puis un saut. B-rolls enchaînés : fondu 0,3 s, pas 3 coupes sèches.
-- Rush **déjà dérushée** seulement si Cyril le dit ou si aucun blanc > 0.2 s → sauter l'étape 3. Sinon on resserre (13/10 : la rush Meta Verified avait des blancs de 0,3-0,46 s, son monteur l'a passée de 42 à 39 s, plus vivante).
+- Rush **déjà dérushée** seulement si Cyril le dit ou si aucun blanc > 0.2 s → sauter l'étape 3. Sinon on resserre (13/10 : le rush Meta Verified avait des blancs de 0,3-0,46 s, son monteur l'a passée de 42 à 39 s, plus vivante).
 - **Musique TOUJOURS ÉMOTIONNELLE** (Cyril 14/10 puis 16/10, tous styles) : motivation, tristesse, nostalgie, espoir… une émotion qu'on SENT (mélodie piano / cordes qui monte). Jamais une nappe neutre, d'ambiance ou de suspense sans mélodie (« Your Greatest Adversary » sur la conf = refusé). Sujet grave = piano lent qui monte ; business / tension = **dark cinématique** (orchestral hybride épique sombre, cordes) avec une COUPURE puis une FRAPPE sur la punchline (« Invictus ») ; la motivation lumineuse (« It Can Be Done ») a été remplacée. Le champ `music` de la DA n'est qu'un indice. Musique et SFX : **Epidemic Sound, toujours** (connecteur MCP, plan Creator = organique OK, PAS pub Meta). Jamais la bibliothèque SSD (`music_root`) pour la musique (Cyril 13/10). SFX minimalistes.
 - **Son Noctivum** (Cyril 18/10, il adore @noctivum sur TikTok : phonk sombre + chœurs épiques sous une voix grave) : pour les reels mindset / tension / motivation sombre, piocher d'abord dans `<music_epidemic>/Noctivum-Phonk-Sombre/` (PIXEL8, Outbreak, INFERNO, RESILIENCIA, HEALING, Eagle ; HEALING = le plus calme sous la voix). Ne pas reprendre le morceau du reel précédent. Ses originaux (FRACTURE - RFTN, Dies Irae - Aloboi, Cyberwave - Mazzo, BRIGHTNESS - The Afridi, liste dans `ORIGINAUX-Noctivum.txt`) ne vont JAMAIS dans le montage : pas de licence. Dans la fiche de publication, proposer « version originale : ajouter <titre> dans l'appli Insta en organique » quand Cyril préfère l'original.
 - Police minimaliste : Montserrat. 2e police pour les mots importants : **serif italique** (Instrument Serif).
@@ -76,22 +76,22 @@ Un dossier par reel, tout se lance depuis ce dossier.
 ```bash
 python3 $S/cadre.py <rush ORIGINALE, 4K> --apply     # ~45 s -> clip.mp4
 ```
-Rush filmée large (yeux sous 40 % ou visage < 28 % de la largeur) → recadrage fixe depuis la 4K : yeux à 35 %, visage à 33 % (cadre serré de la rush « vidéos virales », reel validé 7,75/10). Déjà serrée → simple mise au format. Toujours partir de la rush ORIGINALE 4K (zoom > 1,10 sur du 1080 = flou ; le script plafonne alors à 1,10). Plan large de scène (conférence, écran géant derrière) : cadrer à la main (voir `feedback.md` 16/10).
+Rush filmé large (yeux sous 40 % ou visage < 28 % de la largeur) → recadrage fixe depuis la 4K : yeux à 35 %, visage à 33 % (cadre serré du rush « vidéos virales », reel validé 7,75/10). Déjà serrée → simple mise au format. Toujours partir du rush ORIGINALE 4K (zoom > 1,10 sur du 1080 = flou ; le script plafonne alors à 1,10). Plan large de scène (conférence, écran géant derrière) : cadrer à la main (voir `feedback.md` 16/10).
 
 **2. Transcrire** (Whisper local, gratuit ; chaque mot est recalé sur l'énergie de la voix, utile en salle qui résonne)
 ```bash
 python3 $S/transcribe.py clip.mp4 words.json
 ```
 
-**3. Dérusher** (sauf rush déjà dérushée)
+**3. Dérusher** (sauf rush déjà dérushé)
 Lire la transcription. Repérer les répétitions et phrases ratées : on garde la **dernière** prise. Les noter en plages d'indices de mots dans `drop.json` (`[[12,18]]`, ou `[]`).
 ```bash
 python3 $S/derush.py clip.mp4 words.json cut.mp4 --drop drop.json
 python3 $S/transcribe.py cut.mp4 words.json && mv cut.mp4 clip.mp4      # on retravaille sur la version coupée
 ```
-**Entrée / sortie** (Cyril 16/10 : « ça coupe un peu sec au niveau du hook et à la fin ») : le dérush garde 0,15 s avant le 1er mot et 0,6 s après le dernier (`--lead` / `--tail`). Il écrit aussi `cut.words.json` = la transcription de la RUSH recalée sur la version coupée (souvent meilleure qu'une transcription refaite sur le montage coupé) : on peut la prendre au lieu de retranscrire.
+**Entrée / sortie** (Cyril 16/10 : « ça coupe un peu sec au niveau du hook et à la fin ») : le dérush garde 0,15 s avant le 1er mot et 0,6 s après le dernier (`--lead` / `--tail`). Il écrit aussi `cut.words.json` = la transcription du RUSH recalée sur la version coupée (souvent meilleure qu'une transcription refaite sur le montage coupé) : on peut la prendre au lieu de retranscrire.
 Le script ne coupe que dans les blancs entre deux mots : fin de phrase = blanc + respiration supprimés ; milieu de phrase = blanc resserré à 0.15 s. Chaque coupe : micro-fondu son de 0,03 s (anti-clic) et plages calées sur la grille des images (image et son exactement de la même durée, la bouche ne se décale jamais). Testé 13/10.
-**LA pause avant la punchline** (s'il y en a une ; la musique continue dessous, Cyril 17/10) : repérer la punchline AVANT le dérush et ajouter `--pause <indice du mot punchline>` : la vraie pause avant ce mot est gardée (jusqu'à 0,9 s). Pas de pause dans la rush = pas de silence (le dire à Cyril : marquer un temps avant la phrase choc au tournage).
+**LA pause avant la punchline** (s'il y en a une ; la musique continue dessous, Cyril 17/10) : repérer la punchline AVANT le dérush et ajouter `--pause <indice du mot punchline>` : la vraie pause avant ce mot est gardée (jusqu'à 0,9 s). Pas de pause dans le rush = pas de silence (le dire à Cyril : marquer un temps avant la phrase choc au tournage).
 
 **4. Écrire `plan.json`** en lisant la transcription (c'est là que se joue la qualité). Champs communs (le fichier du style ajoute les siens) :
 ```json

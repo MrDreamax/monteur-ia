@@ -10,7 +10,7 @@ Détail, sources et minutages : Brain `02-Formations/experts-<domaine>.md` (mont
 ### Montage et rythme
 1. À chaque coupe, décider dans cet ordre : émotion > histoire > rythme > regard. Un blanc de 0,6-0,9 s avant la phrase clé n'est jamais resserré (c'est LE silence). Murch [P]
 2. Structure en 4 temps : hook 0-7 s, contexte jusqu'à ~60 %, réponse ~15 %, CTA ≤ 10 s. Musique, zooms et preuves suivent ces phases. Heras [P]
-3. Dans les 2,4 premières secondes : la promesse dite + 1 événement (mot géant, impact, zoom lent). Si la promesse arrive plus tard dans la rush : le dire à Cyril (c'est le script). Heras [P], Meta [P]
+3. Dans les 2,4 premières secondes : la promesse dite + 1 événement (mot géant, impact, zoom lent). Si la promesse arrive plus tard dans le rush : le dire à Cyril (c'est le script). Heras [P], Meta [P]
 4. Face cam posée : 1 changement (zoom lent, b-roll, carton) toutes les 8 à 15 s après le hook. Rafale de b-rolls (4 max, ~1 s) seulement sur une énumération. Victor 9,6-14,5 s [M]
 5. Débit cible 165-195 mots/min, alerte au-dessus de 240. Le monteur humain est à 276 : trop rapide pour 35-50 ans. Victor 158-192 en studio [M]
 6. Chaque élément du plan (b-roll, insert, carton, mot géant, chiffre, preuve) a un champ `why` : le mot déclencheur + ce qu'il montre. Pas de `why` = pas d'élément. Heras, Block [P]
@@ -20,11 +20,11 @@ Détail, sources et minutages : Brain `02-Formations/experts-<domaine>.md` (mont
 10. Une seule montée par reel : la punchline (riser + silence + impact au même endroit) (→ Cyril 17/10 : la musique ne se coupe jamais, « on dirait un bug » ; la montée finit sur une frappe de la musique). Événements visuels par tranche de 10 s : ≤ 2, ≤ 3, ≤ 4 au pic, ≤ 2 à la fin. Block [P], plafonds [H]
 
 ### Direction artistique, couleur, cadrage
-11. **Fiche univers AVANT tout visuel**, tirée de la RUSH : les 7 composantes de Bruce Block (espace, ligne, forme, couleur, ton, mouvement, rythme) + la source de lumière (côté, couleur, dureté). Elle remplit `plan.colors` et la lumière des prompts Higgsfield. Block, Deakins [P]
-12. Test "5 sur 7" sur chaque ajout : il partage au moins 5 composantes avec la rush. Il peut contraster sur UNE seule, exprès (l'accent). Sinon on jette. Block [P], seuil [H]
+11. **Fiche univers AVANT tout visuel**, tirée du RUSH : les 7 composantes de Bruce Block (espace, ligne, forme, couleur, ton, mouvement, rythme) + la source de lumière (côté, couleur, dureté). Elle remplit `plan.colors` et la lumière des prompts Higgsfield. Block, Deakins [P]
+12. Test "5 sur 7" sur chaque ajout : il partage au moins 5 composantes avec le rush. Il peut contraster sur UNE seule, exprès (l'accent). Sinon on jette. Block [P], seuil [H]
 13. Test "sortir de la vidéo" sur chaque ajout : d'où vient sa lumière ? Est-il dans CETTE pièce ? Sert-il la phrase ? Un seul non = retiré. Deakins [P]
-14. Palette : 3 teintes dominantes max (prises sur la rush) + 1 accent. Ombre portée d'un insert du côté opposé à la source de lumière. Deakins [P]
-15. Caler les inserts SUR la rush (luminosité, couleur, netteté, grain), jamais la rush sur les inserts. Jamais de LUT sur la cam. Waqas Qazi [P], tolérances [H]
+14. Palette : 3 teintes dominantes max (prises sur le rush) + 1 accent. Ombre portée d'un insert du côté opposé à la source de lumière. Deakins [P]
+15. Caler les inserts SUR le rush (luminosité, couleur, netteté, grain), jamais le rush sur les inserts. Jamais de LUT sur la cam. Waqas Qazi [P], tolérances [H]
 16. Pas d'étalonnage créatif : noirs tenus (jamais relevés : ça fait un voile gris, testé [M]), garder le bleu des LED, zéro néon. Darren Mostyn, Cullen Kelly [P]
 17. Cadre : yeux entre 33 et 36 % de la hauteur, visage centré (47-53 % de la largeur). Réf monteur : 35,1 % et 49,7 % [M]
 
@@ -76,7 +76,7 @@ Le style est VERROUILLÉ par Cyril au Style Lab (13/10) : Montserrat 700 majuscu
 - Sorties douces `power2.in` (inserts et chiffres 0,25 s ; listes, preuves, CTA 0,3 s) seulement si ≥ 1,5 s de face cam derrière. Vérifié image par image sur Meta Verified : le badge s'efface entre 2,65 et 2,90 s au lieu de disparaître d'un coup.
 - Sidechain 30 / 450 ms (la musique remonte en douceur entre les phrases).
 - Zoom : 5 s mini entre deux zooms dans le hook (0-7 s), 8 s ensuite.
-- Outils : `lookstats.py` (mesure du look + cadre), `match_look.py` (cale chaque ajout sur la rush, couleur réelle jamais touchée), `univers_check.py` (fiche univers + test 5 sur 7 + planche), `score.py` (débit, car/s, image cam, yeux).
+- Outils : `lookstats.py` (mesure du look + cadre), `match_look.py` (cale chaque ajout sur le rush, couleur réelle jamais touchée), `univers_check.py` (fiche univers + test 5 sur 7 + planche), `score.py` (débit, car/s, image cam, yeux).
 - Voix : paramètre `voice_lufs` (config, défaut -14 ; musique et SFX suivent). Test A/B -14 / -16 rendu : `livrables/test-voix-AB/`, en attente du choix de Cyril.
 
 ### Appliqués le 14/10 (greffe GitHub, « tout greffer » de Cyril, testés sur copies OPUS + green screen, sauvegarde `_backup/2026-10-14-avant-greffe-github/`)
@@ -87,5 +87,5 @@ Le style est VERROUILLÉ par Cyril au Style Lab (13/10) : Montserrat 700 majuscu
 - Écartés : cotes du viseur REC de heditor (elles visent un écran de surveillance, le nôtre respecte les zones sûres Instagram) ; tout rebond, glitch, flash, néon, sous-titres multicolores.
 
 ### Trouvé en testant (à proposer)
-- Cadrage : la rush Meta Verified est filmée large (yeux 47,6 %, visage 24,5 %) ; la rush « vidéos virales » (réf FINAL.mp4) est filmée serré (34,5 %, 33 %). Le monteur humain ne recadre PAS (mesuré). `cadre.py` recadre depuis la 4K (x 1,34 sur Meta Verified : yeux 47 % -> 36 %, visage 25 % -> 33 %, mesuré sur le fichier produit). VALIDÉ par Cyril le 13/10 : automatique à l'étape 1 (rush déjà serrée = pas touchée, testé sur « vidéos virales »). Attention : `score.py` compare à FINAL.mp4, une autre rush.
+- Cadrage : le rush Meta Verified est filmée large (yeux 47,6 %, visage 24,5 %) ; le rush « vidéos virales » (réf FINAL.mp4) est filmée serré (34,5 %, 33 %). Le monteur humain ne recadre PAS (mesuré). `cadre.py` recadre depuis la 4K (x 1,34 sur Meta Verified : yeux 47 % -> 36 %, visage 25 % -> 33 %, mesuré sur le fichier produit). VALIDÉ par Cyril le 13/10 : automatique à l'étape 1 (rush déjà serré = pas touchée, testé sur « vidéos virales »). Attention : `score.py` compare à FINAL.mp4, un autre rush.
 - Débit Meta Verified 268 mots/min et 26,5 car/s au pire moment : au-dessus des repères (240 et 20).

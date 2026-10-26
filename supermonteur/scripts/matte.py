@@ -16,13 +16,15 @@ sess = ort.InferenceSession(model, providers=["CPUExecutionProvider"])
 W, H, FPS, WARM = 1080, 1920, 30, 0.5
 src = os.path.join(d, plan["cam"])
 
-# vidéo avec titre-question : pas de mot géant (règle Cyril 13/10), donc rien à détourer pour eux
-jobs = [(n, f"fg_{k}.webm") for k, n in enumerate(plan.get("numbers", []))] + ([] if plan.get("title") else [(w, f"fgw_{k}.webm") for k, w in enumerate(plan.get("bigwords", []))])
+# vidéo avec titre-question : pas de mot géant (règle 13/10), donc rien à détourer pour eux
+jobs = [(n, f"fg_{k}.webm") for k, n in enumerate(plan.get("numbers", []))] + [(w, f"fgw_{k}.webm") for k, w in enumerate(plan.get("bigwords", []))]   # 21/10 : mots géants permis avec un titre
+# 23/10 cockpit : motion design « chiffres » (1-2-3 géants derrière la tête) = la tête passe devant, comme un mot géant
+jobs += [(m, f"fgm_{k}.webm") for k, m in enumerate(plan.get("motions", [])) if m.get("kind") == "chiffres"]
 for n, name in jobs:
     a, b = max(0.0, n["start"] - 0.1), n["end"] + 0.05
     a0 = max(0.0, a - WARM)
     if n.get("fg") == name and os.path.exists(os.path.join(d, name)) and abs(n.get("fgStart", -1) - round(a, 3)) < 1e-3 and abs(n.get("fgEnd", -1) - round(b, 3)) < 1e-3:
-        print(f"{name}  déjà fait ({n['text']})")
+        print(f"{name}  déjà fait ({n.get('text', n.get('kind'))})")
         continue
     dec = subprocess.Popen(["ffmpeg", "-v", "error", "-ss", f"{a0:.3f}", "-i", src, "-t", f"{b - a0:.3f}",
                             "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], stdout=subprocess.PIPE)
@@ -44,5 +46,5 @@ for n, name in jobs:
         i += 1
     enc.stdin.close(); enc.wait(); dec.wait()
     n.update(fg=name, fgStart=round(a, 3), fgEnd=round(b, 3))
-    print(f"{name}  {a:.2f}-{b:.2f}s  ({n['text']})")
+    print(f"{name}  {a:.2f}-{b:.2f}s  ({n.get('text', n.get('kind'))})")
 json.dump(plan, open(plan_p, "w"), ensure_ascii=False, indent=1)

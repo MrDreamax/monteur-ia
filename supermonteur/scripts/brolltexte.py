@@ -1,4 +1,4 @@
-"""FAMILLE « B-ROLL + TEXTE » (Cyril 16/10/2026) : 1 plan (2 max) de 5-7 s, du texte AU-DESSUS DE LA TÊTE, musique, zéro voix.
+"""FAMILLE « B-ROLL + TEXTE » (16/10/2026) : 1 plan (2 max) de 5-7 s, du texte AU-DESSUS DE LA TÊTE, musique, zéro voix.
   python3 brolltexte.py plan.json            -> final.mp4 + legende.txt (+ text.png pour contrôle)
 plan.json :
   "brolls": [{"src": "<chemin absolu>", "from": 1.33 | "auto", "dur": 6}]   1 ou 2 plans, total 5-7 s
@@ -9,8 +9,8 @@ plan.json :
   "y": 470          facultatif : force le centre du bloc texte (sinon calculé au-dessus de la tête)
   "music": {"src": "<wav Epidemic coupé à la durée, loopable>"}
   "caption": "..."  la légende du post (écrite par l'étape Copywriter)
-  "da": "da/<client>.json"   facultatif (défaut : config.json « client », sinon da/cyril.json)
-Règles Cyril 16/10 :
+  "da": "da/<client>.json"   facultatif (défaut : config.json « client », sinon la DA de l'utilisateur : Brain/00-Moi/reglages/da-montage.json, sinon da/exemple.json)
+Règles 16/10 :
 - Texte TOUJOURS au-dessus de la tête. Le script mesure le haut de la tête sur tout le plan (5e centile = quand elle est
   la plus haute) ; pas assez de place -> le plan descend et le haut de l'image est prolongé en fondu (« place rajoutée »
   validée en montage viral). Pas de visage (de dos, mains, lieu) -> texte en haut de la zone sûre.
@@ -28,11 +28,14 @@ SKILL = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) if os.path.b
 plan_p = sys.argv[1]
 here = os.path.dirname(os.path.abspath(plan_p))
 plan = json.load(open(plan_p))
-CFG = json.load(open(os.path.join(SKILL, "config.json")))
-_da = os.path.expanduser(plan.get("da") or (CFG.get("client") and f"da/{CFG['client']}.json") or "da/cyril.json")
+sys.path.insert(0, os.path.join(SKILL, "scripts"))
+import reglages  # config.json du skill + réglages de cette machine (Brain)
+from sdr import sdr, BT709
+CFG = reglages.config()
+_da = os.path.expanduser(plan.get("da") or (CFG.get("client") and f"da/{CFG['client']}.json") or reglages.da_perso())
 DA = json.load(open(_da if os.path.isabs(_da) else os.path.join(SKILL, _da)))
 W, H, FPS = 1080, 1920, 30
-TOP, BOTTOM, LEFT, RIGHT = 270, 1480, 120, 960      # zones mortes Instagram (Cyril 16/10)
+TOP, BOTTOM, LEFT, RIGHT = 270, 1480, 120, 960      # zones mortes Instagram (16/10)
 AIR, SMAX, FADE = 70, 480, 260                     # air entre texte et tête ; descente max du plan ; fondu (viral.py)
 run = lambda *a: subprocess.run(a, check=True)
 P = lambda n: os.path.join(here, n)
@@ -40,6 +43,7 @@ P = lambda n: os.path.join(here, n)
 # --- 1. plans : coupés, recadrés 1080x1920, bruts, enchaînés en coupe franche ---
 parts = []
 for i, b in enumerate(plan["brolls"]):
+    b["src"] = sdr(b["src"], here)   # 25/10 : plan iPhone HDR -> SDR avant la coupe
     start = b.get("from", 0)
     if start == "auto":
         out = subprocess.check_output(["python3", os.path.join(SKILL, "scripts/broll.py"), "steady", b["src"], str(b["dur"])]).decode()
@@ -47,7 +51,7 @@ for i, b in enumerate(plan["brolls"]):
     p = P(f"_b{i}.mp4")
     run("ffmpeg", "-v", "error", "-y", "-ss", str(start), "-i", b["src"], "-t", str(b["dur"]), "-map", "0:v:0", "-an",
         "-vf", f"scale={W}:{H}:force_original_aspect_ratio=increase:flags=lanczos,crop={W}:{H},fps={FPS},format=yuv420p",
-        "-c:v", "libx264", "-crf", "14", "-preset", "slow", p)
+        "-c:v", "libx264", "-crf", "14", "-preset", "slow", *BT709, p)
     parts.append(p)
 open(P("_list.txt"), "w").write("".join(f"file '{p}'\n" for p in parts))
 run("ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", P("_list.txt"), "-c", "copy", P("_broll.mp4"))
@@ -78,7 +82,7 @@ def head_top(src):
 t = plan["text"]; style = plan.get("style", "da")
 import re
 def nopunct(x):
-    """Cyril 16/10 : pas de ponctuation à la fin d'un texte (l'emoji final reste)."""
+    """16/10 : pas de ponctuation à la fin d'un texte (l'emoji final reste)."""
     emo = re.search(r"[\s\U0001F000-\U0001FFFF\u2600-\u27BF\uFE0F]*$", x).group(0)
     core = x[:len(x) - len(emo)] if emo else x
     return re.sub(r"[\s.,;:!?…«»\"']+$", "", core) + (" " + emo.strip() if emo.strip() else "")
@@ -144,14 +148,14 @@ import {{ existsSync, readdirSync }} from "node:fs";
 import {{ join }} from "node:path";
 import {{ homedir }} from "node:os";
 // puppeteer-core + Chrome installés par HyperFrames (même recherche que zones.mjs) ; secours : Google Chrome
-const NPX = join(homedir(), ".npm", "_npx"), CH = join(homedir(), ".cache", "puppeteer", "chrome-headless-shell");
+const NPX = join(homedir(), ".npm", "_npx"), CH = [join(homedir(), ".cache", "hyperframes", "chrome", "chrome-headless-shell"), join(homedir(), ".cache", "puppeteer", "chrome-headless-shell")];   // 0.8 range Chrome dans ~/.cache/hyperframes, 0.6 dans ~/.cache/puppeteer (25/10)
 const mod = existsSync(NPX) && readdirSync(NPX).map(d => join(NPX, d, "node_modules")).find(d => existsSync(join(d, "puppeteer-core")));
-if (!mod) {{ console.log("puppeteer-core introuvable : lancer une fois « npx --yes hyperframes@0.6.81 browser ensure »"); process.exit(1); }}
+if (!mod) {{ console.log("puppeteer-core introuvable : lancer une fois « npx --yes hyperframes@0.8.149 browser ensure »"); process.exit(1); }}
 const puppeteer = createRequire(mod + "/")("puppeteer-core");
-const hs = existsSync(CH) && readdirSync(CH).sort().reverse().map(v => join(CH, v)).flatMap(v => readdirSync(v).map(x => join(v, x, "chrome-headless-shell"))).find(existsSync);
+const hs = CH.filter(existsSync).flatMap(c => readdirSync(c).sort().reverse().map(v => join(c, v))).flatMap(v => readdirSync(v).map(x => join(v, x, "chrome-headless-shell"))).find(existsSync);
 const gc = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 let exe = hs || (existsSync(gc) && gc);
-if (!exe) {{ try {{ exe = (await import("node:child_process")).execSync("npx --yes hyperframes@0.6.81 browser path", {{encoding: "utf8"}}).trim().split("\\n").pop(); }} catch (e) {{}} }}
+if (!exe) {{ try {{ exe = (await import("node:child_process")).execSync("npx --yes hyperframes@0.8.149 browser path", {{encoding: "utf8"}}).trim().split("\\n").pop(); }} catch (e) {{}} }}
 if (!exe) {{ console.log("Chrome introuvable (ni chrome-headless-shell ni Google Chrome)"); process.exit(1); }}
 const b = await puppeteer.launch({{executablePath: exe, headless: "new", args: ["--allow-file-access-from-files", "--no-sandbox"]}});
 const p = await b.newPage(); await p.setViewport({{width: {W}, height: {H}, deviceScaleFactor: 1}});
@@ -215,7 +219,7 @@ if S > 0:                                          # fondu « place rajoutée »
         "-filter_complex", fc, "-map", "[v]", "-t", str(dur), "-c:v", "libx264", "-crf", "14", "-preset", "fast", P("_place.mp4"))
     os.remove(P("_mask.png")); cam = P("_place.mp4")
 top, bot, ok, ctop, cbot = render(ytop)
-# contraste sous le texte (Cyril 16/10 : « fond légèrement noir en haut » quand le contraste n'est pas bon)
+# contraste sous le texte (16/10 : « fond légèrement noir en haut » quand le contraste n'est pas bon)
 x0, x1 = LEFT - 20, RIGHT + 20
 ch, cy = (bot - top) // 2 * 2, top // 2 * 2          # ffmpeg arrondit le crop au pair sur du 4:2:0 : on le fait nous-mêmes
 raw = subprocess.check_output(["ffmpeg", "-nostdin", "-v", "error", "-i", cam, "-vf",

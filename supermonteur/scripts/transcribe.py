@@ -1,18 +1,57 @@
-"""Transcription mot à mot (faster-whisper local, gratuit).
-  python3 transcribe.py video.mp4 out.words.json [--model small] [--no-snap]
+"""Transcription mot à mot : ElevenLabs Scribe d'abord, faster-whisper du Mac en secours.
+  python3 transcribe.py video.mp4 out.words.json [--mac] [--model small] [--no-snap]
+ElevenLabs (23/10, rush IMG_6799) : 16/16 vraies pauses contre 8/16 pour Whisper, bords à 0,03 s, 2 s au lieu de 39 s.
+Clé lue dans le trousseau (service elevenlabs-api-key), jamais dans un fichier. Pas de clé, quota vide, pas d'internet
+ou toute autre erreur -> Whisper du Mac, sans s'arrêter. --mac = Whisper forcé.
 Recalage sur le vrai son (16/10, rush de conférence) : dans une salle qui résonne, Whisper colle les pauses À L'INTÉRIEUR des mots
 (« vous » 4,94-6,10 s pour 0,25 s de parole), donc derush.py ne voyait aucun blanc à couper. On mesure l'énergie de la voix
 (10 ms) et chaque plage vraiment silencieuse >= 0,15 s cachée dans un mot est sortie du mot : la plus grande partie parlée garde
 le mot, l'autre part au mot voisin (on ne perd jamais de parole). --no-snap = timings Whisper bruts.
 """
-import json, subprocess, sys
+import json, os, subprocess, sys, tempfile
 import numpy as np
-from faster_whisper import WhisperModel
 
 src, out = sys.argv[1], sys.argv[2]
 model = sys.argv[sys.argv.index("--model") + 1] if "--model" in sys.argv else "small"
-segs, _ = WhisperModel(model, compute_type="int8").transcribe(src, language="fr", word_timestamps=True)
-words = [{"text": w.word.strip(), "start": round(w.start, 3), "end": round(w.end, 3)} for s in segs for w in s.words]
+
+
+def elevenlabs():
+    key = subprocess.run(["security", "find-generic-password", "-s", "elevenlabs-api-key", "-w"],
+                         capture_output=True, text=True).stdout.strip()
+    if not key:
+        raise RuntimeError("pas de clé dans le trousseau")
+    import requests
+    with tempfile.TemporaryDirectory() as tmp:
+        wav = os.path.join(tmp, "a.wav")                              # mono 16 kHz : 1,3 Mo pour 41 s
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", src, "-map", "0:a:0", "-vn", "-ac", "1", "-ar", "16000",
+                        "-c:a", "pcm_s16le", wav], check=True)
+        with open(wav, "rb") as f:
+            r = requests.post("https://api.elevenlabs.io/v1/speech-to-text", headers={"xi-api-key": key},
+                              files={"file": ("a.wav", f, "audio/wav")}, timeout=600,
+                              data={"model_id": "scribe_v1", "language_code": "fr", "timestamps_granularity": "word",
+                                    "tag_audio_events": "false"})
+    if r.status_code != 200:
+        raise RuntimeError(f"ElevenLabs {r.status_code} : {r.text[:200]}")
+    return [{"text": w["text"].strip(), "start": round(w["start"], 3), "end": round(w["end"], 3)}
+            for w in r.json()["words"] if w.get("type") == "word" and w["text"].strip()]
+
+
+def whisper():
+    from faster_whisper import WhisperModel
+    segs, _ = WhisperModel(model, compute_type="int8").transcribe(src, language="fr", word_timestamps=True)
+    return [{"text": w.word.strip(), "start": round(w.start, 3), "end": round(w.end, 3)} for s in segs for w in s.words]
+
+
+moteur = "Mac (Whisper)"
+if "--mac" in sys.argv:
+    words = whisper()
+else:
+    try:
+        words, moteur = elevenlabs(), "ElevenLabs"
+    except Exception as e:
+        print(f"ElevenLabs indisponible ({e}) -> secours Whisper du Mac")
+        words = whisper()
+print(f"transcription : {moteur}")
 
 
 def snap(words, run_min=0.15, part_min=0.06, margin=0.05):

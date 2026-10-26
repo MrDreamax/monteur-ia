@@ -1,13 +1,13 @@
-"""Famille « À plusieurs » (podcast, visio, split screen) : 2 personnes côte à côte en 16:9 -> reel 9:16 (Cyril 13/10).
+"""Famille « À plusieurs » (podcast, visio, split screen) : 2 personnes côte à côte en 16:9 -> reel 9:16 (13/10).
 Mise en page MIX validée : split haut/bas par défaut, plein écran sur celui qui parle pendant la phrase qui porte un mot fort
-(2-3,5 s), jamais moins de 1,5 s de split entre deux pleins écrans. Échantillon validé : Stratosphere/style-lab/a-plusieurs/MIX_musique.mp4
+(2-3,5 s), jamais moins de 1,5 s de split entre deux pleins écrans. Échantillon validé : <dossier>/style-lab/a-plusieurs/MIX_musique.mp4
 
   python3 podcast.py speakers src.mp4 words.json        # qui parle, mot par mot (bouche qui bouge dans chaque tuile) -> words.json["who"]
   python3 podcast.py layout plan.json                    # clip.mp4 9:16 + plan.cam / plan.subY / plan.subYAt / plan.zoom=false
 
 plan.json -> "podcast": {"src": "cut169.mp4", "top": "L", "delogo": [x, y, w, h] | null, "segments": "cut169.segments.json"}
   src   = le passage dérushé en 16:9 (tuile gauche = L, tuile droite = R)
-  top   = la tuile en haut du split (défaut L = l'hôte, Cyril à gauche dans ses visios)
+  top   = la tuile en haut du split (défaut L = l'hôte, à gauche dans les visios)
   delogo = logo incrusté à effacer, en pixels de la source (ex. ancien logo MYDREAMAX : [24, 34, 266, 152])
   segments = cut.segments.json de derush.py : les pleins écrans démarrent sur une coupe quand elle est à < 0,15 s
 Les plein écrans sont décidés par plan.keywords (1re occurrence de chaque mot fort) ; avec un titre-question (pas de mots forts),
@@ -63,7 +63,7 @@ def speakers(src, words_p):
     W = json.load(open(words_p))
     ws = W["words"]
     F = faces(src)
-    # MOUVEMENT de la mâchoire seulement : la bouche ouverte d'un sourire qui écoute ne compte pas (test 13/10 : sourire de Cyril
+    # MOUVEMENT de la mâchoire seulement : la bouche ouverte d'un sourire qui écoute ne compte pas (test 13/10 : sourire de l'hôte
     # pris pour de la parole). Visage perdu (main devant) = image ignorée, pas « bouche fermée ».
     motion = {}
     for s in ("L", "R"):

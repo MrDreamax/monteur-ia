@@ -1,6 +1,6 @@
-# MODE CLIENT (Publieur installé chez un client, décidé avec Cyril le 16/10)
+# MODE CLIENT (Publieur installé par un coach chez son client, 16/10)
 
-On est chez un client quand `config.json` du skill a un champ `"client"` rempli. Ce fichier passe AVANT `SKILL.md` quand ils se contredisent. Dans `SKILL.md`, « Cyril » = le client pour tout ce qui touche à sa personne (son OK, ses comptes, ses B-rolls, sa DA) ; les règles de qualité restent celles de la maison.
+On est chez un client quand `config.json` du skill a un champ `"client"` rempli. Ce fichier passe AVANT `SKILL.md` quand ils se contredisent. Dans `SKILL.md`, « l'utilisateur » = le client pour tout ce qui touche à sa personne (son OK, ses comptes, ses B-rolls, sa DA) ; les règles de qualité restent celles de la maison.
 
 ## Ses fichiers à lui (jamais écrasés par une mise à jour)
 - `config.json` : sa marque Metricool, son compte Instagram attendu, son disque d'archive, son CTA, sa cible.
@@ -26,7 +26,7 @@ Même chemin que `SKILL.md` § 1 à 7, avec ses dossiers :
 - Archive : `archive_ssd.sh` copie chaque vidéo publiée sur SON disque (`archive_dir`).
 
 ## Rien ne sort de chez lui
-Ses retours, ses fiches et son registre restent sur son Mac. Rien ne part sur le compte Metricool, le Higgsfield ou le SSD de Cyril.
+Ses retours, ses fiches et son registre restent sur son Mac. Rien ne part sur le compte Metricool, le Higgsfield ou le disque du coach qui l'a installé.
 
 ## Pour le ZIP client (à faire dans le chat du kit monteur)
-Livrer : `SKILL.md`, `mode-client.md`, `regles-legendes.md`, `config.exemple-client.json`, `scripts/`, `assets/`. Exclure : `config.json` (réglages de Cyril) et `retours-client.md`. Garde-fou : refuser le ZIP si l'id de marque Metricool de Cyril, son pseudo Instagram ou le chemin de son SSD apparaît dans un fichier livré (les valeurs sont dans le `config.json` de Cyril, à comparer).
+Livrer : `SKILL.md`, `mode-client.md`, `regles-legendes.md`, `config.exemple-client.json`, `scripts/`, `assets/`. Exclure : `retours-client.md` (le `config.json` livré ne contient que les défauts ; les réglages du coach sont dans son Brain, 00-Moi/reglages/publieur.json). Garde-fou : refuser le ZIP si l'id de marque Metricool du coach, son pseudo Instagram ou le chemin de son disque apparaît dans un fichier livré (les valeurs sont dans 00-Moi/reglages/publieur.json du coach, à comparer).

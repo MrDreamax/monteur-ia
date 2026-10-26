@@ -12,7 +12,7 @@ Le client ne remplit rien : on lui MONTRE 4 DA avec son propre visage, il clique
    **Coût mesuré : 0,25 crédit l'image → 1 crédit les 4.**
 4. **Planche** : télécharger les 4, `hstack` en une image, vérifier le visage. Le client choisit dans le Style Lab (section « Ton ambiance »).
 5. **Vidéo** (optionnel, seulement la DA choisie) : `kling3_0` std 5 s sans son = **6,25 crédits** (25 images). `seedance_2_5` = 15 crédits : non.
-6. **Fiche** : écrire `da/<prenom>.json` (modèle `cyril.json`) en tirant les couleurs de l'image choisie (dégradé `list`, `halo`, `glow`) + `broll.prompt_higgsfield` = l'ambiance de la DA choisie.
+6. **Fiche** : écrire `da/<prenom>.json` (modèle `exemple.json`) en tirant les couleurs de l'image choisie (dégradé `list`, `halo`, `glow`) + `broll.prompt_higgsfield` = l'ambiance de la DA choisie.
    Fait tout seul par `round.py lock` ; polices, couleur, musique et rythme se choisissent aussi dans le Style Lab. `QUESTIONNAIRE.md` = seulement la légende.
 
 Vérifier : le visage est-il le sien sur les 4 ? Sinon refaire avec d'autres réfs AVANT de montrer au client. Un client qui ne se reconnaît pas = pire que pas de DA.

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Cover de reel 1080x1920 : photo B-roll (déjà retouchée Higgsfield), SANS texte par défaut (Cyril 17/10).
+"""Cover de reel 1080x1920 : photo B-roll (déjà retouchée Higgsfield), SANS texte par défaut (règle du 17/10).
 Titre (police sans) + sous-titre (serif, couleur accent) seulement si --titre est donné.
-Polices et couleurs : DA de Cyril par défaut, DA du client si config.json "da" est rempli.
+Polices et couleurs : DA par défaut du kit (Montserrat blanc + Instrument Serif or), DA du client si config.json "da" est rempli.
 Sorties dans --out : cover.png (pour Metricool), grille.jpg (aperçu 3:4 du profil), cover_480.jpg (pour la fiche).
 Usage : cover.py --photo retouche.png --out DOSSIER   (texte : --titre "TIER LIST" --sous-titre "...", sur demande seulement)
 """

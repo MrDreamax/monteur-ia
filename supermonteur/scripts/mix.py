@@ -2,14 +2,14 @@
 dont le PIC tombe pile sur l'événement.
   python3 mix.py plan.json render.mp4 voice.mp4 final.mp4
 plan.json :
-  "music": {"src", "from", "target"}  target = niveau voulu SOUS la voix (défaut config "music_target_lufs" = -31, Cyril 13/10).
+  "music": {"src", "from", "target"}  target = niveau voulu SOUS la voix (défaut config "music_target_lufs" = -31, 13/10).
      Le script mesure CHAQUE segment après ducking et recale tout seul son niveau (lufs = point de départ, ±1 LU).
-     ou une LISTE de segments quand le sujet / l'ambiance / le plan change (Cyril 13/10) :
+     ou une LISTE de segments quand le sujet / l'ambiance / le plan change (13/10) :
      [{"src", "from", "start": 0, "end": 14.9, "lufs", "emotion": "tension"},
       {"src", "from", "start": 14.9, "end": 36.8, "transition": "douce" | "sec", "emotion": "espoir"}]
      douce = fondu enchaîné 1,5 s centré sur start ; sec = coupe nette + impact sur start. "fin": "naturelle" = pas de long
      fondu de sortie (morceau déjà coupé à la bonne durée par Epidemic EditRecording).
-  "silences": [{"to": 8.30}]  -> UN SEUL par reel (Cyril 13/10 : « ne pas abuser de l'effet de silence »).
+  "silences": [{"to": 8.30}]  -> UN SEUL par reel (13/10 : « ne pas abuser de l'effet de silence »).
      "to" = début du mot punchline. "from" se cale tout seul sur la frontière de mot >= 0,4 s avant (jamais au milieu d'un mot).
      Riser qui monte et se coupe net sur "from" -> musique coupée sec (voix seule) -> retour + impact pile sur "to".
      (ancien format "music": {"silences": [...]} encore lu)
@@ -24,7 +24,9 @@ import json, os, subprocess, sys
 plan_p, video, voice, out = sys.argv[1:]
 plan = json.load(open(plan_p))
 here = os.path.dirname(os.path.abspath(plan_p))
-CFG = json.load(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.json")))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import reglages  # config.json du skill + réglages de cette machine (Brain)
+CFG = reglages.config()
 dur = float(subprocess.check_output(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", video]))
 
 # --- musique : 1 morceau ou des segments ---
@@ -46,13 +48,13 @@ if segs and segs[-1].get("fin") == "naturelle":
 sil = plan.get("silences") or ((m or {}).get("silences", []) if isinstance(m, dict) else [])
 if len(sil) > 1:
     main = [z for z in sil if z.get("main")] or sil[:1]
-    print(f"!! {len(sil)} silences demandés -> 1 seul gardé (to={main[0]['to']}) : règle Cyril 13/10")
+    print(f"!! {len(sil)} silences demandés -> 1 seul gardé (to={main[0]['to']}) : règle 13/10")
     sil = main[:1]
 words_p = plan.get("words") and os.path.join(here, plan["words"])
 W = json.load(open(words_p)) if words_p and os.path.exists(words_p) else []
 W = W.get("words", W) if isinstance(W, dict) else W
 
-# --- LA VIDÉO FINIT QUAND LA MUSIQUE FINIT (Cyril 17/10, voix off : « à la fin il n'y a plus de musique et la vidéo continue
+# --- LA VIDÉO FINIT QUAND LA MUSIQUE FINIT (17/10, voix off : « à la fin il n'y a plus de musique et la vidéo continue
 # de tourner ») : on mesure la fin réelle de la musique (dernier instant à moins de 20 dB de son niveau des 6 dernières s, seuil 20 dB) ;
 # si elle s'arrête > 0,4 s avant la fin, la vidéo est coupée 0,25 s après (jamais avant la fin de la voix + 0,3 s). ---
 def music_end():
@@ -84,7 +86,7 @@ for z in list(sil):
             prev = [w["end"] for w in W if w["end"] <= z["to"] + 0.01]
             z["from"] = prev[-1] if prev else z["to"] - 0.8
     z.setdefault("from", z["to"] - 0.8)
-    # Cyril 13/10 : 0,5 s de musique coupée sous la voix = « trop court, on ne sent pas l'impact ». Pas de vraie pause = pas de silence.
+    # 13/10 : 0,5 s de musique coupée sous la voix = « trop court, on ne sent pas l'impact ». Pas de vraie pause = pas de silence.
     if z["to"] - z["from"] < 0.6:
         print(f"!! pas de vraie pause avant la punchline ({z['to'] - z['from']:.2f} s < 0,6 s) : silence ABANDONNÉ. "
               "Garder la pause au dérush (derush.py --pause) ou la marquer au tournage.")
@@ -106,7 +108,7 @@ if "sfx" not in plan:
     ev = [("number", n["start"] + 0.05, {}) for n in plan.get("numbers", [])] + [("list", l["start"], {}) for l in plan.get("lists", [])]
     ev += [("bullet", t, {}) for t in (plan.get("bullets") or {}).get("at", [])]
     ev += [("broll", b["start"], {}) for b in plan.get("brolls", [])]
-    ev += [("broll", n["start"], {}) for n in plan.get("inserts", [])]   # whoosh b-roll / insert : COUPÉ par défaut ("broll" retiré de sfx_auto, choix Cyril 13/10)
+    ev += [("broll", n["start"], {}) for n in plan.get("inserts", [])]   # whoosh b-roll / insert : COUPÉ par défaut ("broll" retiré de sfx_auto, choix 13/10)
     for z in sil:
         ev += [("riser", z["from"], {"cut_at_peak": True, "solo": True})]
         if z.get("hit", True): ev += [("impact", z["to"], {"dur": 1.6})]
@@ -140,7 +142,7 @@ def duck(sfx):
     return f",volume='{g}':eval=frame"
 
 # Voix : config "voice_lufs" (défaut -14) ou plan "voice_lufs". Experts (Curtis Judd, Boykin, EBU) : -16 pour la parole sur mobile.
-# La musique et les SFX suivent la voix : l'équilibre validé par Cyril (musique 17 dB sous une voix à -14) ne bouge pas.
+# La musique et les SFX suivent la voix : l'équilibre validé par l'utilisateur (musique 17 dB sous une voix à -14) ne bouge pas.
 VOICE = plan.get("voice_lufs", CFG.get("voice_lufs", -14))
 TARGET = CFG.get("music_target_lufs", -29) + (VOICE + 14)
 SFXG = 10 ** ((VOICE + 14) / 20)
@@ -196,7 +198,7 @@ def graph():
     return inp, f, n_music_inp
 
 def measure(inp, f, n_music_inp):
-    """Niveau RÉEL de chaque segment de musique une fois baissée sous la voix (Cyril 13/10 : mesurer CHAQUE segment)."""
+    """Niveau RÉEL de chaque segment de musique une fois baissée sous la voix (13/10 : mesurer CHAQUE segment)."""
     g = ";".join([f[0]] + [x for x in f if ("[mraw]" in x or "[mus]" in x or x.endswith(tuple(f"[m{i}]" for i in range(len(segs)))))
                            and "[a]" not in x]) + ";[vo]anullsink;[mus]ebur128[o]"
     # le gate du silence est AVANT le sidechain : placé après, ffmpeg 6.0 ne propage plus la fin du flux.
@@ -235,7 +237,7 @@ if segs:   # recalage automatique : chaque segment à sa cible ±1 LU (le duckin
 # Boucle de crête (13/10, voix off DIFFICILE) : le mix sortait à -2,3 dBTP pile mais l'AAC le remontait à -1,2 (+1,1 dB sur une
 # musique très percussive, pas 0,1-0,3 comme prévu). On MESURE après encodage et on rabaisse le limiteur de l'excès, 3 essais max.
 for essai in range(3):
-    # écran noir au départ (16/10, Cyril : « la toute première seconde, c'est toujours un écran noir ») : le rendu HyperFrames commence
+    # écran noir au départ (16/10 : « la toute première seconde, c'est toujours un écran noir ») : le rendu HyperFrames commence
     # à 0,021 s avec une « edit list » vide devant ; Chrome l'ignore mais AVFoundation (QuickTime, iPhone, Instagram) ne trouve AUCUNE
     # image à 0 s. On recale la vidéo à 0 (setts) + faststart (moov en tête). Vérifié : image à 0,00 s, segment unique.
     # 17/10 (VSL David « ça bug ») : « setts=ts=... » met pts = dts sur chaque image -> avec des B-frames, iPhone/QuickTime affichent

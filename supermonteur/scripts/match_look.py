@@ -4,9 +4,9 @@
   --w = largeur de l'objet à l'écran en px (comme "w" dans plan.inserts, défaut 400) : la netteté se compare à taille d'écran.
 Deux cas :
 - OBJET (PNG détouré) : il est éclairé par la pièce. S'il est plus lumineux que le rush (P99 rush + 15), on baisse son EXPOSITION
-  (même facteur sur les 3 couleurs). Sa VRAIE couleur ne bouge pas (règle Cyril 13/10 : un objet réel garde sa couleur).
+  (même facteur sur les 3 couleurs). Sa VRAIE couleur ne bouge pas (règle 13/10 : un objet réel garde sa couleur).
 - PLAN (b-roll, image pleine) : raccord seulement. Blancs brûlés (P99 > 235) ramenés, noirs relevés (voile gris) redescendus.
-  Ses plans restent BRUTS (règle Cyril 13/10 : jamais de filtre créatif). --force = caler aussi noirs et blancs sur le rush.
+  Ses plans restent BRUTS (règle 13/10 : jamais de filtre créatif). --force = caler aussi noirs et blancs sur le rush.
 Objet trop net par rapport au rush (x 1,6, mesuré à sa taille d'écran) -> flou de 0,6 px à l'écran. Plan : info seulement. --color = couleur de la lumière rapprochée à moitié
 de celle du rush (seulement pour un visuel GÉNÉRÉ, jamais un objet réel ni ses vrais plans).
 Néon et différence de médiane : affichés pour info (un néon se corrige en refaisant le visuel, pas en filtrant).

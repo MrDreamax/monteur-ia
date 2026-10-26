@@ -1,4 +1,4 @@
-"""Hauteur des sous-titres (Style Lab R1-R2, Cyril 13/10 : « au niveau du col du t-shirt, jamais sur le cou ni le menton »).
+"""Hauteur des sous-titres (Style Lab R1-R2, 13/10 : « au niveau du col du t-shirt, jamais sur le cou ni le menton »).
   python3 subzone.py clip.mp4            -> imprime le y (px, en 1080x1920) à mettre dans plan.json "subY"
 Règle validée : haut du bloc ≈ 95 px sous le bas du col. Mesurée sur le visage (MediaPipe) pour suivre le cadrage :
   y = menton bas (90e centile, quand la tête descend le plus) + 0,41 x hauteur du visage   (Meta Verified : 1177 + 0,41 x 322 = 1310)

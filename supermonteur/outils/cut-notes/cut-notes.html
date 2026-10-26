@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>Cut Notes</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -332,7 +333,7 @@
   const pin = () => { if (pendingT !== null) return; video.pause(); pendingT = video.currentTime || 0; $("noteAt").textContent = tc(pendingT); };
   input.addEventListener("focus", pin);
   input.addEventListener("input", pin);
-  // 16/10 : les notes de Cyril n'arrivaient pas (tapées ou dictées sans Entrée, puis « I'm done »). Une note tapée est enregistrée
+  // 16/10 : les notes n'arrivaient pas (tapées ou dictées sans Entrée, puis « I'm done »). Une note tapée est enregistrée
   // dès qu'on quitte le champ, avec le bouton « Envoyer la note », et avant « I'm done ».
   input.addEventListener("blur", () => { if (input.value.trim()) addNote(); else pendingT = null; });
   $("saveNote").addEventListener("mousedown", (e) => e.preventDefault());

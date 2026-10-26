@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copie de revue pour Cut Notes : H.264 720p, < 15 Mo (cible 13 Mo).
 # Usage : review_copy.sh final.mp4 [sortie.mp4]
-# Affiche : chemin, taille en octets, fps. Code 2 si > 15 Mo (alors donner le chemin du rendu complet à Cyril).
+# Affiche : chemin, taille en octets, fps. Code 2 si > 15 Mo (alors donner le chemin du rendu complet à l'utilisateur).
 set -e
 IN="$1"; OUT="${2:-review.mp4}"
 DUR=$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$IN")

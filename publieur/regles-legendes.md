@@ -1,6 +1,6 @@
 # Légendes Instagram : les règles des experts (version embarquée, sans Brain)
 
-Pour les machines des clients, qui n'ont pas le Brain de Cyril. Résumé de `Brain/02-Formations/experts-legendes-instagram.md` (12/10/2026). Sources primaires seulement : ce qui n'a pas de source est une hypothèse à tester.
+Pour les machines qui n'ont pas la fiche experts dans leur Brain. Résumé de `Brain/02-Formations/experts-legendes-instagram.md` (12/10/2026). Sources primaires seulement : ce qui n'a pas de source est une hypothèse à tester.
 
 ## Les règles
 1. Instagram lit d'abord la légende, puis la vidéo, l'audio et les commentaires. (Mosseri chez Brock Johnson, youtube.com/watch?v=b_MGyd8TKdQ [16:11])

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Contrôles automatiques d'une fiche de publication (JSON). Sort la liste des contrôles ; code 1 si un contrôle bloque.
 Règles : Brain/02-Formations/experts-legendes-instagram.md (mot-clé en 1re ligne, 5 hashtags max, 1 CTA, 1er commentaire, alt text)
-+ voix de Cyril (pas de tiret cadratin, pas de « ce n'est pas X, c'est Y »).
++ voix de l'utilisateur (pas de tiret cadratin, pas de « ce n'est pas X, c'est Y »).
 Usage : controle.py fiche.json
 """
 import json, re, sys
@@ -26,15 +26,21 @@ def controler(f):
     if mot and not f.get("dit_a_voix"):
         res.append(("alerte", f"Mot-clé « {mot} » pas dit à voix haute dans la vidéo"))
     tags = re.findall(r"#\w+", leg)
-    add(len(tags) <= 5, f"{len(tags)} hashtags (Instagram en autorise 5 max)", f"{len(tags)} hashtags : 5 max sur Instagram")
+    add(len(tags) == 0, "Aucun hashtag (règle du 20/10)", f"{len(tags)} hashtag(s) : aucun (règle du 20/10)")
+    phr = [p for p in re.split(r"(?<=[.!?…])\s+", leg.strip()) if p.strip()]
+    add(1 <= len(phr) <= 2, f"Légende courte : {len(phr)} phrase(s)", f"Légende de {len(phr)} phrases : 1 ou 2 max (règle du 20/10)")
     add(len(leg) <= 2200, "Légende sous 2 200 caractères", f"Légende trop longue ({len(leg)} / 2 200)")
     cta = f.get("cta", "").strip()
     n_cta = len(re.findall(r"\b" + re.escape(cta) + r"\b", leg)) if cta else 0
-    add(n_cta == 1, f"1 seul appel à l'action : Commente {cta}", f"CTA « {cta} » présent {n_cta} fois (il en faut 1)")
+    if f.get("cta_dans_video"):
+        ok2 = n_cta == 1 and len(phr) == 2 and cta in phr[1]
+        add(ok2, f"CTA de la vidéo en 2e phrase : {cta}", f"CTA « {cta} » : il doit être la 2e phrase, une seule fois (règle du 20/10)")
+    else:
+        add(n_cta == 0, "Pas de CTA (la vidéo n'en a pas)", f"CTA « {cta} » dans la légende alors que la vidéo n'en dit pas (règle du 20/10)")
     com = ig.get("premier_commentaire", "")
-    add(bool(com.strip()), "1er commentaire prêt (merci ou valeur en plus)", "1er commentaire manquant")
+    add(not com.strip(), "Pas de 1er commentaire (règle du 20/10)", "1er commentaire présent : aucun (règle du 20/10)")
     add(not (cta and re.search(r"\b" + re.escape(cta) + r"\b", com)), "Pas de CTA dans le 1er commentaire",
-        f"CTA « {cta} » dans le 1er commentaire : merci ou valeur à la place (Cyril 17/10)")
+        f"CTA « {cta} » dans le 1er commentaire : merci ou valeur à la place (règle du 17/10)")
     add(bool(ig.get("alt", "").strip()), "Texte alternatif rempli", "Texte alternatif manquant", "alerte")
     yt = f.get("youtube", {})
     add(0 < len(yt.get("titre", "")) <= 100, "Titre YouTube sous 100 caractères", f"Titre YouTube : {len(yt.get('titre',''))} caractères (1 à 100)")
@@ -51,7 +57,7 @@ def controler(f):
     if c:
         mots = len((c.get("titre", "") + " " + c.get("sous_titre", "")).split())
         if mots:
-            res.append(("alerte", "Texte sur la cover : par défaut la cover est SANS texte (Cyril 17/10)"))
+            res.append(("alerte", "Texte sur la cover : par défaut la cover est SANS texte (règle du 17/10)"))
         add(mots <= 6, "Texte de la cover dans la zone visible de la grille", f"Cover : {mots} mots, viser 2 à 4", "alerte")
         if c.get("source") == "broll":
             res.append(("ok", "Cover tirée de tes B-rolls, retouchée Higgsfield à ta DA, visage intact"))

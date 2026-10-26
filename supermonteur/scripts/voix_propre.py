@@ -1,13 +1,13 @@
 """Voix propre : une voix prise dans une salle (conférence, micro de scène capté par la caméra, pièce vide) remise au son de la
-voix STUDIO de la personne. Cyril 16/10 sur la conf « décide vite » : « améliore la qualité sonore », puis « améliore encore ».
+voix STUDIO de la personne. 16/10 sur la conf « décide vite » : « améliore la qualité sonore », puis « améliore encore ».
   python3 voix_propre.py clip.mp4 voix/clean.wav [words.json] [--ref voix_studio.wav] [--fort]
-PAR DÉFAUT = DOUX (Cyril 16/10, v4 : « ma voix est un peu bizarre et déformée, reviens à l'original et monte légèrement, +10 dB c'est
+PAR DÉFAUT = DOUX (16/10, v4 : « ma voix est un peu bizarre et déformée, reviens à l'original et monte légèrement, +10 dB c'est
 trop, peut-être +3 ou +4 dB ») : la voix ORIGINALE (pas de Demucs, pas d'expandeur, pas d'exciteur), seulement l'EQ vers la voix
 studio, à 35 % et bornée à ±3,5 dB. --fort = l'ancienne chaîne complète ci-dessous (à réserver à une salle vraiment mauvaise).
   puis : python3 mix.py plan.json renders/<x>.mp4 voix/clean.wav final.mp4
 Étapes :
   1. Demucs isole la voix (public, bruit de salle).
-  2. EQ calée sur la voix studio (config "voice_ref", Cyril = ref/voix-studio-cyril.wav) : on mesure le profil (1/3 d'octave,
+  2. EQ calée sur la voix studio (réglage "voice_ref" = un WAV de sa voix studio) : on mesure le profil (1/3 d'octave,
      trames de parole) et on corrige l'écart, lissé, -10 / +9 dB max. Mesuré sur la conf : +10-12 dB de basses en trop (sono),
      -10 à -25 dB d'aigus en moins (son étouffé) ; écart moyen 10,1 dB -> 2,8 dB.
   3. Aigus quasi absents (> 6 kHz) : exciteur (harmoniques recréées depuis 5 kHz), seulement s'il manque plus de 10 dB à 8 kHz.
@@ -21,7 +21,9 @@ args = [a for a in sys.argv[1:] if not a.startswith("--")]
 src, out = args[0], args[1]
 words = args[2] if len(args) > 2 else None
 SK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CFG = json.load(open(os.path.join(SK, "config.json")))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import reglages  # config.json du skill + réglages de cette machine (Brain)
+CFG = reglages.config()
 ref = sys.argv[sys.argv.index("--ref") + 1] if "--ref" in sys.argv else os.path.expanduser(CFG.get("voice_ref", ""))
 BANDS = [80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000, 12500]
 TAIL = ("agate=threshold=0.028:ratio=2.5:range=0.22:attack=3:release=140:knee=3,deesser=i=0.4:m=0.5:f=0.5,"

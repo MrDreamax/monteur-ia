@@ -1,5 +1,5 @@
 """Analyse une vidéo de référence (le modèle à copier) et en sort la recette chiffrée.
-  python3 analyse_ref.py video.mp4 outdir [--lang es]
+  python3 analyse_ref.py video.mp4 outdir [--lang es|auto]
 
 Mesure : coupes (rythme), voix (débit, pauses), musique (changements, coupures nettes,
 niveau sous la voix, tempo), SFX (impacts calés sur les coupes).
@@ -45,7 +45,7 @@ mref = np.percentile(mdb, 95)
 
 # 3. Voix : mots, débit, pauses
 from faster_whisper import WhisperModel
-segs, _ = WhisperModel("small", compute_type="int8").transcribe(voc_p, language=lang, word_timestamps=True)
+segs, _ = WhisperModel("small", compute_type="int8").transcribe(voc_p, language=None if lang == "auto" else lang, word_timestamps=True)
 words = [{"w": w.word.strip(), "s": round(w.start, 2), "e": round(w.end, 2)} for s in segs for w in s.words]
 gaps = [(round(a["e"], 2), round(b["s"] - a["e"], 2)) for a, b in zip(words, words[1:]) if b["s"] - a["e"] >= 0.3]
 speech_time = sum(w["e"] - w["s"] for w in words)

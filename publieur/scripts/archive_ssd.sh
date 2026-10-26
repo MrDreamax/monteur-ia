@@ -1,6 +1,6 @@
 #!/bin/bash
-# Archive une vidéo PUBLIÉE sur le disque d'archive (demande de Cyril du 16/10 : historique de toutes les vidéos terminées).
-# Dossier = "archive_dir" de config.json : SSD de Cyril, ou disque externe du client.
+# Archive une vidéo PUBLIÉE sur le disque d'archive (16/10 : historique de toutes les vidéos terminées).
+# Dossier = "archive_dir" des réglages (config.json + Brain/00-Moi/reglages/publieur.json) : ton disque d'archive, ou celui du client.
 # Copie (jamais de déplacement) sous le nom « AAAA-MM-JJ - Titre.mp4 ». Code 2 = disque absent, on réessaie au prochain passage.
 # Usage : archive_ssd.sh final.mp4 2026-10-19 "Tier list des formats Instagram"
 set -e

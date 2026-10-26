@@ -15,7 +15,8 @@ Regarder `score/compare.jpg` (haut = reel, bas = réf) et `score/hook.jpg`, puis
 9. **Son** : `lufs` entre -15 et -13, SFX discrets et calés. ≤ 1 SFX toutes les 4 s en moyenne, jamais 2 à moins de 1,5 s (`mix.py` affiche la liste gardée / sautée), 1 seul silence + riser. Plus de 12 SFX sur 40 s = 0.
 10. **Fini pro** : aucun visage coupé, aucun bug visuel, image dès 0 s (pas d'écran noir), tient la comparaison avec la réf. Cam : `cam_noirs_P1` 1-8, `cam_P99` ≤ 235, `cam_neon_%` < 0,5. Cadre (info) : `yeux_y_%` ; attention, la réf FINAL.mp4 est une AUTRE rush, filmée serré (34 %) ; Meta Verified est filmée large (48 %) et son monteur ne l'a pas recadrée. Après `cadre.py`, `yeux_y_%` doit être entre 30 et 40.
 
+**Chez un client (25/10)** : `python3 $S/note.py <dossier du reel>` fait tout ça sans réf (grille seule, `oeil.json` pour ce que l'œil seul voit) + garde-fous bloquants + historique des versions (`note.json`). Process : `mode-client.md`.
 Note < 8 → corriger les critères à 0 ou 0.5, refaire le rendu, renoter. Max 2 tours ; au-delà, livrer et dire ce qui bloque.
 Ne pas se gonfler la note : en cas de doute, 0.5.
 Livrer `final.mp4` + la note /10 + une ligne par critère raté + ce qui n'a pas pu être fait (ex : logos 3D sans Higgsfield).
-Quand Cyril donne sa note : si l'écart avec la note auto est ≥ 2 points, durcir le critère concerné dans cette grille.
+Quand l'utilisateur donne sa note : si l'écart avec la note auto est ≥ 2 points, durcir le critère concerné dans cette grille.

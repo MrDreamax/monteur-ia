@@ -11,11 +11,17 @@ a = sys.argv[1:]
 def opt(name, default):
     return a[a.index(name) + 1] if name in a else default
 prompt, out = a[0], a[1]
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import reglages  # config.json du skill + réglages de cette machine (Brain)
 try:
-    _cfg_client = json.load(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.json"))).get("client")
+    _cfg_client = reglages.config().get("client")
 except Exception:
     _cfg_client = None
-client = opt("--client", _cfg_client or "cyril")
+try:  # compte du trousseau par défaut = le prénom de 00-Moi/marque.json, en minuscules
+    _moi = (json.load(open(os.path.join(os.path.dirname(reglages.REG), "marque.json"))).get("prenom") or "").lower()
+except Exception:
+    _moi = ""
+client = opt("--client", _cfg_client or _moi or "moi")
 ratio, size, model, ref = opt("--ratio", "9:16"), opt("--size", "1K").upper(), opt("--model", "gemini-nano-banana-2.1"), opt("--ref", None)
 # Le prompt de la DA dit souvent "vertical 9:16" : en 1:1 Gemini compose alors en vertical avec des bandes floues. On retire tout format écrit et on impose le bon.
 import re

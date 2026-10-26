@@ -24,7 +24,7 @@ if not os.path.exists(index):
 mots = [m.strip().lower() for m in a.mots.split(",") if m.strip()]
 cands = []
 for r in csv.DictReader(open(index)):
-    if r.get("cyril_visible") != "True" or (r.get("date_tournage") or "0") < mini or r.get("qualite") == "mauvais":
+    if r.get(cfg.get("colonne_visible", "personne_visible")) != "True" or (r.get("date_tournage") or "0") < mini or r.get("qualite") == "mauvais":
         continue
     txt = " ".join([r["fichier"], r["theme"], r["action"], r["lieu"]]).lower()
     score = sum(m in txt for m in mots)
@@ -58,7 +58,7 @@ n = len(vignettes)
 cols = min(6, n)
 lignes = [vignettes[k:k + cols] for k in range(0, n, cols)]
 noir = os.path.join(a.out, "vide.png")
-subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=black:s=300x533", "-frames:v", "1", noir], check=True)
+subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=black:s=300x533,format=rgb24", "-frames:v", "1", noir], check=True)
 rangs = []
 for j, ligne in enumerate(lignes):
     ligne = ligne + [noir] * (cols - len(ligne))

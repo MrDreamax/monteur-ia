@@ -2,14 +2,14 @@
 /**
  * supermonteur : face cam -> compo HyperFrames (à lancer dans le dossier du projet, à côté de plan.json).
  *   node build.mjs --plan plan.json --out index.html
- * plan.json : da? (DA de la personne, défaut ../da/cyril.json), cam, words, duration?, keywords (mots en serif italique), numbers (chiffres derrière la tête, fg = détourage),
+ * plan.json : da? (DA de la personne, défaut : celle de l'utilisateur, ~/Documents/Brain/00-Moi/reglages/da-montage.json), cam, words, duration?, keywords (mots en serif italique), numbers (chiffres derrière la tête, fg = détourage),
  *             lists (cartons plein écran), bullets (pastilles 1-2-3), brolls (plans de coupe plein écran),
  *             inserts (images sur-mesure incrustées par-dessus la cam : {src, start, end, pos: top|center, w}),
  *             hook (ouverture : bandes noires qui s'écartent + viseur REC), bigwords (mot géant serif derrière la tête),
  *             proofs (pleins écrans preuve : curve | clock | dashboard), cta (feuille de commentaires « commente MOT »).
  * Écrit aussi cues.json (sons des nouveaux blocs) que mix.py lit tout seul.
  */
-// Zones mortes Instagram (Cyril 16/10, TOUS les montages, choix « zone organique ») : aucun texte ni élément animé
+// Zones mortes Instagram (16/10, TOUS les montages, choix « zone organique ») : aucun texte ni élément animé
 // au-dessus de 270 px (14 %, Meta Ads Guide Reels), à moins de 65 px des bords (6 %), sous 1480 px (pseudo + légende),
 // ni à droite des sous-titres là où sont les boutons (sous-titres entre 120 et 960 px). Fonds et décors peuvent déborder.
 // Contrôle après chaque montage : node scripts/zones.mjs <dossier> (0 élément attendu).
@@ -23,21 +23,41 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (
 const plan = JSON.parse(readFileSync(args.plan, "utf8"));
 
 // DA de la personne : polices + couleurs (da/<prenom>.json)
-// défaut : la DA du client de cette machine (config.json « client »), sinon Cyril, sinon l'exemple (kit client)
+// défaut : la DA du client de cette machine (« client » des réglages), sinon celle de l'utilisateur (Brain), sinon l'exemple du kit
 const DA_DEF = (() => {
-  try { const c = JSON.parse(readFileSync(join(SKILL, "config.json"), "utf8")).client;
-        if (c && existsSync(join(SKILL, "da", c + ".json"))) return join(SKILL, "da", c + ".json"); } catch (e) {}
-  return existsSync(join(SKILL, "da", "cyril.json")) ? join(SKILL, "da", "cyril.json") : join(SKILL, "da", "exemple.json");
+  const REG = join(process.env.KIT_BRAIN || join(process.env.HOME, "Documents", "Brain"), "00-Moi", "reglages");
+  let c = "";
+  try { c = JSON.parse(readFileSync(join(SKILL, "config.json"), "utf8")).client || ""; } catch (e) {}
+  try { if (!process.env.MONTEUR_CONFIG) c = JSON.parse(readFileSync(join(REG, "supermonteur.json"), "utf8")).client ?? c; } catch (e) {}
+  if (c && existsSync(join(SKILL, "da", c + ".json"))) return join(SKILL, "da", c + ".json");
+  return existsSync(join(REG, "da-montage.json")) ? join(REG, "da-montage.json") : join(SKILL, "da", "exemple.json");
 })();
-const DA = JSON.parse(readFileSync(plan.da || DA_DEF, "utf8"));
+// 25/10 (test kit 1.3, faux client) : une DA client incomplète (sans "colors" ni "fonts") faisait planter le build ;
+// on part toujours de da/exemple.json et la DA de la personne écrase champ par champ. Une case « <à remplir> » = valeur de l'exemple.
+const DA = (() => {
+  const base = existsSync(join(SKILL, "da", "exemple.json")) ? JSON.parse(readFileSync(join(SKILL, "da", "exemple.json"), "utf8")) : {};
+  const own = JSON.parse(readFileSync(plan.da || DA_DEF, "utf8"));
+  const clean = o => Object.fromEntries(Object.entries(o || {}).filter(([, v]) => !(typeof v === "string" && v.startsWith("<"))));
+  const d = { ...base, ...own, fonts: { ...clean(base.fonts), ...clean(own.fonts) }, colors: { ...clean(base.colors), ...clean(own.colors) } };
+  d.fonts.sans = d.fonts.sans || "Montserrat.ttf"; d.fonts.serif = d.fonts.serif || "InstrumentSerif-Italic.ttf";
+  d.colors.text = d.colors.text || "#FFFFFF"; d.colors.accent = d.colors.accent || d.colors.text;
+  return d;
+})();
 const C = DA.colors;
-// la DA du MONTAGE suit l'univers du RUSH (Cyril 13/10, 4/10 quand la charte a été plaquée sur un rush d'un autre univers) : plan.colors écrase la DA
+// la DA du MONTAGE suit l'univers du RUSH (13/10, 4/10 quand la charte a été plaquée sur un rush d'un autre univers) : plan.colors écrase la DA
 Object.assign(C, plan.colors || {});
+// 23/10 (cockpit v3, looks) : colors.serif = couleur des mots en serif (titre ligne 2, mots forts, mot géant) ; absent = inchangé
 mkdirSync("fonts", { recursive: true });
-// police des sous-titres à part si la DA en donne une (DA.fonts.sub ; Cyril = Montserrat, Oswald rejeté le 13/10) ; le reste (cartons, chiffres, CTA) garde DA.fonts.sans
+// police des sous-titres à part si la DA en donne une (DA.fonts.sub ; défaut Montserrat, Oswald rejeté le 13/10) ; le reste (cartons, chiffres, CTA) garde DA.fonts.sans
 DA.fonts.sub = DA.fonts.sub || DA.fonts.sans;
-for (const f of new Set([DA.fonts.sans, DA.fonts.serif, DA.fonts.sub])) if (!existsSync(join("fonts", f))) copyFileSync(join(SKILL, "fonts", f), join("fonts", f));
-const SUBSIZE = plan.subSize || DA.subSize || 52, SUBTRACK = plan.subTrack ?? DA.subTrack ?? .5;
+// 23/10 (cockpit, personnalisation) : plan.typo = { t1, t2, sub : {font, weight, size, caps, track, stretch, italic, color, scale}, shadow, align }
+// = police, graisse, taille, couleur de chaque ligne du titre et des sous-titres, choisis dans le cockpit. Absent = rendu inchangé.
+const TY = plan.typo || null;
+if (TY) DA.fonts.sub = TY.sub.font;
+for (const f of new Set([DA.fonts.sans, DA.fonts.serif, DA.fonts.sub, ...(TY ? [TY.t1.font, TY.t2.font] : [])])) if (!existsSync(join("fonts", f))) copyFileSync(join(SKILL, "fonts", f), join("fonts", f));
+const SUBSIZE = Math.round((plan.subSize || DA.subSize || 52) * (TY?.sub.scale || 1)), SUBTRACK = TY ? TY.sub.track ?? .5 : plan.subTrack ?? DA.subTrack ?? .5;
+// 22/10 (cockpit v2, reels d'essai) : plan.subMax = mots max par sous-titre (1 = mot à mot, 2 = deux mots) ; défaut 4 = inchangé
+const SUBMAX = Math.max(1, Math.min(4, plan.subMax || 4));
 const out = args.out || "index.html";
 const esc = t => String(t).replace(/[<>&]/g, "");
 const norm = t => t.toLowerCase().replace(/[«»“”"….,!?;:]/g, "").trim();
@@ -58,12 +78,13 @@ const FIX = Object.fromEntries(Object.entries(plan.fixes || {}).map(([k, v]) => 
 for (const w of W) { const k = norm(w.text); if (FIX[k] !== undefined) w.text = w.text.replace(/^[^.,!?]+/, FIX[k]); }
 const dur = Math.min(plan.duration || camDur, camDur - 0.04);
 const kw = new Set((plan.keywords || []).map(norm));
-// règle Cyril (13/10, Style Lab final) : vidéo AVEC titre-question = ni mot géant derrière la tête, ni mot fort. Sans titre : les deux sont permis.
-if (plan.title && (plan.bigwords || []).length) console.log(`titre présent : ${plan.bigwords.length} mot(s) géant(s) ignoré(s) (règle titre = ni mot géant ni mot fort)`);
-const lists = plan.lists || [], proofs = plan.proofs || [], cta = plan.cta, bigwords = plan.title ? [] : plan.bigwords || [];
+// règle (13/10, Style Lab final) : vidéo AVEC titre-question = ni mot géant derrière la tête, ni mot fort. Sans titre : les deux sont permis.
+// 21/10 (CAM20033 v1 : « dépendance / AGI, mot en gros derrière la tête » sur une vidéo AVEC titre) : le titre n'empêche
+// plus les mots géants (règle du 13/10 « titre = ni mot géant ni mot fort » assouplie) ; il coupe toujours les mots forts serif.
+const lists = plan.lists || [], proofs = plan.proofs || [], cta = plan.cta, bigwords = plan.bigwords || [];
 // style minimaliste (plan.mini, réf Creator College 16/10) : les cartons typo plein écran comptent comme des pleins écrans (anti-flash, pas de sous-titres dessous)
 const cards = (plan.mini || []).filter(m => m.type === "card");
-// ---------- 17/10 (Cyril, Tesla : « micro cut de ma tête ») : chaque début / fin de B-roll à moins de 0,35 s d'une coupe du dérush
+// ---------- 17/10 (Tesla : « micro cut de ma tête ») : chaque début / fin de B-roll à moins de 0,35 s d'une coupe du dérush
 //            (cut.segments.json à côté du plan, ou plan.segments) est calé SUR la coupe : début 0,02 s avant, fin 0,02 s après.
 //            Sinon on voit la tête 0,1-0,3 s puis un saut. ----------
 {
@@ -72,12 +93,15 @@ const cards = (plan.mini || []).filter(m => m.type === "card");
     let o = 0; const C = JSON.parse(readFileSync(sp, "utf8")).slice(0, -1).map(([a, b]) => (o += b - a));
     (plan.brolls || []).forEach(b => {
       const cs = C.find(c => Math.abs(c - b.start) < 0.35 && Math.abs(c - b.start) > 0.03), ce = C.find(c => Math.abs(c - b.end) < 0.35 && Math.abs(c - b.end) > 0.03);
-      if (cs !== undefined) { console.log(`calage coupe : B-roll ${b.start} -> ${(cs - 0.02).toFixed(2)} (coupe ${cs.toFixed(2)})`); b.start = +(cs - 0.02).toFixed(3); }
-      if (ce !== undefined) { console.log(`calage coupe : fin de B-roll ${b.end} -> ${(ce + 0.02).toFixed(2)} (coupe ${ce.toFixed(2)})`); b.end = +(ce + 0.02).toFixed(3); }
+      // 20/10 (Titanic) : 0,02 s ne suffisait pas, le Gardien (« Zéro micro-coupure ») veut la coupe à >= 0,05 s DANS le plein
+      // écran (arrondi à l'image près : à 0,02 s, la 1re image de la nouvelle prise pouvait passer). Marge = 0,07 s (2 images).
+      const M = 0.07;
+      if (cs !== undefined) { console.log(`calage coupe : B-roll ${b.start} -> ${(cs - M).toFixed(2)} (coupe ${cs.toFixed(2)})`); b.start = +(cs - M).toFixed(3); }
+      if (ce !== undefined) { console.log(`calage coupe : fin de B-roll ${b.end} -> ${(ce + M).toFixed(2)} (coupe ${ce.toFixed(2)})`); b.end = +(ce + M).toFixed(3); }
     });
   }
 }
-// ---------- garde-fou anti-flash (Cyril 13/10 : la tête visible une fraction de seconde entre deux pleins écrans = « bug pour le cerveau ») :
+// ---------- garde-fou anti-flash (13/10 : la tête visible une fraction de seconde entre deux pleins écrans = « bug pour le cerveau ») :
 //            entre deux pleins écrans, soit enchaînés direct, soit >= 1,5 s de face cam. Carton/preuve -> prolongé jusqu'au suivant ;
 //            B-roll -> raccourci (ou retiré s'il tombe sous 1,2 s). ----------
 {
@@ -85,6 +109,12 @@ const cards = (plan.mini || []).filter(m => m.type === "card");
     .sort((a, b) => a.start - b.start);
   for (let i = 0; i + 1 < blocks.length; i++) {
     const a = blocks[i], b = blocks[i + 1], g = b.start - a.end;
+    // 20/10 (« Mode difficile » v3 : 1 image de la tête entre un B-roll et un carton enchaînés, à 9,2 et 30,6 s = « ça bugue ») :
+    // deux pleins écrans collés (B-roll -> carton, carton -> B-roll, B-roll -> B-roll) se CHEVAUCHENT de 0,35 s (le temps du fondu
+    // d'entrée du second), jamais 0 s pile. (v3 : B-roll -> B-roll laissait aussi 1 image de tête à 6,6 s.)
+    // 20/10 (retour : « tu es déjà mort : il faut qu'il se cale à ma voix et qu'il ne dépasse pas ») : carton -> B-roll = le B-roll
+    // démarre 0,35 s plus tôt SOUS le carton (z 6 < 20), le carton finit pile à l'heure. Sinon le premier se prolonge sous le second.
+    if (Math.abs(g) < 0.05) { if (!a._broll && b._broll) b.start = +(a.end - 0.35).toFixed(3); else a.end = +(b.start + 0.35).toFixed(3); continue; }
     if (g <= 0 || g >= GAP) continue;
     if (!a._broll) { console.log(`anti-flash : plein écran ${a.start}-${a.end} prolongé jusqu'à ${b.start} (tête ${g.toFixed(2)} s évitée)`); a.end = b.start; }
     else if (b.start - GAP - a.start >= 1.2) { console.log(`anti-flash : B-roll ${a.start} raccourci à ${(b.start - GAP).toFixed(2)}`); a.end = +(b.start - GAP).toFixed(3); }
@@ -97,21 +127,28 @@ const cards = (plan.mini || []).filter(m => m.type === "card");
 const FULL = [...lists, ...proofs, ...cards, ...(cta ? [cta] : []), ...(plan.brolls || []).filter(b => b.nosub)];
 // 17/10 (selfie voiture, visage trop proche) : sous-titres posés AU-DESSUS de la tête (plan.subY < 760) = même place que les
 // chiffres et mots géants -> masqués pendant qu'un chiffre / mot géant est à l'écran (sinon ils se chevauchent)
-const TOPBIG = (plan.subY ?? 9999) < 760 ? [...(plan.numbers || []), ...(plan.title ? [] : plan.bigwords || []),
+const TOPBIG = (plan.subY ?? 9999) < 760 ? [...(plan.numbers || []), ...(plan.bigwords || []),
                                             ...(plan.inserts || []).filter(n => n.pos !== "center" && !n.track)] : [];
 const covered = t => FULL.some(l => t >= l.start - 0.02 && t < l.end) || TOPBIG.some(l => t >= l.start - 0.45 && t < l.end);
 // sortie douce seulement s'il reste >= 1,5 s de face cam derrière ; sinon coupe franche enchaînée au plein écran suivant (anti-flash)
 const FS = [...lists, ...proofs, ...cards, ...(cta ? [cta] : []), ...(plan.brolls || [])];
 const SOFT = (b, d) => Math.min(dur, ...FS.filter(x => x.start >= b - 0.02).map(x => x.start)) - b >= 1.5 ? d : 0;
-// sous-titres dans la zone la plus lisible (sombre + unie, ex. t-shirt noir), calculée sur le rush (Cyril 13/10)
+// sous-titres dans la zone la plus lisible (sombre + unie, ex. t-shirt noir), calculée sur le rush (13/10)
 let SUBY = plan.subY;
 if (SUBY == null) { try { SUBY = +execFileSync("python3", [join(SKILL, "scripts", "subzone.py"), plan.cam]).toString().trim(); } catch { SUBY = 1150; } console.log(`sous-titres à y=${SUBY}px`); }
-// zones mortes Insta (Cyril 16/10) : encre d'un sous-titre 52 px = de +8 à +53 px sous son haut ; mot fort serif 132 px = de +16 à +143 px
+// zones mortes Insta (16/10) : encre d'un sous-titre 52 px = de +8 à +53 px sous son haut ; mot fort serif 132 px = de +16 à +143 px
 // (jambages g, p, j compris), mesuré au navigateur le 16/10. Rien sous 1480 px, rien au-dessus de 270 px.
 const SUB_MAX = 1480 - Math.round(53 * SUBSIZE / 52), KW = plan.kwSize || 132, EMW = {};
-const emLines = t => { if (EMW[t] == null) { try { EMW[t] = +execFileSync("python3", ["-c", "import sys;from PIL import ImageFont;print(ImageFont.truetype(sys.argv[1],int(sys.argv[3])).getlength(sys.argv[2]))", join("fonts", DA.fonts.serif), t, String(KW)]).toString(); } catch { EMW[t] = t.length * 0.42 * KW; } }
-  return Math.max(1, Math.ceil(EMW[t] * 1.03 / 840)); };
-const subY = (y, em) => Math.max(270, Math.min(y, em ? 1480 - Math.round(143 * KW / 132) - Math.round((emLines(em) - 1) * 1.05 * KW) : SUB_MAX));
+// 23/10 (IMG_6850, Gardien « zones mortes » : « personal » en mot fort à 1484 px) : les lignes se comptaient sur le SEUL mot fort ;
+// les mots normaux du même sous-titre (« conçu ta ») le poussaient sur une 2e ligne, 4 px dans la zone morte. On mesure tout le
+// sous-titre (mot fort en serif 132 px + mots normaux dans la police des sous-titres) et le mot fort est supposé sur la dernière ligne.
+const largeur = (t, f, sz) => { const k = f + "|" + sz + "|" + t; if (EMW[k] == null) { try { EMW[k] = +execFileSync("python3", ["-c", "import sys;from PIL import ImageFont;print(ImageFont.truetype(sys.argv[1],int(sys.argv[3])).getlength(sys.argv[2]))", join("fonts", f), t, String(sz)]).toString(); } catch { EMW[k] = t.length * 0.42 * sz; } } return EMW[k]; };
+const emLines = (t, normal = "") => Math.max(1, Math.ceil((largeur(t, DA.fonts.serif, KW) + (normal ? largeur(normal + " ", DA.fonts.sub, SUBSIZE) : 0)) * 1.03 / 840));
+// 23/10 (IMG_6850, style « Fin + gras ») : +143 px a été mesuré le 16/10 dans une ligne de sous-titres en Montserrat 52 px ; une
+// autre police de sous-titres (Outfit 56 px ici) descend la ligne de base du mot fort (+4 px mesurés par le Gardien). Avec un style
+// perso (plan.typo), marge de 12 % de la taille des sous-titres.
+const EM_MARGE = TY ? Math.round(0.12 * SUBSIZE) : 0;
+const subY = (y, em, normal = "") => Math.max(270, Math.min(y, em ? 1480 - Math.round(143 * KW / 132) - EM_MARGE - Math.round((emLines(em, normal) - 1) * 1.05 * KW) : SUB_MAX));
 if (SUBY > SUB_MAX) { console.log(`sous-titres remontés de ${SUBY} à ${SUB_MAX} px (zone morte du bas)`); SUBY = SUB_MAX; }
 const ACC = C.accent || "#4f7cff";   // 1 seul accent (guide OPUS : 2 neutres + 1 accent)
 
@@ -127,7 +164,7 @@ const F = (sel, from, to, t) => { ops += `tl.fromTo("${sel}",${from},{${to},imme
 const H = (sel, state, t) => { ops += `tl.fromTo("${sel}",${state},Object.assign(${state},{duration:${Math.max(+t, 0.001).toFixed(3)},immediateRender:false}),0);`; };
 // compteur qui défile (texte remplacé à chaque image), format français 12 400
 const COUNT = (id, to, t, d, dec = 0, ease = "power2.out") => { ops += `(function(){var o={v:0},el=document.getElementById("${id}");tl.fromTo(o,{v:0},{v:${to},duration:${d.toFixed(3)},ease:"${ease}",immediateRender:false,onUpdate:function(){el.textContent=o.v.toFixed(${dec}).replace(".",",").replace(/\\B(?=(\\d{3})+(?!\\d))/g,"\\u202f")}},${t.toFixed(3)});})();`; };
-// coup de zoom d'impact : COUPÉ (Cyril 13/10 : les zooms brusques font saccader, « ça sort de la vidéo »)
+// coup de zoom d'impact : COUPÉ (13/10 : les zooms brusques font saccader, « ça sort de la vidéo »)
 const PUNCH = () => {};
 
 // ---------- caméra : zoom LENT et doux seulement quand l'idée change (fin de phrase + au moins 5 s depuis le dernier),
@@ -139,7 +176,24 @@ const ZG = plan.zoomGap || DA.zoomGap || [5, 8];
 W.forEach((w, i) => { if (i && /[.!?]$/.test(W[i - 1].text) && w.t - cuts[cuts.length - 1] > (w.t < 7 ? ZG[0] : ZG[1])) cuts.push(+(w.t - 0.3).toFixed(3)); });
 const lvl = [1.0, 1.07], DRIFT = 1.015, MOVE = 1.4;
 // plan.zoom = false (famille « À plusieurs », podcast.py) : pas de zoom, c'est l'alternance split / plein écran qui donne le rythme
-if (plan.zoom !== false) cuts.forEach((t, i) => {
+// 23/10 cockpit étape 3 « moments forts » : plan.zooms = [{start, end}] = un zoom lent et doux sur CE moment (entrée 0,9 s, dérive, sortie 0,9 s),
+// à la place des zooms automatiques. Absent = comme avant.
+const ZOOMS = plan.zooms || [];
+ZOOMS.forEach(z => {
+  // 23/10 (retour n7 « zoom in / zoom out ») : dir "out" = zoom arrière. Jamais de saut de cadre : la caméra s'avance
+  // doucement (×1,10) dans la seconde d'avant, puis recule d'un coup franc mais lissé sur le moment (0,7 s).
+  if (z.dir === "out") {
+    const pre = Math.min(1.4, Math.max(0.6, z.start - 0.2));
+    ops += `tl.fromTo("#camwrap",{scale:1},{scale:1.1,duration:${pre.toFixed(3)},ease:"sine.inOut",force3D:true,immediateRender:false},${(z.start - pre).toFixed(3)});`;
+    ops += `tl.fromTo("#camwrap",{scale:1.1},{scale:1,duration:.7,ease:"power2.out",force3D:true,immediateRender:false},${z.start.toFixed(3)});`;
+    return;
+  }
+  const d = Math.max(2, z.end - z.start), mv = Math.min(0.9, d / 3);
+  ops += `tl.fromTo("#camwrap",{scale:1},{scale:1.08,duration:${mv.toFixed(3)},ease:"sine.inOut",force3D:true,immediateRender:false},${z.start.toFixed(3)});`;
+  ops += `tl.fromTo("#camwrap",{scale:1.08},{scale:1.095,duration:${(d - 2 * mv).toFixed(3)},ease:"none",force3D:true,immediateRender:false},${(z.start + mv).toFixed(3)});`;
+  ops += `tl.fromTo("#camwrap",{scale:1.095},{scale:1,duration:${mv.toFixed(3)},ease:"sine.inOut",force3D:true,immediateRender:false},${(z.start + d - mv).toFixed(3)});`;
+});
+if (plan.zoom !== false && !ZOOMS.length) cuts.forEach((t, i) => {
   const d = (cuts[i + 1] ?? dur) - t, s = lvl[i % 2], from = i ? lvl[(i - 1) % 2] * DRIFT : s, mv = i ? Math.min(MOVE, d / 2) : 0;
   if (mv) ops += `tl.fromTo("#camwrap",{scale:${from.toFixed(4)}},{scale:${s},duration:${mv.toFixed(3)},ease:"sine.inOut",force3D:true,immediateRender:false},${t.toFixed(3)});`;
   ops += `tl.fromTo("#camwrap",{scale:${s}},{scale:${(s * DRIFT).toFixed(4)},duration:${(d - mv).toFixed(3)},ease:"none",force3D:true,immediateRender:false},${(t + mv).toFixed(3)});`;
@@ -151,7 +205,7 @@ if (plan.zoom !== false) cuts.forEach((t, i) => {
 // le suffixe arrive APRÈS le compte (son propre temps). Durée 1,2-2 s si la place le permet : en dessous de 0,8 s, ça se lit comme un flash.
 (plan.numbers || []).forEach((n, i) => {
   const cd = n.count ? Math.max(0.6, Math.min(2.0, n.end - n.start - 0.6)) : 0, nc = String(n.count ?? "").length;
-  camLayers += `<div class="num" id="n${i}"><span id="n${i}v"${n.count ? ` class="nct" style="min-width:calc(${nc}ch - ${nc * 12}px)"` : ""}>${esc(n.text)}</span>${n.suffix ? `<span class="suf" id="n${i}s">${esc(n.suffix)}</span>` : ""}</div>`;
+  camLayers += `<div class="num" id="n${i}"${n.size ? ` style="font-size:${n.size}px;white-space:nowrap"` : ""}><span id="n${i}v"${n.count ? ` class="nct" style="min-width:calc(${nc}ch - ${nc * 12}px)"` : ""}>${esc(n.text)}</span>${n.suffix ? `<span class="suf" id="n${i}s">${esc(n.suffix)}</span>` : ""}</div>`;
   V(`#n${i}`, n.start, n.end, n.count ? `{filter:"blur(24px)"}` : `{scale:1.18,filter:"blur(24px)"}`, n.count ? `{filter:"blur(0px)",ease:"power3.out"}` : `{scale:1,filter:"blur(0px)",ease:"power3.out"}`, 0.32, SOFT(n.end, 0.25));
   if (n.count) {
     ops += `(function(){var o={v:0},el=document.getElementById("n${i}v");tl.fromTo(o,{v:0},{v:${n.count},duration:${cd.toFixed(3)},ease:"power3.out",immediateRender:false,onUpdate:function(){el.textContent=Math.round(o.v)}},${n.start.toFixed(3)});})();`;
@@ -161,7 +215,7 @@ if (plan.zoom !== false) cuts.forEach((t, i) => {
   if (n.fg) camLayers += `<video id="fg${i}" class="clip fg" src="${n.fg}" muted playsinline preload="auto" data-start="${n.fgStart.toFixed(3)}" data-duration="${(n.fgEnd - n.fgStart).toFixed(3)}" data-track-index="${2 + i}" data-has-audio="false"></video>`;
 });
 
-// ---------- MOTION DESIGN derrière la personne détourée (famille « Toi + une source », source.py -> plan.motion, Cyril 14/10) ----------
+// ---------- MOTION DESIGN derrière la personne détourée (famille « Toi + une source », source.py -> plan.motion, 14/10) ----------
 //            univers = celui de la vidéo (pièce sombre, LED bleue), zéro visage, mouvements expo sans rebond, la personne repasse devant.
 const BADGE = (id, sz) => `<svg id="${id}" class="mo-badge" width="${sz}" height="${sz}" viewBox="0 0 40 40"><path fill="${ACC}" d="M20 1.5l4.3 3.1 5.3-.3 1.6 5 4.4 3-1.6 5.1 1.6 5.1-4.4 3-1.6 5-5.3-.3L20 38.5l-4.3-3.1-5.3.3-1.6-5-4.4-3 1.6-5.1-1.6-5.1 4.4-3 1.6-5 5.3.3z"/><path fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" d="M13 20.5l4.6 4.6L27.5 15"/></svg>`;
 const MOTION = {
@@ -315,7 +369,7 @@ const MOTION = {
       ${m.label ? `<div class="mo-rl" id="${id}l">${esc(m.label)}</div>` : ""}</div></div>`;
     V(`#${id}`, S, E, "{}", "{}", 0.2);
     F(`#${id}g`, `{scale:.9,opacity:0,filter:"blur(12px)"}`, `scale:1,opacity:1,filter:"blur(0px)",duration:.6,ease:"expo.out"`, S);
-    F(`#${id}w`, `{scale:1}`, `scale:1.04,duration:${(E - S).toFixed(3)},ease:"none"`, S);   // dérive lente : jamais figé (règle Cyril)
+    F(`#${id}w`, `{scale:1}`, `scale:1.04,duration:${(E - S).toFixed(3)},ease:"none"`, S);   // dérive lente : jamais figé (règle)
     F(`#${id}r`, "{strokeDashoffset:1}", `strokeDashoffset:${(1 - v / 100).toFixed(3)},duration:${cd.toFixed(3)},ease:"power3.out"`, S + 0.3);
     F(`#${id}n`, "{scale:.55}", `scale:1,duration:${cd.toFixed(3)},ease:"power3.out"`, S + 0.3);
     COUNT(`${id}v`, m.count ?? v, S + 0.3, cd, m.decimals || 0, "power3.out");
@@ -348,7 +402,7 @@ const MOTION = {
     }
   },
 };
-// zones mortes Insta (Cyril 16/10) : chaque bloc a été dessiné à partir de ~150 px. Boîte [haut, bas] mesurée le 16/10 sur tout le bloc
+// zones mortes Insta (16/10) : chaque bloc a été dessiné à partir de ~150 px. Boîte [haut, bas] mesurée le 16/10 sur tout le bloc
 // (dérive comprise) ; on le recale à 280 px. Plancher = 890 px (10 px d'air au-dessus des sous-titres du green screen, y 900) ou son bas
 // d'origine s'il était plus bas (dm, chart, bars : jamais plus bas qu'avant). Simple descente s'il y a la place, sinon descente + réduction
 // proportionnelle (dm, chart -16 %, bars -17 %, profile -16 %, ring -12 %). Le fond et la LED débordent toujours.
@@ -374,7 +428,7 @@ const MO_TOP = 280, MO_FLOOR = 890;
 bigwords.forEach((w, i) => {
   const ch = [...String(w.text)], mid = (ch.length - 1) / 2, d = w.end - w.start;
   // taille = le mot tient dans 820 px (mesure exacte de la police si Pillow est là, sinon 0,47 em par lettre) : avec le zoom
-  // d'impact il reste entre les marges de 65 px (zones mortes Insta, Cyril 16/10 ; avant 900 px = « dangereux » mordait les bords)
+  // d'impact il reste entre les marges de 65 px (zones mortes Insta, 16/10 ; avant 900 px = « dangereux » mordait les bords)
   const sans = w.font === "sans";
   let em = 0.47 * ch.length;
   try { em = +execFileSync("python3", ["-c", "import sys;from PIL import ImageFont;f=ImageFont.truetype(sys.argv[1],1000)\ntry: f.set_variation_by_axes([800])\nexcept Exception: pass\nprint(f.getlength(sys.argv[2])/1000)", join("fonts", sans ? DA.fonts.sans : DA.fonts.serif), sans ? String(w.text).toUpperCase() : String(w.text)]).toString() * 1.06; } catch {}
@@ -383,14 +437,20 @@ bigwords.forEach((w, i) => {
   // "font": "sans" = police des sous-titres en capitales grasses (comme son monteur, « VISIBILITÉ » derrière la tête) ; défaut serif italique
   const sty = sans ? `font-family:Mont;font-style:normal;font-weight:800;text-transform:uppercase;letter-spacing:2px;` : "";
   // DERRIÈRE la tête (Style Lab R4, 13/10) : le bas du mot passe sous le haut des cheveux (headtop.py) ; avant, 170 px fixe = le mot flottait au-dessus
-  const fsz = fs;   // sans : mesuré dans sa propre police (avant : 0,62 x la taille serif, pas mesuré = débordait)
-  let top = w.top;
+  let fsz = fs;   // sans : mesuré dans sa propre police (avant : 0,62 x la taille serif, pas mesuré = débordait)
+  let top = w.top, devant = false;
   if (top == null) {
     try { const ht = +execFileSync("python3", [join(SKILL, "scripts", "headtop.py"), plan.cam, String(w.start), String(w.end)], { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
-          top = Math.max(270, Math.round(ht - 0.7 * fsz)); console.log(`mot géant « ${w.text} » : haut de la tête ${ht}px -> top ${top}px`); }
-    catch { top = 270; }
+          // 21/10 (CAM20033 v2 : « AGI » en 330 px caché à moitié par la tête) : entre la zone morte (270 px) et le haut de la tête,
+          // la place est parfois courte ; un mot court montait à 330 px et la tête mangeait le bas des lettres. Taille plafonnée pour
+          // que ~70 % de la hauteur des lettres reste au-dessus des cheveux (sauf taille imposée).
+          if (!w.size) fsz = Math.min(fsz, Math.max(150, Math.round((ht - 270) / 0.7)));
+          top = Math.max(270, Math.round(ht - 0.7 * fsz)); console.log(`mot géant « ${w.text} » : haut de la tête ${ht}px -> top ${top}px, ${fsz}px`); }
+    // 23/10 (retour n2, « sans téléprompteur » : la caméra montre le décor, pas de tête) : avant, top 270 px en dur, mot beige
+    // illisible sur la boîte à lumière. Sans tête, le mot va au milieu de l'écran avec une ombre forte (lisible sur tout fond).
+    catch { top = 760; devant = true; console.log(`mot géant « ${w.text} » : pas de tête à l'image -> devant, top ${top}px, ${fsz}px`); }
   }
-  camLayers += `<div class="bigw" id="w${i}" style="${sty}font-size:${fsz}px;top:${top}px"><div class="echo" id="w${i}e2">${esc(w.text)}</div><div class="echo" id="w${i}e1">${esc(w.text)}</div><div class="bwt">${letters}</div></div>`;
+  camLayers += `<div class="bigw${devant ? " devant" : ""}" id="w${i}" style="${sty}font-size:${fsz}px;top:${top}px"><div class="echo" id="w${i}e2">${esc(w.text)}</div><div class="echo" id="w${i}e1">${esc(w.text)}</div><div class="bwt">${letters}</div></div>`;
   V(`#w${i}`, w.start, w.end, "{}", "{}", 0.001);
   ch.forEach((_, k) => {
     const t = w.start + Math.abs(k - mid) * 0.05;
@@ -404,15 +464,15 @@ bigwords.forEach((w, i) => {
   if (w.fg) camLayers += `<video id="fgw${i}" class="clip fg" src="${w.fg}" muted playsinline preload="auto" data-start="${w.fgStart.toFixed(3)}" data-duration="${(w.fgEnd - w.fgStart).toFixed(3)}" data-track-index="${30 + i}" data-has-audio="false"></video>`;
 });
 
-// ---------- ouverture du hook : viseur REC + impact grave (bandes noires seulement si bars: true, Cyril n'en veut pas) ----------
+// ---------- ouverture du hook : viseur REC + impact grave (bandes noires seulement si bars: true, l'utilisateur n'en veut pas) ----------
 if (plan.hook) {
   const hk = plan.hook, f = hk.focus ?? 750, s = hk.slit ?? 380;
-  if (hk.bars === true) {   // bandes noires : REJETÉES par Cyril le 13/10, coupées par défaut
+  if (hk.bars === true) {   // bandes noires : REJETÉES par l'utilisateur le 13/10, coupées par défaut
     layers += `<div class="bar" id="barT" style="top:0;height:${f - s / 2}px"></div><div class="bar" id="barB" style="top:${f + s / 2}px;bottom:0"></div>`;
     F("#barT", "{yPercent:0}", `yPercent:-100,duration:.75,ease:"expo.inOut"`, 0.12);
     F("#barB", "{yPercent:0}", `yPercent:100,duration:.75,ease:"expo.inOut"`, 0.12);
   }
-  if (hk.rec === true) {   // viseur REC : seulement si la vidéo parle de tournage (Cyril 13/10 : « REC, ça n'a rien à voir »)
+  if (hk.rec === true) {   // viseur REC : seulement si la vidéo parle de tournage (13/10 : « REC, ça n'a rien à voir »)
     const re = hk.recEnd ?? 1.6;
     layers += `<div id="rec"><i class="cn c1"></i><i class="cn c2"></i><i class="cn c3"></i><i class="cn c4"></i><div class="rlab"><b id="rdot"></b>REC</div><div class="rtc" id="rtc">00:00:00</div></div>`;
     V("#rec", 0, re, "{}", "{}", 0.001);
@@ -424,7 +484,7 @@ if (plan.hook) {
 }
 
 // ---------- cartons liste plein écran ----------
-// zones mortes Insta (Cyril 16/10) : une page (2 colonnes) doit tenir entre 540 px et 1480 px. Taille du texte = la plus grande
+// zones mortes Insta (16/10) : une page (2 colonnes) doit tenir entre 540 px et 1480 px. Taille du texte = la plus grande
 // (43 px max, le style validé) pour laquelle la plus haute colonne tient dans 925 px (15 px de marge pour la montée d'entrée),
 // mesurée avec la vraie police (retours à la ligne compris). 18 lignes longues par page débordaient sous les boutons de l'appli.
 const LIST_FIT = `import sys,json
@@ -476,10 +536,17 @@ lists.forEach((l, li) => {
 
 // ---------- B-rolls plein écran (au-dessus de la cam, sous les sous-titres) : légère poussée, entrée nette ----------
 (plan.brolls || []).forEach((b, i) => {
+  // 21/10 (CAM20033, Gardien final : 2 « plans éclair » de 0,03 s à 26,63 et 41,63 s) : un début de B-roll entre deux images
+  // (26,633 au lieu de 26,6333) tombait au milieu de l'entrée de 0,001 s = 1 image à 33 % d'opacité (fantôme tête + B-roll).
+  // Début calé sur la grille des images (juste avant) : le B-roll est entier dès sa 1re image.
+  b.start = Math.max(0, +(Math.round(b.start * 30) / 30 - 0.002).toFixed(4));
   const d = (b.end - b.start).toFixed(3), img = /\.(jpe?g|png|webp)$/i.test(b.src);
   layers += img
     ? `<div class="broll" id="b${i}"><div class="bw" id="b${i}m"><img class="bm" src="${esc(b.src)}"/></div></div>`
-    : `<div class="broll" id="b${i}"><div class="bw" id="b${i}m"><video id="b${i}v" class="clip bm" src="${esc(b.src)}" muted playsinline preload="auto" data-start="${b.start.toFixed(3)}" data-duration="${d}" data-track-index="${10 + i}" data-has-audio="false"></video></div></div>`;
+    // 23/10 (cockpit, Gardien : « plan éclair » de 0,03 s à 17,53 et 31,73 s = 1 image NOIRE) : la vidéo s'arrêtait 1 image avant
+    // son cadre (fin hors de la grille des images) et le fond noir du cadre passait. La vidéo dure 0,1 s de plus que le cadre
+    // (prep garde 0,9 s de marge) : c'est toujours le cadre qui disparaît, jamais la vidéo avant lui.
+    : `<div class="broll" id="b${i}"><div class="bw" id="b${i}m"><video id="b${i}v" class="clip bm" src="${esc(b.src)}" muted playsinline preload="auto" data-start="${b.start.toFixed(3)}" data-duration="${(+d + 0.1).toFixed(3)}" data-track-index="${10 + i}" data-has-audio="false"></video></div></div>`;
   V(`#b${i}`, b.start, b.end, "{}", "{}", 0.001);
   ops += `tl.fromTo("#b${i}m",{scale:1.12},{scale:1.02,duration:${d},ease:"power2.out",force3D:true,immediateRender:false},${b.start.toFixed(3)});`;
 });
@@ -618,7 +685,7 @@ proofs.forEach((p, i) => {
 // ---------- CTA « commente MOT » : une vraie feuille de commentaires monte du bas, le mot se tape lettre par lettre
 //            (clavier qui s'allume), puis se publie en haut de la liste. Champ de saisie au-dessus des 20 % du bas cachés par l'appli ----------
 if (cta) {
-  // zones mortes Insta (Cyril 16/10) : touches, champ et commentaires entre 270 et 1480 px, à 65 px des bords ; le fond de la feuille et
+  // zones mortes Insta (16/10) : touches, champ et commentaires entre 270 et 1480 px, à 65 px des bords ; le fond de la feuille et
   // la plaque grise du clavier descendent jusqu'en bas (décor). Le contenu monte dans un cache qui s'arrête à 1480 px.
   const WD = String(cta.word || "GUIDE").toUpperCase(), T = cta.start, rowH = 130;
   const com = cta.comments || [["julie.coach", WD, "2 min"], ["marc_formation", WD, "4 min"], ["sandra.business", `${WD} stp`, "9 min"], ["thomas.entrepreneur", WD, "14 min"]];
@@ -657,7 +724,7 @@ if (plan.bullets) {
   b.at.forEach((t, k) => ops += `tl.fromTo("#d${k}",{opacity:.25,scale:.85,backgroundColor:"rgba(255,255,255,0)"},{opacity:1,scale:1,backgroundColor:"rgba(255,255,255,.14)",duration:.25,ease:"power3.out",immediateRender:false},${t.toFixed(3)});`);
 }
 
-// ---------- sous-titres (règles Style Lab 13/10, ~/Documents/Stratosphere/style-lab/STYLE.md) : Montserrat 700 blanc 52 px, 1-3 mots, majuscules ;
+// ---------- sous-titres (règles Style Lab 13/10, <dossier>/style-lab/STYLE.md) : Montserrat 700 blanc 52 px, 1-3 mots, majuscules ;
 //            mot fort = serif italique blanc 132 px, SEUL à l'écran, groupe de 1-3 mots ; entrée fondu + petite montée ; hauteur = subzone.py (sous le col) ----------
 // un bloc ne finit jamais sur un petit mot (« du », « pour »...) : il passe au bloc suivant
 const SMALL = new Set(["du","de","des","la","le","les","un","une","et","pour","sur","à","ta","tes","ce","cette","ces","il","on","tu","je","que","qu'à","c'est","t'as","t'es","avec","parce","plus","dès"]);
@@ -672,7 +739,7 @@ const openEnd = j => isCarry(norm(W[j].text)) && !/[.,!?]$/.test(W[j].text);   /
 // mots forts = mots OU groupes de 1 à 3 mots (« badge bleu »), Style Lab R2 13/10 : chaque mot porte l'id de sa phrase (-1 = normal)
 // élision ignorée pour reconnaître le mot (« l'arnaque » = arnaque), le sous-titre garde « l'arnaque »
 const normK = s => norm(s).replace(/^(?:l|d|j|t|s|c|n|m|qu)['’]/, "");
-// règle Style Lab R5 (Cyril 13/10) : vidéo AVEC titre-question = AUCUN mot fort dans les sous-titres, sinon ça fait trop. Titre OU mots forts, jamais les deux.
+// règle Style Lab R5 (13/10) : vidéo AVEC titre-question = AUCUN mot fort dans les sous-titres, sinon ça fait trop. Titre OU mots forts, jamais les deux.
 if (plan.title && (plan.keywords || []).length) console.log(`titre présent : ${plan.keywords.length} mots forts ignorés (règle titre OU mot fort)`);
 const KWP = (plan.title ? [] : plan.keywords || []).map(k => String(k).split(/\s+/).map(normK).filter(Boolean)).filter(p => p.length);
 // nom propre (17/10, voix off Aristote : « aristote » en minuscule) : un mot fort écrit avec une majuscule dans plan.keywords la garde
@@ -681,6 +748,13 @@ const PROPER = new Set((plan.keywords || []).flatMap(k => String(k).split(/\s+/)
 const kwCase = t => /[a-zà-ÿ][A-Z]/.test(t) ? t : PROPER.has(normK(t)) ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : t.toLowerCase();
 const kwOf = W.map(() => -1);
 W.forEach((_, i) => KWP.forEach((ph, p) => { if (kwOf[i] < 0 && ph.every((s, k) => W[i + k] && kwOf[i + k] < 0 && normK(W[i + k].text) === s)) ph.forEach((_, k) => kwOf[i + k] = p * 1000 + i); }));
+// 23/10 cockpit (retour n7 « mot géant dans le sous-titrage normal ») : plan.subwords = [{text, start, end}] = CE mot, à CE moment,
+// sort en géant (serif des mots forts) dans la ligne des sous-titres. Marche aussi avec un titre (≠ keywords, ignorés s'il y a un titre).
+(plan.subwords || []).forEach((sw, p) => {
+  const toks = String(sw.text).split(/\s+/).map(normK).filter(Boolean);
+  const i = W.findIndex((w, x) => w.t >= sw.start - 0.15 && w.t <= sw.end + 0.1 && toks.every((s, k) => W[x + k] && normK(W[x + k].text.replace(/[.,!?]$/, "")) === s));
+  if (i >= 0) toks.forEach((_, k) => { kwOf[i + k] = 900000 + p * 1000 + i; }); else console.log(`mot dans le sous-titre « ${sw.text} » introuvable vers ${sw.start} s`);
+});
 const kStart = i => kwOf[i] >= 0 && (i === 0 || kwOf[i - 1] !== kwOf[i]);
 const kIn = i => kwOf[i] >= 0 && i > 0 && kwOf[i - 1] === kwOf[i];
 const kEnd = i => kwOf[i] >= 0 && kwOf[i + 1] !== kwOf[i];
@@ -688,19 +762,27 @@ const kEnd = i => kwOf[i] >= 0 && kwOf[i + 1] !== kwOf[i];
 // Coût d'un bloc : 1 (moins de blocs) ; > 16 car. +3 (max 18, 4 mots) ; mot seul +2,5 (+0,5 si long) ; finit sur un petit mot +6,
 // sur un pronom / adjectif / « très » +3 (sauf « ET QUE », « PARCE QUE ») ; pause > 0,25 s dans le bloc +4 (+1 après un mot CARRY).
 const LINK = new Set(["et","parce","alors","pendant","tandis","ainsi","bien","dès","avant","après","sans","sauf"]);
+// 22/10 (IMG_6798 : « SUR LES MOTS / LOURDS QUI ONT », « POIDS ET LES MOTS / LOURDS ») : un CONCEPT de la vidéo ne se coupe jamais
+// en deux sous-titres. Concept = 2 mots qui se suivent, ni petits mots ni pronoms (CARRY), et qui reviennent au moins 2 fois
+// dans la transcription (« mots lourds » x3). Couper entre les deux = +8 (plus cher qu'un bloc qui finit sur « les »).
+const cleanW = j => normK(String(W[j].text).replace(/[.,!?;:…]+$/, ""));
+const pairKey = j => W[j + 1] && !/[.,!?;:…]$/.test(W[j].text) && !isCarry(cleanW(j)) && !isCarry(cleanW(j + 1)) && cleanW(j).length > 2 && cleanW(j + 1).length > 2 ? cleanW(j) + " " + cleanW(j + 1) : "";
+const PAIRN = {}; W.forEach((_, j) => { const k = pairKey(j); if (k) PAIRN[k] = (PAIRN[k] || 0) + 1; });
+const conceptAfter = j => { const k = pairKey(j); return k && PAIRN[k] >= 2; };
 const blockCost = (a, b, last) => {
   const n = b - a + 1, L = W.slice(a, b + 1).map(w => w.text).join(" ").length;
-  if (n > 4 || (L > 18 && n > 1)) return Infinity;
+  if (n > SUBMAX || (L > 18 && n > 1)) return Infinity;
   let c = 1 + (L > 16 ? 3 : 0);
   if (n === 1) c += W[a].text.length >= 9 ? 0.5 : 2.5;
   const e = norm(W[b].text);
   if (!last && !/[.,!?]$/.test(W[b].text) && !(/^qu/.test(e) && n === 2 && LINK.has(norm(W[a].text)))) c += SMALL.has(e) ? 6 : isCarry(e) ? 3 : 0;
   for (let j = a; j < b; j++) if (W[j + 1].t - W[j].e > .25) c += openEnd(j) ? 1 : 4;
+  if (!last && conceptAfter(b)) c += 8;
   return c;
 };
 const splitBest = ids => {
   const N = ids.length, best = Array(N + 1).fill(Infinity), from = Array(N + 1).fill(0); best[0] = 0;
-  for (let k = 1; k <= N; k++) for (let s = Math.max(0, k - 4); s < k; s++) {
+  for (let k = 1; k <= N; k++) for (let s = Math.max(0, k - SUBMAX); s < k; s++) {
     const c = best[s] + blockCost(ids[s], ids[k - 1], k === N);
     if (c < best[k]) { best[k] = c; from[k] = s; }
   }
@@ -723,7 +805,7 @@ groups = groups.flatMap(gr => { const out = []; let run = []; gr.forEach(j => { 
 groups = groups.reduce((acc, gr, gi, all) => {
   const prev = acc.at(-1), txt = ws => ws.map(j => W[j].text).join(" "), nxt = all[gi + 1];
   const small = nxt && kwOf[nxt[0]] >= 0 && gr.every(j => kwOf[j] < 0 && SMALL.has(norm(W[j].text)));
-  if (small && prev && kwOf[prev[0]] < 0 && !/[.,!?]$/.test(W[prev.at(-1)].text) && txt([...prev, ...gr]).length <= 18) prev.push(...gr); else acc.push(gr);
+  if (small && prev && kwOf[prev[0]] < 0 && !/[.,!?]$/.test(W[prev.at(-1)].text) && txt([...prev, ...gr]).length <= 18 && prev.length + gr.length <= SUBMAX) prev.push(...gr); else acc.push(gr);
   return acc;
 }, []);
 // règle apprise (réf 12/10) : un chiffre ou un mot géant à l'écran sort du sous-titre (« DONNE-MOI » seul, pas « DONNE-MOI 30 »)
@@ -738,7 +820,7 @@ groups.forEach((grp, gi) => {
   if (covered(a)) return;
   grp = grp.filter(j => !onScreen(j));
   if (!grp.length) return;
-  const html = grp.map(j => { const t = W[j].text.replace(/[.,!?]$/, ""); return kwOf[j] >= 0 ? `<em>${esc(kwCase(t))}</em>` : esc(t.toUpperCase()); }).join(" ");
+  const html = grp.map(j => { const t = W[j].text.replace(/[.,!?]$/, ""); return kwOf[j] >= 0 ? `<em>${esc(kwCase(t))}</em>` : esc(TY && TY.sub.caps === false ? t : t.toUpperCase()); }).join(" ");
   const emTxt = grp.filter(j => kwOf[j] >= 0).map(j => kwCase(W[j].text.replace(/[.,!?]$/, ""))).join(" ");
   const bEnd = Math.min(b, ...FULL.filter(l => l.start > a).map(l => l.start));
   // plan.subYAt (podcast.py) : hauteur par plage (jonction du split / col en plein écran). Un bloc à cheval sur un changement
@@ -750,7 +832,7 @@ groups.forEach((grp, gi) => {
     const p1 = pts[k + 1];
     if (p1 - p0 < 0.25 && pts.length > 2) return;
     const zone = ZS.find(z => p0 >= z.start - 0.02 && p0 < z.end), id = `c${gi}${k ? "_" + k : ""}`;
-    const y0 = zone ? zone.y : SUBY, y = subY(y0, emTxt);
+    const y0 = zone ? zone.y : SUBY, y = subY(y0, emTxt, emTxt ? grp.filter(j => kwOf[j] < 0).map(j => W[j].text.replace(/[.,!?]$/, "")).map(t => TY && TY.sub.caps === false ? t : t.toUpperCase()).join(" ") : "");
     if (y !== y0) console.log(`sous-titre ${gi} « ${emTxt || W[grp[0]].text} » : y ${y0} -> ${y} (zones mortes)`);
     layers += `<div class="cap${zone && zone.light ? " onlight" : ""}" id="${id}"${zone || y !== y0 ? ` style="top:${y}px"` : ""}>${html}</div>`;
     CAPT.push([p0, p1]);
@@ -761,10 +843,26 @@ groups.forEach((grp, gi) => {
 
 // ---------- titre-question en haut pendant le hook (Style Lab R4, 13/10) : 2 lignes (petites MAJUSCULES + serif italique) sur un voile sombre,
 //            fondu + petite montée. plan.title = {l1: "Le badge bleu Meta", l2: "une arnaque ?", start: 0, end: 4, top: 280} ----------
+// 21/10 (CAM20033 v1 : « dans le titre, ne mets jamais de virgule ou de points, et deux petits points aussi ») :
+// virgules, points, points de suspension, deux-points et points-virgules retirés du titre (le « ? » d'un titre-question reste).
+const TP = t => String(t || "").replace(/\s*[,.;:…]+/g, "").replace(/\s{2,}/g, " ").trim();
+// 23/10 (Cyril : « jamais trois lignes ») : chaque ligne du titre reste sur UNE ligne, sa taille baisse jusqu'à tenir dans 940 px
+// (x 70-1010, zone interdite des côtés = 65 px). Mesure Pillow avec la graisse et la largeur (axes variables) de la police.
+const MESURE = "import sys\nfrom PIL import ImageFont\nf=ImageFont.truetype(sys.argv[1],1000)\ntry:\n v=[]\n for a in f.get_variation_axes():\n  n=a['name'];n=n.decode() if isinstance(n,bytes) else n\n  x=float(sys.argv[3]) if n=='Weight' else float(sys.argv[4]) if n=='Width' else a['default']\n  v.append(max(a['minimum'],min(a['maximum'],x)))\n f.set_variation_by_axes(v)\nexcept Exception: pass\nprint(f.getlength(sys.argv[2]))";
+const fitLigne = (text, file, base, { weight = 400, stretch = 100, track = 0, caps = false } = {}, maxW = 940) => {
+  const t = caps ? String(text).toUpperCase() : String(text);
+  try { const L = +execFileSync("python3", ["-c", MESURE, join("fonts", file), t, String(weight), String(stretch)]).toString() / 1000;
+        return Math.min(base, Math.floor((maxW - track * t.length) / (L * 1.03))); } catch { return base; }
+};
+const T1S = TY ? TY.t1 : { font: DA.fonts.sub, weight: 700, size: Math.round(SUBSIZE * 46 / 52), caps: true, track: plan.subTrack ?? DA.subTrack ?? 1 };
+const T2S = TY ? TY.t2 : { font: DA.fonts.serif, weight: 400, size: 104, track: 0 };
+let FS1 = T1S.size, FS2 = T2S.size;
 if (plan.title) {
   const T = plan.title;
+  FS1 = fitLigne(TP(T.l1), T1S.font, T1S.size, T1S); FS2 = fitLigne(TP(T.l2), T2S.font, T2S.size, T2S);
+  if (FS1 < T1S.size || FS2 < T2S.size) console.log(`titre rétréci pour tenir sur 2 lignes : ${T1S.size} -> ${FS1} px, ${T2S.size} -> ${FS2} px`);
   const tz = (plan.subYAt || []).find(z => (T.start ?? 0) >= z.start - 0.02 && (T.start ?? 0) < z.end);   // fond clair = pas de voile (14/10)
-  layers += `<div class="htitle${tz && tz.light ? " onlight" : ""}" id="htitle" style="top:${T.top ?? 280}px"><div class="ht1">${esc(T.l1 || "")}</div><div class="ht2">${esc(T.l2 || "")}</div></div>`;
+  layers += `<div class="htitle${tz && tz.light ? " onlight" : ""}" id="htitle" style="top:${T.top ?? 280}px"><div class="ht1">${esc(TP(T.l1))}</div><div class="ht2">${esc(TP(T.l2))}</div></div>`;
   V("#htitle", T.start ?? 0, Math.min(T.end ?? 4, dur), `{y:10}`, `{y:0,ease:"power2.out"}`, 0.25);
 }
 
@@ -778,7 +876,7 @@ if (plan.title) {
   if (hits.length) console.log(`ATTENTION chevauchement : incrustation ${i} (${n.src}) passe sur les sous-titres de ${hits[0].t.toFixed(2)} à ${hits.at(-1).t.toFixed(2)} s -> monter l'offset, la réduire ou décaler le moment`);
 });
 
-// ---------- STYLE MINIMALISTE (degré « face caméra minimaliste », réf Creator College, Cyril 16/10) : beaucoup d'air, zéro transition.
+// ---------- STYLE MINIMALISTE (degré « face caméra minimaliste », réf Creator College, 16/10) : beaucoup d'air, zéro transition.
 //            card = carton typo plein écran, le texte se construit mot par mot, calé sur la voix (MAJUSCULES + serif italique) ;
 //            icon = icône au trait fin au-dessus de la tête (barrée d'une croix sur « non ») ;
 //            shot = capture en carte arrondie qui flotte, un cercle se dessine à la main autour de LA chose dite.
@@ -812,21 +910,72 @@ const fitPx = (text, file, base, maxW, upper) => {   // taille qui tient dans ma
   try { const em = +execFileSync("python3", ["-c", "import sys;from PIL import ImageFont;print(ImageFont.truetype(sys.argv[1],1000).getlength(sys.argv[2])/1000)", join("fonts", file), upper ? String(text).toUpperCase() : String(text)]).toString();
         return Math.round(Math.min(base, maxW / (em * 1.04))); } catch { return base; }
 };
+// ---------- 23/10 cockpit étape 3 « Motion design » : 2 variantes VALIDÉES par Cyril (maquettes motion-r2 F + L, 23/10 ; leçon Jun Yuh :
+//            rien de « mignon », pas de rebond, tout arrive en coupe franche ; jamais d'IA). Les anciens coeur / entoure / souligne
+//            (« dégueulasses ») restent lus pour les vieux plans mais ne sont plus proposés.
+//   chiffres : 1, 2, 3 géants DERRIÈRE la tête (matte.py → fg), contour fin, le chiffre en cours plein, son mot au-dessus (couleur serif).
+//              m.n = numéro (1…), m.total = combien de chiffres, m.mot = le mot. Haut calé sur la tête (headtop.py).
+//   trait    : une illustration au trait blanc fin (SVG du skill Carrousel, art.py, déjà validées) à côté de la tête, son mot dessous ;
+//              côté opposé au visage. m.svg = chemin du SVG, m.mot. ----------
+(plan.motions || []).forEach((m, i) => {
+  const id = `mx${i}`, S = m.start, E = m.end, col = C.serif || "#F2D37A";
+  if (m.kind === "chiffres") {
+    let ht = 500;
+    try { ht = +execFileSync("python3", [join(SKILL, "scripts", "headtop.py"), plan.cam, String(S), String(E)], { stdio: ["ignore", "pipe", "ignore"] }).toString().trim(); } catch {}
+    const top = Math.max(330, Math.round(ht - 160)), tot = Math.max(1, Math.min(4, m.total || 3)), w = 260, gap = tot > 3 ? 20 : 40;
+    const x0 = Math.round(540 - (tot * w + (tot - 1) * gap) / 2);
+    let html = "";
+    for (let k = 1; k <= tot; k++) {
+      const on = k === m.n, vu = k <= m.n;
+      html += `<div style="position:absolute;left:${x0 + (k - 1) * (w + gap)}px;top:${top}px;width:${w}px;text-align:center;font-family:Mont;font-weight:800;font-size:330px;line-height:1;`
+            + `color:${on ? "#fff" : "transparent"};-webkit-text-stroke:${on ? 0 : 3}px rgba(255,255,255,${vu ? 0.85 : 0.35});${on ? "text-shadow:0 10px 50px rgba(0,0,0,.35);" : ""}">${k}</div>`;
+    }
+    camLayers += `<div class="mxc" id="${id}">${html}</div>`;
+    const lx = x0 + (m.n - 1) * (w + gap) + w / 2;
+    layers += `<div class="mxw" id="${id}w" style="left:${Math.round(lx - 200)}px;top:${top - 45}px;color:${col}">${esc(String(m.mot || "").toUpperCase())}</div>`;
+    V(`#${id}`, S, E, "{}", "{}", 0.001); V(`#${id}w`, S, E, "{}", "{}", 0.001);
+    console.log(`motion chiffres ${m.n}/${tot} « ${m.mot} » : haut de la tête ${ht}px -> top ${top}px`);
+    if (m.fg) camLayers += `<video id="fgm${i}" class="clip fg" src="${m.fg}" muted playsinline preload="auto" data-start="${m.fgStart.toFixed(3)}" data-duration="${(m.fgEnd - m.fgStart).toFixed(3)}" data-track-index="${50 + i}" data-has-audio="false"></video>`;
+  } else if (m.kind === "trait") {
+    let cx = 640;
+    try { cx = JSON.parse(execFileSync("python3", [join(SKILL, "scripts", "headtop.py"), plan.cam, String(S), String(E), "--json"], { stdio: ["ignore", "pipe", "ignore"] }).toString()).cx; } catch {}
+    const gauche = cx >= 540, svg = existsSync(m.svg || "") ? readFileSync(m.svg, "utf8") : "";
+    layers += `<div class="mxt" id="${id}" style="${gauche ? "left:65px" : "right:65px"}">${svg}</div>`
+            + `<div class="mxl" id="${id}w" style="${gauche ? "left:90px" : "right:130px;text-align:right"}">${esc(String(m.mot || "").toUpperCase())}</div>`;
+    V(`#${id}`, S, E, "{}", "{}", 0.001); V(`#${id}w`, S, E, "{}", "{}", 0.001);
+  } else if (m.kind === "coeur") {   // ancien (23/10 matin), plus proposé
+    camLayers += `<div class="mxh" id="${id}"><svg viewBox="0 0 48 48" width="190" height="190"><path d="M24 42S5.5 31 5.5 17.8A10 10 0 0 1 24 12.6a10 10 0 0 1 18.5 5.2C42.5 31 24 42 24 42z" fill="#FF3B5C"/></svg></div>`;
+    V(`#${id}`, S, E, "{}", "{}", 0.01, 0.2);
+  }
+});
+
 (plan.mini || []).forEach((m, i) => {
   const id = `mi${i}`, S = m.start, E = m.end;
   if (m.type === "card") {
     // fond : "grad" = dégradé doux aux couleurs du rush (C.grad), "flat" = uni sombre, ou une couleur "#hex"
-    // 4 coins comme la réf (sombre en haut à gauche, couleur vive en haut à droite, clair en bas) ; défaut = studio de Cyril (nuit + LED bleue)
+    // 4 coins comme la réf (sombre en haut à gauche, couleur vive en haut à droite, clair en bas) ; défaut = studio nuit + LED bleue
     const G = C.grad || ["#060a1c", "#2f74ff", "#132b66", "#9fbcf0", "#11235a"];
-    const bg = m.bg && m.bg.startsWith("#") ? m.bg : m.bg === "flat" ? C.list[2] :
+    // "blur" (19/10) = SA vidéo floutée et assombrie derrière le carton (on reste dans sa pièce)
+    // 23/10 (Cyril : « les cartes en plein écran, fais toujours des dégradés, jamais une couleur unie, c'est dégueulasse ») :
+    // une couleur "#hex" ou "flat" devient un dégradé de cette couleur (coin éclairé en haut à droite, coin sombre en bas à gauche).
+    const DEG = h => { const x = parseInt(h.slice(1).padEnd(6, "0").slice(0, 6), 16), r = x >> 16, g = (x >> 8) & 255, b2 = x & 255;
+      const mix = (k, t) => `rgb(${Math.round(r + (t - r) * k)},${Math.round(g + (t - g) * k)},${Math.round(b2 + (t - b2) * k)})`;
+      return `radial-gradient(80% 55% at 100% 0%,${mix(0.35, 255)} 0%,transparent 70%),radial-gradient(90% 60% at 0% 100%,${mix(0.6, 0)} 0%,transparent 75%),linear-gradient(160deg,${mix(0.15, 255)} 0%,${h} 45%,${mix(0.45, 0)} 100%)`; };
+    const bg = m.bg === "blur" ? "rgba(4,8,12,.5);backdrop-filter:blur(34px) saturate(1.15) brightness(.8);-webkit-backdrop-filter:blur(34px) saturate(1.15) brightness(.8)" :
+      m.bg && /gradient\(/.test(m.bg) ? m.bg : m.bg && m.bg.startsWith("#") ? DEG(m.bg) : m.bg === "flat" && /^#[0-9a-f]{6}$/i.test(C.list[2]) ? DEG(C.list[2]) :
       `radial-gradient(85% 60% at 0% 0%,${G[0]} 0%,transparent 72%),radial-gradient(80% 60% at 100% 8%,${G[1]} 0%,transparent 72%),radial-gradient(90% 65% at 0% 100%,${G[2]} 0%,transparent 75%),radial-gradient(85% 60% at 100% 100%,${G[3]} 0%,transparent 72%),${G[4] || G[2]}`;
     const lines = m.lines || [];
-    let row = 0, cur = W.findIndex(w => w.t >= S - 0.05);
+    // 21/10 (CAM20033 v2 : « de masse » affiché AVANT « chômage ») : chaque ligne cherchait ses mots depuis le DÉBUT du carton ;
+    // une ligne sans « at » après des lignes à « at » trouvait un mot plus tôt. Une ligne cherche maintenant après la ligne d'avant.
+    let row = 0, cur = W.findIndex(w => w.t >= S - 0.05), prevT = S;
     const html = lines.map((ln, j) => {
       if (!(j && ln.swap)) row++;
       const serif = ln.font === "serif", toks = String(ln.text).split(/\s+/).filter(Boolean);
-      const fs = ln.size || fitPx(ln.text, serif ? DA.fonts.serif : DA.fonts.sans, serif ? 150 : 104, 900, !serif);
-      let last = ln.at ?? S, first = null;
+      // 21/10 (CAM20033 v1 à 57 s : « fais attention que le texte ne va pas dans la zone interdite des reels ») : une ligne de
+      // carton tient dans 840 px centrés (120-960 px, comme les sous-titres : boutons Insta à droite), même avec une taille imposée.
+      const fs = fitPx(ln.text, serif ? DA.fonts.serif : DA.fonts.sans, ln.size || (serif ? 150 : 104), 840, !serif);
+      if (ln.at != null) { const c2 = W.findIndex(w => w.t >= ln.at - 0.05); if (c2 >= 0) cur = Math.max(cur, c2); }
+      let last = ln.at ?? prevT, first = null;
       const spans = toks.map((tk, k) => {
         let t = ln.at != null && ln.whole ? ln.at : null;
         if (t == null) {   // le mot apparaît quand il est dit (cherché dans la transcription, 3 s max après le mot d'avant)
@@ -837,9 +986,10 @@ const fitPx = (text, file, base, maxW, upper) => {   // taille qui tient dans ma
         F(`#${id}l${j}w${k}`, "{opacity:0,y:8}", `opacity:1,y:0,duration:.14,ease:"power2.out"`, t);
         return `<span class="mw" id="${id}l${j}w${k}">${esc(serif ? tk : tk.toUpperCase())}</span>`;
       }).join(" ");
+      prevT = Math.max(prevT, last);
       // swap : la ligne remplace celle d'avant au même endroit (« IMPORTANT » -> « ASSET »)
       if (j && ln.swap) F(`#${id}l${j - 1}`, "{opacity:1}", `opacity:0,duration:.01`, (first ?? S) - 0.01);
-      return `<div class="mcl${serif ? " ser" : ""}" id="${id}l${j}" style="grid-row:${row};font-size:${fs}px">${spans}</div>`;
+      return `<div class="mcl${serif ? " ser" : ""}" id="${id}l${j}" style="grid-row:${row};font-size:${fs}px${ln.color ? `;color:${ln.color}` : ""}">${spans}</div>`;
     }).join("");
     layers += `<div class="mcard" id="${id}" style="background:${bg}"><div class="mstack">${html}</div></div>`;
     V(`#${id}`, S, E, "{}", "{}", 0.001);   // coupe sèche, pas de fondu (réf)
@@ -877,8 +1027,9 @@ const html = `<!doctype html><html><head><meta charset="utf-8"/>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
 <style>
   @font-face{font-family:"Mont";src:url("fonts/${DA.fonts.sans}");font-weight:100 900}
-  @font-face{font-family:"Serif";src:url("fonts/${DA.fonts.serif}");font-style:italic}
-  @font-face{font-family:"Sub";src:url("fonts/${DA.fonts.sub}");font-weight:100 900}
+  @font-face{font-family:"SMSerif";src:url("fonts/${DA.fonts.serif}");font-style:italic}
+  @font-face{font-family:"Sub";src:url("fonts/${DA.fonts.sub}");font-weight:100 900;font-stretch:50% 200%}
+  ${TY ? ["t1", "t2"].map(k => `@font-face{font-family:"${k.toUpperCase()}";src:url("fonts/${TY[k].font}");font-weight:100 900;font-stretch:50% 200%;font-style:${TY[k].italic ? "italic" : "normal"}}`).join("\n  ") : ""}
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{width:1080px;height:1920px;background:#000;overflow:hidden;font-family:"Mont",sans-serif}
   #root{position:relative;width:1080px;height:1920px;background:#000;overflow:hidden}
@@ -888,12 +1039,12 @@ const html = `<!doctype html><html><head><meta charset="utf-8"/>
   .fg{z-index:3}
   .num{position:absolute;left:0;right:0;top:270px;z-index:2;opacity:0;text-align:center;color:${C.text};
        font-weight:600;font-size:440px;line-height:1;letter-spacing:-12px;text-shadow:0 10px 60px rgba(0,0,0,.25)}
-  .num .suf{font-size:300px;margin-left:30px;letter-spacing:0;display:inline-block}
+  .num .suf{font-size:.68em;margin-left:30px;letter-spacing:0;display:inline-block}
   .num .nct{display:inline-block;text-align:center;font-variant-numeric:tabular-nums;transform-origin:50% 85%}
   #vign{position:absolute;inset:0;z-index:4;pointer-events:none;background:radial-gradient(ellipse 85% 75% at 50% 42%,transparent 60%,rgba(0,0,0,.38) 100%)}
   .cap{position:absolute;left:120px;right:120px;top:${SUBY}px;z-index:10;opacity:0;text-align:center;color:${C.text};
        font-family:"Sub";font-weight:700;font-size:${SUBSIZE}px;line-height:1.05;letter-spacing:${SUBTRACK}px;text-shadow:0 3px 18px rgba(0,0,0,.55)}
-  .cap em{font-family:"Serif";font-style:italic;font-weight:400;font-size:${plan.kwSize || 132}px;letter-spacing:0;text-transform:none;text-shadow:0 0 24px rgba(255,255,255,.25),0 3px 18px rgba(0,0,0,.5)}
+  .cap em{font-family:"SMSerif";font-style:italic;${C.serif ? `color:${C.serif};` : ""}font-weight:400;font-size:${plan.kwSize || 132}px;letter-spacing:0;text-transform:none;text-shadow:0 0 24px rgba(255,255,255,.25),0 3px 18px rgba(0,0,0,.5)}
   .mo{position:absolute;inset:0;z-index:2;opacity:0;background:radial-gradient(120% 70% at 50% 28%,#1a2444 0%,#0c1226 55%,#06080f 100%);overflow:hidden}
   .mo-led{position:absolute;left:-5%;right:-5%;top:1170px;height:10px;border-radius:10px;background:${ACC};opacity:.55;filter:blur(14px)}
   .mo-safe{position:absolute;inset:0;transform-origin:540px 0}
@@ -929,8 +1080,8 @@ const html = `<!doctype html><html><head><meta charset="utf-8"/>
   .mo-rv{position:absolute;left:0;right:0;top:372px;display:flex;align-items:baseline;justify-content:center;font-family:"Mont";font-weight:700;font-size:170px;line-height:1;color:#fff}
   .mo-rn{display:inline-block;text-align:center;font-variant-numeric:tabular-nums;transform-origin:50% 80%}
   .mo-rv i{display:inline-block;font-style:normal;font-size:84px;margin-left:6px}
-  .mo-rl{position:absolute;left:90px;right:90px;top:752px;text-align:center;font-family:"Serif";font-style:italic;font-size:62px;line-height:1.1;color:#fff}
-  .mo-bt{position:absolute;left:0;right:0;top:160px;text-align:center;font-family:"Serif";font-style:italic;font-size:96px;color:#fff}
+  .mo-rl{position:absolute;left:90px;right:90px;top:752px;text-align:center;font-family:"SMSerif";font-style:italic;font-size:62px;line-height:1.1;color:#fff}
+  .mo-bt{position:absolute;left:0;right:0;top:160px;text-align:center;font-family:"SMSerif";font-style:italic;font-size:96px;color:#fff}
   .mo-bv{position:absolute;left:0;right:0;top:290px;text-align:center;font-family:"Mont";font-weight:700;font-size:130px;line-height:1;color:#fff;font-variant-numeric:tabular-nums;transform-origin:50% 80%}
   .mo-bars{position:absolute;left:100px;right:100px;top:450px;height:420px;display:flex;align-items:flex-end;justify-content:center;gap:34px}
   .mo-bc{position:relative;height:100%;display:flex;align-items:flex-end}
@@ -944,7 +1095,7 @@ const html = `<!doctype html><html><head><meta charset="utf-8"/>
   .mo-link{position:absolute;left:390px;top:440px;width:300px;height:20px}
   .mo-dot{position:absolute;left:384px;top:438px;width:24px;height:24px;border-radius:50%;background:#fff;opacity:0}
   .mo-pill{position:absolute;left:0;right:0;margin:auto;top:680px;width:max-content;padding:20px 40px;border-radius:999px;background:${ACC};color:#0B0B0D;font-family:"Mont";font-weight:700;font-size:38px;opacity:0}
-  .mo-vq{position:absolute;left:0;right:0;top:190px;text-align:center;font-family:"Serif";font-style:italic;font-size:120px;color:#fff;opacity:0}
+  .mo-vq{position:absolute;left:0;right:0;top:190px;text-align:center;font-family:"SMSerif";font-style:italic;font-size:120px;color:#fff;opacity:0}
   .mo-vr{position:absolute;left:130px;right:130px;height:130px;border-radius:32px;display:flex;align-items:center;gap:28px;padding:0 34px;box-sizing:border-box;background:rgba(18,26,52,.85);border:1px solid rgba(255,255,255,.12);opacity:0;top:420px}
   .mo-vy{top:590px;border:2px solid ${ACC};background:rgba(79,155,255,.14)}
   .mo-vr span{position:relative;font-family:"Mont";font-weight:700;font-size:44px;color:#fff}
@@ -979,13 +1130,21 @@ const html = `<!doctype html><html><head><meta charset="utf-8"/>
   .htitle{position:absolute;left:0;right:0;z-index:11;opacity:0;text-align:center;color:#fff;text-shadow:0 3px 18px rgba(0,0,0,.55);
           padding:30px 60px 38px;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.5) 22%,rgba(0,0,0,.5) 78%,rgba(0,0,0,0))}
   .htitle.onlight{background:none;text-shadow:0 0 2px rgba(0,0,0,.9),0 2px 5px rgba(0,0,0,.8),0 6px 26px rgba(0,0,0,.55)}
-  .ht1{font-family:"Sub";font-weight:700;font-size:${Math.round(SUBSIZE * 46 / 52)}px;letter-spacing:${plan.subTrack ?? DA.subTrack ?? 1}px;text-transform:uppercase}
-  .ht2{font-family:"Serif";font-style:italic;font-size:104px;line-height:1.05}   /* 2 mots forts : sinon l'espace est celui de la petite police (« badgebleu ») */
+  .ht1{font-family:"Sub";font-weight:700;font-size:${FS1}px;letter-spacing:${plan.subTrack ?? DA.subTrack ?? 1}px;text-transform:uppercase;white-space:nowrap}
+  .ht2{font-family:"SMSerif";font-style:italic;${C.serif ? `color:${C.serif};` : ""}font-size:${FS2}px;line-height:1.05;white-space:nowrap}
+  ${TY ? (() => {   // 23/10 personnalisation : jamais de bande derrière le titre (rejetée), ombre seule ; chaque ligne = sa police, sa couleur
+    const L = (c, s, fs, lh) => `.${c}{font-family:"${c === "ht1" ? "T1" : "T2"}";font-weight:${s.weight || 400};font-size:${fs}px;line-height:${lh};font-style:${s.italic ? "italic" : "normal"};font-stretch:${s.stretch || 100}%;letter-spacing:${s.track || 0}px;text-transform:${s.caps ? "uppercase" : "none"};color:${s.color || "#fff"}}`;
+    const sh = TY.shadow === "forte" ? "0 0 3px rgba(0,0,0,.9),0 3px 8px rgba(0,0,0,.75),0 8px 30px rgba(0,0,0,.6)" : "0 4px 26px rgba(0,0,0,.55),0 1px 3px rgba(0,0,0,.35)";
+    return `.htitle,.htitle.onlight{background:none;text-shadow:${sh};padding:30px 70px 38px${TY.align === "left" ? ";text-align:left" : ""}}
+  ${L("ht1", TY.t1, FS1, 1.25)}
+  ${L("ht2", TY.t2, FS2, 1.1)}
+  .cap{font-weight:${TY.sub.weight || 700};font-style:${TY.sub.italic ? "italic" : "normal"};font-stretch:${TY.sub.stretch || 100}%;color:${TY.sub.color || C.text};${TY.shadow === "forte" ? `text-shadow:${sh}` : ""}}`;
+  })() : ""}   /* 2 mots forts : sinon l'espace est celui de la petite police (« badgebleu ») */
   .list{position:absolute;inset:0;z-index:20;opacity:0;color:${C.text};
         background:radial-gradient(ellipse 90% 60% at 50% 45%,${C.list[0]} 0%,${C.list[1]} 55%,${C.list[2]} 100%)}
   .lt{position:absolute;top:290px;left:65px;right:65px;text-align:center;text-shadow:0 0 28px rgba(${C.halo},.45)}
   .l1{font-weight:600;font-size:76px;letter-spacing:-.5px}
-  .l2{font-family:"Serif";font-style:italic;font-size:110px;line-height:1;margin-top:4px}
+  .l2{font-family:"SMSerif";font-style:italic;font-size:110px;line-height:1;margin-top:4px}
   .page{position:absolute;top:540px;left:65px;right:65px;display:flex;gap:24px;opacity:0}
   .col{flex:1;display:flex;flex-direction:column;gap:calc(var(--fs,43px)*30/43)}
   .it{font-weight:600;font-size:var(--fs,43px);line-height:1.12;text-align:center;opacity:0;text-shadow:0 0 18px rgba(${C.glow},.7),0 0 4px rgba(255,255,255,.35)}
@@ -1001,8 +1160,9 @@ const html = `<!doctype html><html><head><meta charset="utf-8"/>
        display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
   /* --- guide OPUS : punch, mot géant, hook --- */
   #punch{position:absolute;inset:0;transform-origin:50% 38%;will-change:transform;backface-visibility:hidden}
-  .bigw{position:absolute;left:0;right:0;z-index:2;opacity:0;text-align:center;font-family:"Serif";font-style:italic;line-height:1.22;color:${C.text};white-space:nowrap}
+  .bigw{position:absolute;left:0;right:0;z-index:2;opacity:0;text-align:center;font-family:"SMSerif";font-style:italic;line-height:1.22;color:${C.serif || C.text};white-space:nowrap}
   .bwt{position:relative;text-shadow:0 10px 60px rgba(0,0,0,.25)}
+  .bigw.devant .bwt{text-shadow:0 0 4px rgba(0,0,0,.85),0 4px 14px rgba(0,0,0,.7),0 12px 60px rgba(0,0,0,.6)}
   .lm{display:inline-block;overflow:hidden;vertical-align:top;padding:0 .14em;margin:0 -.14em}
   .lc{display:inline-block}
   .echo{position:absolute;left:0;right:0;top:0;opacity:0;color:transparent;-webkit-text-stroke:2px rgba(255,255,255,.85)}
@@ -1023,7 +1183,7 @@ const html = `<!doctype html><html><head><meta charset="utf-8"/>
   .grain{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
   .pt{position:absolute;left:65px;right:65px;text-align:center;opacity:0}
   .p1{font-weight:600;font-size:58px;letter-spacing:-.5px}
-  .p2{font-family:"Serif";font-style:italic;font-size:120px;line-height:1;margin-top:6px}
+  .p2{font-family:"SMSerif";font-style:italic;font-size:120px;line-height:1;margin-top:6px}
   .chart{position:absolute;left:60px;width:960px;height:860px;overflow:visible}
   .chart text{font-family:"Mont";font-weight:600}
   .ax{stroke:#1b1b1f;stroke-width:4;stroke-dasharray:1px 2px;stroke-dashoffset:1.05px}
@@ -1033,7 +1193,7 @@ const html = `<!doctype html><html><head><meta charset="utf-8"/>
   .pa{fill:none;stroke:#8f8b83;stroke-width:9;stroke-linecap:round;stroke-dasharray:1px 2px;stroke-dashoffset:1.05px}
   .pb{fill:none;stroke:${ACC};stroke-width:13;stroke-linecap:round;stroke-dasharray:1px 2px;stroke-dashoffset:1.05px;filter:drop-shadow(0 8px 18px rgba(${RGB(ACC)},.35))}
   .la{font-size:42px;fill:#6d6a63;opacity:0}
-  .chart .lb{font-family:"Serif";font-style:italic;font-weight:400;font-size:70px;fill:${ACC};opacity:0}
+  .chart .lb{font-family:"SMSerif";font-style:italic;font-weight:400;font-size:70px;fill:${ACC};opacity:0}
   .dotb{fill:${ACC};opacity:0}
   .clock{position:absolute;left:90px;top:560px;width:900px;height:900px;overflow:visible}
   .clock .fill{fill:#fff;opacity:0;filter:drop-shadow(0 20px 40px rgba(0,0,0,.08))}
@@ -1094,11 +1254,19 @@ const html = `<!doctype html><html><head><meta charset="utf-8"/>
   .kr{display:flex;justify-content:center;gap:10px}
   .key{width:86px;height:62px;border-radius:12px;background:#4a4a4e;color:#fff;font-size:34px;font-weight:500;display:flex;align-items:center;justify-content:center}
   .key.sp{width:520px;font-size:28px;color:#c7c7cc}
+  /* --- motion design du cockpit (plan.motions) : chiffres derrière la tête, illustration au trait --- */
+  .mxh{position:absolute;left:0;right:0;top:290px;height:190px;z-index:8;opacity:0;display:flex;justify-content:center;pointer-events:none;filter:drop-shadow(0 8px 24px rgba(0,0,0,.45))}
+  .mxc{position:absolute;inset:0;z-index:2;opacity:0;pointer-events:none}
+  .mxw{position:absolute;width:400px;z-index:9;opacity:0;text-align:center;font-family:Mont;font-weight:700;font-size:30px;letter-spacing:3px;text-shadow:0 2px 6px rgba(0,0,0,.55),0 8px 30px rgba(0,0,0,.35)}
+  .mxt{position:absolute;top:290px;width:420px;height:350px;z-index:9;opacity:0;pointer-events:none;filter:drop-shadow(0 3px 8px rgba(0,0,0,.55))}
+  .mxt svg{width:100%;height:100%}
+  .mxt svg *{fill:none!important;stroke:#fff!important;stroke-width:9px!important;stroke-linecap:round;stroke-linejoin:round}
+  .mxl{position:absolute;top:650px;z-index:9;opacity:0;font-family:Mont;font-weight:600;font-size:32px;letter-spacing:4px;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.55),0 8px 30px rgba(0,0,0,.35)}
   /* --- style minimaliste (plan.mini) --- */
   .mcard{position:absolute;inset:0;z-index:20;opacity:0;display:flex;align-items:center;justify-content:center}
   .mstack{display:grid;justify-items:center;row-gap:4px;text-align:center;margin-top:-40px}
   .mcl{grid-column:1;font-family:"Mont";font-weight:800;color:#fff;line-height:1.02;letter-spacing:1px;white-space:nowrap}
-  .mcl.ser{font-family:"Serif";font-style:italic;font-weight:400;letter-spacing:0;line-height:.98}
+  .mcl.ser{font-family:"SMSerif";font-style:italic;font-weight:400;letter-spacing:0;line-height:.98}
   .mw{display:inline-block;opacity:0}
   .mico{position:absolute;left:0;right:0;z-index:8;opacity:0;pointer-events:none}
   .micon{position:absolute;top:0;fill:none;stroke:#fff;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;opacity:0;overflow:visible;filter:drop-shadow(0 4px 14px rgba(0,0,0,.5))}
@@ -1126,7 +1294,7 @@ const html = `<!doctype html><html><head><meta charset="utf-8"/>
       fin = Math.min(fin, Math.max(b - a, .001));
       out = Math.min(out || 0, Math.max((b - a - fin) / 2, 0));
       var X = {immediateRender:false, ease:"none"};
-      if (a < .001 && fin <= .002) {   // 17/10 (Cyril, Tesla : « la 1re image doit être le split screen ») : plan à entrée sèche qui
+      if (a < .001 && fin <= .002) {   // 17/10 (Tesla : « la 1re image doit être le split screen ») : plan à entrée sèche qui
         tl.fromTo(s, {opacity:1}, Object.assign({opacity:1, duration:Math.max(b - out, .001)}, X, {immediateRender:true}), 0);   // commence à 0 s = visible dès l'image 0
       } else {
       tl.fromTo(s, {opacity:0}, Object.assign({opacity:0, duration:Math.max(a, .001)}, X), 0);
@@ -1142,5 +1310,17 @@ const html = `<!doctype html><html><head><meta charset="utf-8"/>
   </script>
 </body></html>`;
 writeFileSync(out, html);
-writeFileSync(join(dirname(out), "cues.json"), JSON.stringify(cues, null, 1));
+// 23/10 (cockpit, retour n4 : 9 moments forts au lieu de 3) : deux effets à moins de 1,5 s (mot géant 19,04 s puis carton 20,48 s)
+// = deux bruitages collés, le Gardien bloquait le rendu (règle OPUS 13/10). Le moteur garde le 1er son et retire le suivant
+// (l'effet visuel, lui, reste) : la règle est tenue à la source, plus besoin d'écarter les moments à la main.
+const cuesOK = [];
+cues.sort((a, b) => a.at - b.at).forEach(c => {
+  const prev = cuesOK.at(-1);
+  if (prev && c.at - prev.at < 1.5) console.log(`son « ${c.kind} » à ${(+c.at).toFixed(2)} s retiré (${(c.at - prev.at).toFixed(2)} s après « ${prev.kind} »)`);
+  else cuesOK.push(c);
+});
+writeFileSync(join(dirname(out), "cues.json"), JSON.stringify(cuesOK, null, 1));
+// 21/10 : les VRAIES positions (après calage sur les coupes et anti-flash) pour le Gardien avant rendu (gardien.py --avant)
+writeFileSync(join(dirname(out), "timeline.json"), JSON.stringify({ duration: dur, brolls: plan.brolls || [], inserts: plan.inserts || [],
+  lists, proofs, mini: plan.mini || [] }, null, 1));
 console.log(`${W.length} mots · ${groups.length} sous-titres · ${cuts.length} plans · ${(plan.numbers || []).length} chiffres · ${bigwords.length} mots géants · ${lists.length} listes · ${proofs.length} preuves${cta ? " · CTA " + cta.word : ""}${plan.hook ? " · hook" : ""} -> ${out}`);

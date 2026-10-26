@@ -1,4 +1,4 @@
-"""Planches numérotées pour le tri visuel (photos + vidéos courtes), + photo de référence de Cyril."""
+"""Planches numérotées pour le tri visuel (photos + vidéos courtes), + photo de référence du visage de la personne."""
 import json, os
 from PIL import Image, ImageDraw, ImageFont
 
@@ -37,5 +37,5 @@ refs = [p["thumb"] for p in P if p["dossier"] == "Photo perso"][:4]
 R = Image.new("RGB", (4 * 300, 320), "white")
 for k, t in enumerate(refs):
     im = Image.open(t).convert("RGB"); im.thumbnail((296, 300)); R.paste(im, (k * 300, 0))
-ImageDraw.Draw(R).text((8, 298), "CYRIL (visage actuel)", font=F, fill="black"); R.save(os.path.join(OUT, "ref_cyril.jpg"))
+ImageDraw.Draw(R).text((8, 298), "LA PERSONNE (visage actuel)", font=F, fill="black"); R.save(os.path.join(OUT, "ref_visage.jpg"))
 print(len(items), "éléments,", len(names), "planches")

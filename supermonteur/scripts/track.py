@@ -1,4 +1,4 @@
-"""Tracking : un objet suit un point du corps (Cyril 13/10 : le badge au bout du doigt quand il pointe = ce qui marche chez son monteur).
+"""Tracking : un objet suit un point du corps (13/10 : le badge au bout du doigt quand il pointe = ce qui marche chez son monteur).
   python3 track.py clip.mp4 START END --point index_tip --out track_badge.json
 Points : index_tip (bout de l'index), thumb_tip, palm (paume), head_top (au-dessus de la tête),
          head_left / head_right (à côté de la tête, côté gauche / droit de l'écran), chin.

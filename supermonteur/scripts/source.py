@@ -1,7 +1,7 @@
 """Famille « Toi + une source » (green screen, réaction, démonstration) : face cam + ce qu'on montre -> reel 9:16 (13/10).
 Face cam plein écran quand on parle (hook, conclusion, CTA) ; pendant chaque passage « source », la source remplit le fond et
-Cyril reste à l'écran selon la mise en page :
-  greenscreen = Cyril détouré en bas au centre devant la source (le format « green screen » d'Instagram / TikTok)
+La personne reste à l'écran selon la mise en page :
+  greenscreen = la personne détourée en bas au centre devant la source (le format « green screen » d'Instagram / TikTok)
   split       = source en haut, visage en bas (comme la famille À plusieurs)
   bubble      = source plein écran + visage dans une bulle ronde en bas à gauche
 
@@ -36,9 +36,9 @@ def dur_of(p):
 
 def src_chain(it, d, h=1920):
     """Entrée ffmpeg + filtre qui donne la source en 1080 x h pour la durée d (capture qui défile ou vidéo recadrée)."""
-    if it["src"].lower().endswith(IMG) and it.get("push"):   # illustration (image Higgsfield) : poussée lente + ZOOM marqué (Cyril 14/10)
+    if it["src"].lower().endswith(IMG) and it.get("push"):   # illustration (image Higgsfield) : poussée lente + ZOOM marqué (14/10)
         # "punch": [moment 0-1, zoom final, cy 0-1] = vers ce moment, zoom rapide (0,35 s, smoothstep) vers le point cy (sujet en haut)
-        # Cyril 14/10 (v4) : zoom ou dézoom PROGRESSIF seulement, jamais de zoom brusque -> "punch" ignoré
+        # 14/10 (v4) : zoom ou dézoom PROGRESSIF seulement, jamais de zoom brusque -> "punch" ignoré
         cy = it.get("cy", 0.3)
         pu = it["push"]
         z = f"(1+{pu}*t/{d:.3f})" if pu > 0 else f"(1+{-pu}*(1-t/{d:.3f}))"   # push < 0 = dézoom (part serré, s'élargit)
@@ -66,7 +66,7 @@ def src_chain(it, d, h=1920):
         o = subprocess.check_output(["python3", os.path.join(HERE, "broll.py"), "steady", it["src"], f"{d:.2f}"]).decode()
         fr = float(re.search(r"from ([\d.]+)s", o).group(1))
     zoom = ""
-    if it.get("push"):   # B-roll derrière le détourage : poussée marquée pour garder le mouvement (Cyril 14/10)
+    if it.get("push"):   # B-roll derrière le détourage : poussée marquée pour garder le mouvement (14/10)
         z = f"(1+{it['push']}*t/{d:.3f})"
         zoom = (f",scale=w='trunc(1080*{z}/2)*2':h='trunc({h}*{z}/2)*2':eval=frame:flags=lanczos,"
                 f"crop=1080:{h}:'(iw-1080)/2':'(ih-{h})/2'")
@@ -197,7 +197,7 @@ def layout(plan_p, layout_override=None, a0=None, b0=None, out_name="clip.mp4", 
             it2["y0"], it2["y1"] = y0 + (y1 - y0) * e(a - it["start"]), y0 + (y1 - y0) * e(b - it["start"])
         if it2 and not it2["src"].lower().endswith(IMG) and a0 is not None: it2["from"] = it.get("from", 0) + (a - it["start"])
         if it2 and lay == "greenscreen" and it2["src"].lower().endswith(IMG) and not it2.get("solo"):
-            it2["_html"] = True   # défilement / zoom dans HyperFrames : ffmpeg bouge au pixel entier = saccades (Cyril 14/10 : « pas fluide »)
+            it2["_html"] = True   # défilement / zoom dans HyperFrames : ffmpeg bouge au pixel entier = saccades (14/10 : « pas fluide »)
         if it2 and it2.get("zoom"):
             it2["_hd"] = os.path.join(here, S.get("cam_hd", S["cam"]))
             it2["_k"] = int(subprocess.check_output(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width",

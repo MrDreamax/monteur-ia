@@ -3,7 +3,7 @@
   "client": "",
   "_client": "Prénom du client, le même que dans le monteur (da/<client>.json).",
   "metricool_brand_id": "",
-  "_metricool_brand_id": "Id de SA marque Metricool (getBrandSettings dans SON Claude). Jamais celle de Cyril.",
+  "_metricool_brand_id": "Id de SA marque Metricool (getBrandSettings dans SON Claude). Jamais celle du coach qui l'installe.",
   "timezone": "Europe/Paris",
   "instagram_attendu": "",
   "comptes_interdits": {},

@@ -7,12 +7,15 @@ from datetime import datetime
 from PIL import Image, ImageOps
 
 HERE = os.path.dirname(os.path.abspath(__file__)); os.chdir(HERE)
-_CFG = json.load(open(os.path.join(HERE, "..", "..", "config.json"))) if os.path.exists(os.path.join(HERE, "..", "..", "config.json")) else {}
-B = os.path.expanduser(_CFG.get("brolls_root") or "~/Documents/Montage/B-ROLLS")   # bibliothèque du client (config.json)
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "scripts"))
+import reglages  # noqa: E402  réglages de cette machine (Brain)
+CFG = reglages.config()
+COL = reglages.colonne_visible(CFG)   # colonne « la personne est visible »
+B = CFG["brolls_root"]
 DRY = "--dry" in sys.argv
 CLIP = 7.0
 FIELDS = ["fichier", "dossier", "theme", "action", "tenue", "lieu", "orientation", "resolution", "duree_s", "qualite",
-          "cyril_visible", "date_tournage", "usage"]
+          COL, "date_tournage", "usage"]
 THEMES = {"01-TRAVAIL", "02-TOURNAGE", "03-TELEPHONE", "04-SPORT", "05-REPAS", "06-LUXE", "07-VILLE-VOYAGE", "08-MAISON",
           "09-SOCIAL", "10-ARGENT", "11-STUDIO-MUSIQUE", "12-PORTRAIT", "14-AUTRE"}
 
@@ -41,7 +44,7 @@ dup = json.load(open("doublons_biblio.json"))
 
 # Da Nang 21-22/10/2025 : la biblio a déjà 167 photos de cette séance -> on écarte les scènes à moins de 60 s d'une photo déjà en biblio
 lib_ts = []
-for r in csv.DictReader(open(f"{B}/_INDEX.csv", encoding="utf-8")):
+for r in csv.DictReader(open(f"{B}/_Catalogue/_INDEX.csv", encoding="utf-8")):
     if r["date_tournage"] in ("2025-10-21", "2025-10-22") and r["dossier"].startswith("PHOTOS"):
         try:
             t = Image.open(f'{B}/{r["dossier"]}/{r["fichier"]}').getexif().get_ifd(0x8769).get(36867)
@@ -114,7 +117,7 @@ for iid, x, src in sorted(rows, key=lambda r: r[0]):
                                    "-vf", "scale=600:-2", vig])
     idx_new.append({"fichier": name, "dossier": folder, "theme": theme, "action": slug(x["action"]), "tenue": plain(x.get("tenue")),
                     "lieu": plain(x.get("lieu")), "orientation": o, "resolution": res(w, h), "duree_s": round(dur, 1),
-                    "qualite": x.get("qualite", "moyen"), "cyril_visible": str(bool(x.get("cyril_visible"))),
+                    "qualite": x.get("qualite", "moyen"), COL: str(bool(x.get("personne_visible", x.get(COL)))),
                     "date_tournage": src["date"], "usage": ""})
     cat_new.append({"name": name, "folder": folder, "theme": theme, "action": slug(x["action"]), "tenue": plain(x.get("tenue")),
                     "lieu": plain(x.get("lieu")), "orient": o, "res": res(w, h), "dur": round(dur, 1), "kind": kind,
@@ -128,14 +131,14 @@ print("écartés :", Counter(r for _, r in skipped)); print("ajoutés par thème
 if DRY: sys.exit()
 
 stamp = "2026-10-13"
-shutil.copy2(f"{B}/_INDEX.csv", f"{HERE}/_INDEX_avant_import.csv"); shutil.copy2(f"{B}/_CATALOGUE.html", f"{HERE}/_CATALOGUE_avant_import.html")
-old = list(csv.DictReader(open(f"{B}/_INDEX.csv", encoding="utf-8")))
-with open(f"{B}/_INDEX.csv", "w", encoding="utf-8", newline="") as f:
+shutil.copy2(f"{B}/_Catalogue/_INDEX.csv", f"{HERE}/_INDEX_avant_import.csv"); shutil.copy2(f"{B}/_Catalogue/_CATALOGUE.html", f"{HERE}/_CATALOGUE_avant_import.html")
+old = list(csv.DictReader(open(f"{B}/_Catalogue/_INDEX.csv", encoding="utf-8")))
+with open(f"{B}/_Catalogue/_INDEX.csv", "w", encoding="utf-8", newline="") as f:
     wr = csv.DictWriter(f, FIELDS, extrasaction="ignore"); wr.writeheader(); wr.writerows(old + idx_new)
-cat = open(f"{B}/_CATALOGUE.html", encoding="utf-8").read()
+cat = open(f"{B}/_Catalogue/_CATALOGUE.html", encoding="utf-8").read()
 i = cat.index("const D=") + len("const D="); D, end = json.JSONDecoder().raw_decode(cat, i)
-open(f"{B}/_CATALOGUE.html", "w", encoding="utf-8").write(cat[:i] + json.dumps(D + cat_new, ensure_ascii=False) + cat[end:])
-with open(f"{B}/_JOURNAL-AJOUT-PHOTOS-{stamp}.csv", "w", encoding="utf-8", newline="") as f:
+open(f"{B}/_Catalogue/_CATALOGUE.html", "w", encoding="utf-8").write(cat[:i] + json.dumps(D + cat_new, ensure_ascii=False) + cat[end:])
+with open(f"{B}/_Catalogue/_JOURNAL-AJOUT-PHOTOS-{stamp}.csv", "w", encoding="utf-8", newline="") as f:
     wr = csv.DictWriter(f, ["source", "debut_s", "duree_s", "nouveau_chemin", "id_tri"]); wr.writeheader(); wr.writerows(journal)
 json.dump(idx_new, open("ajoutes.json", "w"), ensure_ascii=False)
 print("index :", len(old), "->", len(old) + len(idx_new), "| catalogue :", len(D), "->", len(D) + len(cat_new))

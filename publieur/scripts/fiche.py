@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fiches de publication à valider par Cyril.
+"""Fiches de publication à valider par l'utilisateur.
   fiche.py fiche fiche.json --out fiche.png        -> la fiche détaillée d'un reel (modèle validé le 16/10)
   fiche.py semaine f1.json f2.json ... --out semaine.png  -> la semaine sur une page (1 ligne par reel)
 Chaque fiche.json est dans le dossier du reel, à côté de cover.png / cover_480.jpg / grille.jpg (sortis par cover.py).
@@ -68,7 +68,7 @@ def fiche(f, dossier, sortie, statut=""):
              "Trial" if ig.get("type") == "TRIAL_REEL" else "Pas de trial",
              f"{round(f.get('duree', 0))} s",
              "Cover = ton B-roll" if f.get("cover", {}).get("source") == "broll" else "Cover"]
-    # Les contrôles qui passent et qui comptent peu sont regroupés en 1 ligne (Cyril ne lit pas les pavés)
+    # Les contrôles qui passent et qui comptent peu sont regroupés en 1 ligne (l'utilisateur ne lit pas les pavés)
     secondaires = ("Vidéo trouvée", "Légende sous", "1er commentaire prêt", "Texte alternatif rempli", "Titre YouTube sous",
                    "Légende TikTok prête", "Date dans le futur")
     lignes, regroupes = [], 0

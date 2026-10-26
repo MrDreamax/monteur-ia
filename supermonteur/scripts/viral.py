@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""FAMILLE « MONTAGE VIRAL » (Cyril 16/10/2026) : le tableau vit AU-DESSUS DE LA TÊTE, la face cam reste visible dessous.
+"""FAMILLE « MONTAGE VIRAL » (16/10/2026) : le tableau vit AU-DESSUS DE LA TÊTE, la face cam reste visible dessous.
 Formats (même zone, même fondu) : comparaison en T (« t », validé version A), mauvais / bien / excellent (« mbe »), tier list (« tier »).
 
   python3 $S/viral.py layout plan.json   # AVANT build.mjs : place au-dessus de la tête (fondu si la tête est trop haute)
@@ -107,7 +107,7 @@ JS_HELPERS = [
     'function TIN(s,t,d){tl.fromTo(s,{opacity:0,y:18,filter:"blur(8px)"},{opacity:1,y:0,filter:"blur(0px)",duration:d||.45,ease:"power3.out",immediateRender:false},t);}',
     'function DRAW(s,t,d){tl.fromTo(s,{strokeDashoffset:1},{strokeDashoffset:0,duration:d||.35,ease:"power2.inOut",autoRound:false,immediateRender:false},t);}',
 ]
-# Zones mortes Instagram (Cyril 16/10, TOUS les montages, choix « zone organique ») : rien de texte ni d'animé au-dessus de
+# Zones mortes Instagram (16/10, TOUS les montages, choix « zone organique ») : rien de texte ni d'animé au-dessus de
 # 270 px (14 %, Meta Ads Guide Reels) ni à moins de 65 px des bords (6 %). Le voile (décor) peut déborder.
 TOP, X0, X1 = 270, 65, 1015
 SHADOW = "text-shadow:0 3px 18px rgba(0,0,0,.65),0 0 2px rgba(0,0,0,.5)"
@@ -127,7 +127,7 @@ def common(Z, title, s, e, ttop=None):
   .tT{{position:absolute;inset:0;z-index:12;pointer-events:none;color:#fff;{SHADOW}}}
   .tT .ttl{{position:absolute;left:{X0}px;right:{1080 - X1}px;top:{ttop:.0f}px;text-align:center;opacity:0}}
   .tT .ttl .s{{display:block;font-family:"Mont";font-weight:800;font-size:{s}px;line-height:1.25;letter-spacing:.2em;text-transform:uppercase}}
-  .tT .ttl .e{{display:block;font-family:"Serif";font-style:italic;font-size:{e}px;line-height:1.05}}"""
+  .tT .ttl .e{{display:block;font-family:"SMSerif";font-style:italic;font-size:{e}px;line-height:1.05}}"""
     body = ['<div class="tveil" id="tveil"></div><div class="tT">',
             f'<div class="ttl" id="tttl"><span class="s">{title["sans"]}</span>'
             + (f'<span class="e">{title["serif"]}</span>' if title.get("serif") else "") + '</div>']
@@ -159,7 +159,7 @@ def build_t(spec, Z, SERIF, MONT):
   .tT .hd{{position:absolute;left:0;right:0;top:{hd:.0f}px;display:flex;align-items:center;justify-content:center;gap:12px;opacity:0;font-family:"Mont";font-weight:800;font-size:{hds}px;letter-spacing:.14em}}
   .tT .hd svg{{width:{int(hds * 1.25)}px;height:{int(hds * 1.25)}px;fill:none;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;overflow:visible}}
   .tT .hd svg path{{stroke-dasharray:1;stroke-dashoffset:1}}
-  .tT .it{{position:absolute;left:0;right:0;text-align:center;opacity:0;font-family:"Serif";font-style:italic;font-size:{its}px;line-height:1.1;white-space:nowrap}}
+  .tT .it{{position:absolute;left:0;right:0;text-align:center;opacity:0;font-family:"SMSerif";font-style:italic;font-size:{its}px;line-height:1.1;white-space:nowrap}}
   .tT .strike{{position:absolute;height:5px;border-radius:3px;background:#FF453A;transform:scaleX(0);transform-origin:0 50%}}
 """
     body.append('<div class="hb" id="thb"></div><div class="vb" id="tvb"></div>')
@@ -195,7 +195,7 @@ def build_t(spec, Z, SERIF, MONT):
 
 def build_mbe(spec, Z, SERIF, MONT):
     """mauvais / bien / excellent : 3 cartes côte à côte, de gauche à droite, chacune sur son mot (son doigt).
-    Carte = pastille couleur + IMAGE (img, Cyril 16/10) ou icône tracée + petit texte serif dessous."""
+    Carte = pastille couleur + IMAGE (img, 16/10) ou icône tracée + petit texte serif dessous."""
     H = Z - TOP
     s, e = (30, 62) if H >= 420 else (24, 50)
     css, body, js, tt = common(Z, spec["title"], s, e)
@@ -215,7 +215,7 @@ def build_mbe(spec, Z, SERIF, MONT):
   .tT .card svg{{width:{isz}px;height:{isz}px;fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round;overflow:visible;margin-top:6px}}
   .tT .card svg path{{stroke-dasharray:1;stroke-dashoffset:1}}
   .tT .cimg{{width:{cw - 24:.0f}px;height:{ih:.0f}px;border-radius:14px;object-fit:cover;object-position:50% 0;opacity:0;box-shadow:0 6px 18px rgba(0,0,0,.35)}}
-  .tT .ctx{{font-family:"Serif";font-style:italic;font-size:{tsz}px;line-height:1.12;text-align:center;opacity:0}}
+  .tT .ctx{{font-family:"SMSerif";font-style:italic;font-size:{tsz}px;line-height:1.12;text-align:center;opacity:0}}
 """
     for i, c in enumerate(spec["cards"]):
         col = COL.get(c.get("color", ["bad", "ok", "top"][i % 3]), c.get("color"))
@@ -244,7 +244,7 @@ def build_mbe(spec, Z, SERIF, MONT):
 def build_tier(spec, Z, SERIF, MONT):
     """tier list : rangées S..D ; chaque élément grossit au CENTRE quand il est nommé (at), puis file dans sa rangée sur la
     LETTRE (land) (logique KimShota/Editable refaite en GSAP, sans rebond). Élément = icône (img, fond transparent) + nom DANS
-    la tuile (label, Montserrat) (Cyril 16/10 : « des logos ou des petites images, pas du texte » puis « le texte dans
+    la tuile (label, Montserrat) (16/10 : « des logos ou des petites images, pas du texte » puis « le texte dans
     l'icône, même police que le montage ») ; emoji possible ; texte seul seulement en secours (pastille)."""
     Z = min(Z, 900)
     rows = spec.get("rows", ["S", "A", "B", "C", "D"])
@@ -253,7 +253,7 @@ def build_tier(spec, Z, SERIF, MONT):
     items = spec["items"]
     hide = spec.get("title_hide", True)   # 16/10 : le titre est dit à voix haute -> grand au début, puis place au tableau
     if hide:
-        # title.size = [sans, serif] en px : hook plus fort (Cyril 17/10, tier list v3 : [96, 110])
+        # title.size = [sans, serif] en px : hook plus fort (17/10, tier list v3 : [96, 110])
         s, e = spec["title"].get("size") or ((34, 76) if H >= 400 else (28, 60))
         tt0 = s * 1.25 + e * 1.05
         css, body, js, tt = common(Z, spec["title"], s, e, TOP + (H - tt0) / 2)
@@ -331,7 +331,7 @@ def build_tier(spec, Z, SERIF, MONT):
     cx, cy = 540, rtop + (Z - rtop) / 2
     for k, it in enumerate(items):
         x, y, w, h = pos[k]
-        if it.get("img") and it.get("label"):   # icône + nom DANS la tuile, en Montserrat (Cyril 16/10 : cohérence DA)
+        if it.get("img") and it.get("label"):   # icône + nom DANS la tuile, en Montserrat (16/10 : cohérence DA)
             words = it["label"].replace("-", "- ").split()
             lines = [it["label"]]
             if len(it["label"]) > 11 and len(words) > 1:   # 2 lignes équilibrées

@@ -14,6 +14,8 @@ Sous-titres au centre-bas (y = 1150, pas de visage à éviter). Mots forts = pla
 import json, os, re, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+from sdr import sdr, BT709
 IMG = (".jpg", ".jpeg", ".png", ".webp")
 SUBY = 1150
 
@@ -45,6 +47,7 @@ def build(plan_p):
             cmd = ["ffmpeg", "-v", "error", "-y", "-loop", "1", "-framerate", "30", "-t", f"{d:.3f}", "-i", b["src"],
                    "-vf", f"scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,{move},fps=30,format=yuv420p"]
         else:
+            b["src"] = sdr(b["src"], here)   # 25/10 : plan iPhone HDR -> SDR avant la coupe
             fr = b.get("from", "auto")
             if fr == "auto":
                 o = subprocess.check_output(["python3", os.path.join(HERE, "broll.py"), "steady", b["src"], f"{d:.2f}"]).decode()
@@ -53,7 +56,7 @@ def build(plan_p):
             b["from"] = fr
             cmd = ["ffmpeg", "-v", "error", "-y", "-ss", f"{fr:.3f}", "-t", f"{d:.3f}", "-i", b["src"],
                    "-vf", f"scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30,{move},format=yuv420p"]
-        subprocess.run(cmd + ["-an", "-frames:v", str(round(d * 30)), "-c:v", "libx264", "-crf", "16", "-preset", "fast", out], check=True)
+        subprocess.run(cmd + ["-an", "-frames:v", str(round(d * 30)), "-c:v", "libx264", "-crf", "16", "-preset", "fast", *BT709, out], check=True)
         got = dur_of(out)
         if got < d - 0.05: print(f"!! plan {k} : le fichier source est trop court ({got:.2f} s sur {d:.2f}) -> prendre un autre passage")
         parts.append(out)
@@ -69,7 +72,7 @@ def build(plan_p):
           f"[0:v][g]overlay=0:0:shortest=1,format=yuv420p[v]")
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", lst, "-i", voice, "-filter_complex", vf,
                     "-map", "[v]", "-map", "1:a", "-c:v", "libx264", "-crf", "16", "-preset", "medium", "-r", "30",
-                    "-c:a", "aac", "-b:a", "192k", "-t", f"{total:.3f}", clip], check=True)
+                    *BT709, "-c:a", "aac", "-b:a", "192k", "-t", f"{total:.3f}", clip], check=True)
     vo["beats"] = beats
     P["cam"], P["zoom"], P["subY"], P["brolls"] = "clip.mp4", False, P.get("subY", SUBY), []
     json.dump(P, open(plan_p, "w"), ensure_ascii=False, indent=1)

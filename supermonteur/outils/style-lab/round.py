@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Style Lab client (Cyril 16/10) : au 1er lancement, le client choisit SA DA de montage en UN tour, sur SA 1re rush.
+"""Style Lab client (16/10) : au 1er lancement, le client choisit SA DA de montage en UN tour, sur SA 1re rush.
 5 sections, 1 seule variable par carte : DA visuelle (4 images Higgsfield avec son visage), polices (4), couleur (4),
 musique (4, à l'oreille), rythme (posé / nerveux). Il vote Garder / Peut-être / Jeter dans la page Style Lab,
 puis `lock` écrit da/<prenom>.json tout seul.
@@ -24,12 +24,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SKILL = os.path.dirname(os.path.dirname(HERE))
 S = os.path.join(SKILL, "scripts")
 ENV = dict(os.environ, PATH=os.path.expanduser("~/.local/bin") + ":" + os.path.expanduser("~/.local/node/bin") + ":" + os.environ.get("PATH", ""))
-HF = ["npx", "--yes", "hyperframes@0.6.81"]
+HF = ["npx", "--yes", "hyperframes@0.8.149"]
 SCALES = json.load(open(os.path.join(SKILL, "fonts", "scales.json")))
 # police étroite = sous-titres qui paraissent petits à 52 px : on compense la taille (mesuré sur la planche du 16/10)
 SCALES = {**SCALES, "BebasNeue-Regular.ttf": 1.35}
 
-# 4 couples de polices libres (OFL), le 1er = la maison (Montserrat + Instrument Serif, validé par Cyril le 13/10)
+# 4 couples de polices libres (OFL), le 1er = la maison (Montserrat + Instrument Serif, validé au Style Lab le 13/10)
 FONTS = [("Montserrat.ttf", "InstrumentSerif-Italic.ttf", "Montserrat + Instrument Serif", "Sobre et premium, celle de la maison."),
          ("Poppins-SemiBold.ttf", "PlayfairDisplay-Italic.ttf", "Poppins + Playfair", "Rond et chaleureux, serif élégante."),
          ("Inter.ttf", "DMSerifDisplay-Italic.ttf", "Inter + DM Serif", "Net et moderne, serif qui claque."),
@@ -66,7 +66,7 @@ def hue_name(h, s):
 
 def palette(c):
     """Couleur d'accent -> dégradé des cartons (plan.colors.grad : haut gauche sombre, haut droite vif, bas gauche, bas droite clair, fond)
-    + fond des cartons liste. Calqué sur le défaut validé (studio de Cyril : #060a1c #2f74ff #132b66 #9fbcf0 #11235a)."""
+    + fond des cartons liste. Calqué sur le défaut validé (studio nuit + LED bleue : #060a1c #2f74ff #132b66 #9fbcf0 #11235a)."""
     h, s, v = hsv_of(c)
     if s < 0.15:
         return {"accent": "#FFFFFF", "grad": ["#0A0A0A", "#D9D9D9", "#3A3A3A", "#F2F2F2", "#1A1A1A"], "list": ["#2A2A2A", "#161616", "#0B0B0D"]}
@@ -76,7 +76,7 @@ def palette(c):
 
 
 def rush_colors(clip, a, b):
-    """Les 2 teintes saturées qui dominent le rush (décor, lumière), peau écartée. Univers = le RUSH (Cyril 13/10)."""
+    """Les 2 teintes saturées qui dominent le rush (décor, lumière), peau écartée. Univers = le RUSH (13/10)."""
     from PIL import Image
     tmp = tempfile.mkdtemp()
     sh(["ffmpeg", "-v", "error", "-ss", str(a), "-to", str(b), "-i", clip, "-vf", "fps=0.8,scale=160:-1", os.path.join(tmp, "f%02d.png")])

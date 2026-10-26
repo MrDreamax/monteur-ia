@@ -1,4 +1,4 @@
-# Style Lab client : la DA de montage choisie sur SA 1re rush (Cyril 16/10 : 1 seul tour)
+# Style Lab client : la DA de montage choisie sur SA 1re rush (16/10 : 1 seul tour)
 
 Quand : 1er lancement chez un client (`mode-client.md`), après les connecteurs et `setup.sh`. Le client vote sur de vrais rendus de lui, ça écrit `da/<prenom>.json` tout seul.
 Durée : ~25 min dont ~10 min de rendu (8 variantes). Coût : ~1 crédit Higgsfield (4 images), 4 musiques Epidemic sur SON compte.

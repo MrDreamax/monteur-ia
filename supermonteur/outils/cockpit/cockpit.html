@@ -1,0 +1,1554 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Le Monteur</title>
+<style>
+/* Cockpit v3 « Claude te guide » (maquette validée le 23/10 : livrables/cockpit-montage/complet-r1/C, complet-r2/1c et 2b).
+   Conversation à droite (23/10 : « mieux pour le contrôle »), vidéo au centre. Remplace Style Lab + Cut Notes. Ancienne page (v2, panneau de cartes) : _backup/2026-10-23-cockpit-v2/.
+   Règle 23/10 : un look = polices + couleur du texte + rythme. JAMAIS d'étalonnage ni de filtre sur la vidéo du rush.
+   Pas de zone qui défile dans la page : si la conversation est longue, c'est la page qui défile, la vidéo reste en place. */
+:root{--bg:#f5f5f7;--ink:#1d1d1f;--ink2:#6e6e73;--ink3:#86868b;--line:rgba(0,0,0,.08);--blue:#0071e3;--green:#34c759;--red:#ff3b30;--yellow:#ffcc00;--orange:#ff9500}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit;background:none;border:0}
+button{cursor:pointer}button:disabled{opacity:.4;cursor:default}
+.app{min-height:100vh;display:flex;flex-direction:column}
+/* barre du haut, translucide, collée en haut quand la page défile */
+.bar{height:56px;flex:none;display:flex;align-items:center;gap:10px;padding:0 18px;background:rgba(255,255,255,.72);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:.5px solid var(--line);position:sticky;top:0;z-index:20}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;letter-spacing:-.01em}.brand img{width:20px}
+.proj{color:var(--ink3);font-size:13px}.sp{flex:1}
+.btn{border-radius:980px;padding:7px 16px;font-weight:600;font-size:13px;background:rgba(0,0,0,.06);transition:transform .1s ease-out;text-decoration:none;color:var(--ink);display:inline-block}
+.btn:active:not(:disabled){transform:scale(.97)}
+.btn.blue{background:var(--blue);color:#fff}
+.main{flex:1;display:flex;align-items:flex-start}
+/* ---------- la conversation ---------- */
+.chat{order:2;width:420px;flex:none;min-height:calc(100vh - 56px);background:rgba(255,255,255,.8);border-left:.5px solid var(--line);display:flex;flex-direction:column;padding:18px 18px 14px}
+#fil{display:flex;flex-direction:column;gap:10px;padding-bottom:16px}
+.who{font-size:11px;color:var(--ink3);font-weight:600;margin:4px 0 -6px 4px;letter-spacing:.02em}
+.who.moi{align-self:flex-end;margin-right:4px}
+.msg{max-width:92%;font-size:14px;line-height:1.4;padding:10px 13px;border-radius:16px;background:#fff;box-shadow:0 0 0 .5px var(--line);transition:box-shadow .15s}
+.msg.large{max-width:100%}
+.msg.on{box-shadow:0 0 0 2px var(--blue)}
+.msg.moi{align-self:flex-end;background:var(--blue);color:#fff;box-shadow:none}
+.msg b{font-weight:600}
+.msg .ch{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center}
+.msg small{display:block;color:var(--ink3);font-size:12px;margin-top:4px}
+.attente{align-self:flex-end;font-size:11.5px;color:var(--ink3);margin:-4px 6px 0 0}
+.pill{font-size:12px;font-weight:600;padding:5px 12px;border-radius:980px;background:rgba(0,113,227,.1);color:var(--blue);white-space:nowrap;transition:transform .1s ease-out}
+.pill:active:not(:disabled){transform:scale(.96)}
+.pill.plein{background:var(--blue);color:#fff}.pill.gris{background:rgba(0,0,0,.06);color:var(--ink)}
+.pill.fait{background:rgba(52,199,89,.14);color:#248a3d;cursor:default}
+.tc{font-size:11px;font-weight:700;color:var(--blue);background:rgba(0,113,227,.1);border-radius:6px;padding:2px 6px;font-variant-numeric:tabular-nums;flex:none;margin-right:6px}
+.msg.moi .tc{background:rgba(255,255,255,.22);color:#fff}
+.spin{width:16px;height:16px;border-radius:50%;border:2.5px solid rgba(0,113,227,.2);border-top-color:var(--blue);animation:t .9s linear infinite;flex:none;display:inline-block;vertical-align:-3px;margin-right:6px}
+@keyframes t{to{transform:rotate(360deg)}}
+/* les 3 looks */
+.looks{display:flex;gap:9px;margin-top:9px}
+.lk{flex:1;min-width:0;text-align:center;font-size:12px;font-weight:600;line-height:1.25;display:flex;flex-direction:column;justify-content:flex-start}
+.lk .v{height:150px;border-radius:10px;background:#000 center/cover;position:relative;overflow:hidden;margin-bottom:6px;transition:box-shadow .15s}
+.lk.on .v{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--blue)}
+.lk small{font-weight:400;color:var(--ink3);font-size:10.5px;margin-top:1px}
+.reg{display:flex;align-items:center;gap:8px;margin-top:9px;font-size:13px;flex-wrap:wrap}.reg>b{width:62px;font-weight:600;color:var(--ink2);font-size:12px;flex:none}
+.dot{width:24px;height:24px;border-radius:50%;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.25);transition:box-shadow .15s}.dot.on{box-shadow:inset 0 0 0 .5px rgba(0,0,0,.25),0 0 0 2px #fff,0 0 0 4px var(--blue)}
+/* 23/10 personnalisation : galerie des 6 polices au centre + 5 réglages qui se déplient (maquettes perso-r1 validées) */
+.galerie{display:grid;grid-template-columns:repeat(3,auto);gap:14px 28px}
+.galerie button{text-align:center;font-size:13px;font-weight:600;line-height:1.3}
+.galerie .v{border-radius:14px;background:#000 center/cover;position:relative;overflow:hidden;box-shadow:0 10px 26px rgba(0,0,0,.16);margin-bottom:7px;transition:box-shadow .15s}
+.galerie button.on .v{box-shadow:0 0 0 3px #fff,0 0 0 6px var(--blue)}
+.galerie small{display:block;font-weight:400;color:var(--ink3);font-size:12px}
+.acc{background:var(--bg);border-radius:12px;margin-top:8px}
+.acc>button{width:100%;display:flex;align-items:center;gap:10px;padding:11px 14px;font-size:14px;text-align:left}
+.acc>button b{font-weight:600;white-space:nowrap}.acc>button span{margin-left:auto;color:var(--ink3);font-size:12.5px;text-align:right}
+.acc .in{padding:0 14px 12px}.acc .in .reg:first-child{margin-top:0}
+.coul{width:24px;height:24px;border-radius:50%;border:0;padding:0;background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);cursor:pointer;-webkit-appearance:none;appearance:none;overflow:hidden}
+.coul::-webkit-color-swatch-wrapper{padding:0}.coul::-webkit-color-swatch{border:0;opacity:0}
+/* les 3 ouvertures */
+.cprev{display:flex;gap:8px;margin-top:8px}
+.cprev button{width:64px;height:114px;border-radius:8px;background:#000 center/cover;position:relative;overflow:hidden;flex:none;transition:box-shadow .15s}
+.cprev button.on{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--blue)}
+.cprev button>span{position:absolute;left:0;right:0;bottom:3px;text-align:center;color:#fff;font-size:9px;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.8);z-index:2}
+.seg{display:inline-flex;background:rgba(0,0,0,.06);border-radius:980px;padding:2px}
+.seg button{font-size:12px;font-weight:500;padding:3px 10px;border-radius:980px}
+.seg button.on{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12);font-weight:600}
+.ask{position:sticky;bottom:14px;margin-top:auto;display:flex;align-items:center;gap:8px;background:#fff;border-radius:14px;padding:7px 7px 7px 12px;box-shadow:0 0 0 .5px var(--line),0 6px 20px rgba(0,0,0,.06);flex:none}
+.ask .tc{margin:0}
+#dis{flex:1;min-width:0;font-size:14px;outline:none}#dis::placeholder{color:var(--ink3)}
+.mic{width:30px;height:30px;border-radius:50%;background:var(--blue);display:grid;place-items:center;flex:none}
+.mic.on{box-shadow:0 0 0 5px rgba(0,113,227,.2)}
+/* ---------- la scène : collée sous la barre, ne défile pas avec la conversation ---------- */
+.stage{flex:1;min-width:0;height:calc(100vh - 56px);position:sticky;top:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:28px 20px 34px}
+.phone{border-radius:34px;overflow:hidden;background:#000;box-shadow:0 20px 50px rgba(0,0,0,.22),0 0 0 6px #fff,0 0 0 7px rgba(0,0,0,.08);position:relative;flex:none}
+.scr{width:100%;height:100%;position:relative}
+.scr video{width:100%;height:100%;object-fit:cover;display:block}
+.ov{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.play{position:absolute;inset:0;display:grid;place-items:center;cursor:pointer}
+.play b{width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:grid;place-items:center;transition:opacity .2s}
+.play b:after{content:"";border-left:17px solid #1d1d1f;border-top:10px solid transparent;border-bottom:10px solid transparent;margin-left:5px}
+.joue .play b{opacity:0}
+/* zones interdites d'Instagram (règle 16/10, toutes les vidéos) : en rouge quand la vidéo est en pause ; le Gardien bloque tout texte dedans */
+.zones{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;transition:opacity .2s}
+.joue .zones{opacity:0}
+/* calques de l'aperçu : polices et couleurs du look (variables posées sur le téléphone ou la vignette) */
+.cap{position:absolute;left:4%;right:4%;text-align:center;font-family:var(--sans);font-weight:700;color:var(--txt,#fff);text-transform:uppercase;text-shadow:0 2px 8px rgba(0,0,0,.6);line-height:1.05}
+.kw{position:absolute;left:3%;right:3%;text-align:center;font-family:var(--serif);font-style:italic;color:var(--sercol,#fff);line-height:1;text-shadow:0 0 18px rgba(255,255,255,.25),0 3px 14px rgba(0,0,0,.5)}
+.ht{position:absolute;left:0;right:0;text-align:center;color:#fff;text-shadow:0 3px 18px rgba(0,0,0,.55);background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.5) 22%,rgba(0,0,0,.5) 78%,rgba(0,0,0,0))}
+.ht1{font-family:var(--sans);font-weight:700;text-transform:uppercase;letter-spacing:.5px;line-height:1.2}
+.ht2{font-family:var(--serif);font-style:italic;line-height:1.05;color:var(--sercol,#fff)}
+.ht.sty{background:none;text-shadow:0 4px 26px rgba(0,0,0,.55),0 1px 3px rgba(0,0,0,.35)}
+.ht.sty.forte,.cap.forte{text-shadow:0 0 3px rgba(0,0,0,.9),0 3px 8px rgba(0,0,0,.75),0 8px 30px rgba(0,0,0,.6)}
+.bw{position:absolute;left:0;right:0;text-align:center;font-family:var(--serif);font-style:italic;color:var(--sercol,#fff);line-height:1.22;text-shadow:0 10px 60px rgba(0,0,0,.25);white-space:nowrap}
+.cart{position:absolute;inset:0;z-index:3;overflow:hidden}
+.mxh{position:absolute;left:0;right:0;display:flex;justify-content:center;animation:bat .75s ease-in-out infinite;filter:drop-shadow(0 6px 18px rgba(0,0,0,.45))}
+@keyframes bat{0%,100%{transform:scale(1)}20%{transform:scale(1.14)}}
+.mxc{position:absolute;text-align:center;font-family:var(--sans);font-weight:800;line-height:1}
+.mxw{position:absolute;text-align:center;font-family:var(--sans);font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--sercol,#F2D37A);text-shadow:0 2px 6px rgba(0,0,0,.55)}
+.mxt{position:absolute;filter:drop-shadow(0 3px 8px rgba(0,0,0,.55))}
+.mxl{position:absolute;font-family:var(--sans);font-weight:600;text-transform:uppercase;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.55)}
+.mv2{grid-template-columns:repeat(2,1fr)}.mvn{font:800 34px/1 -apple-system,system-ui;color:#fff}.mvn i{font-style:normal;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.7);margin-left:4px}
+.mvi{width:64px;height:54px;object-fit:contain}
+.ils{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.il{height:58px;border-radius:9px;background:#0f1522;display:grid;place-items:center}.il.on{box-shadow:0 0 0 2.5px var(--blue)}.il .mvi{width:52px;height:44px}
+.bw.devant{text-shadow:0 0 4px rgba(0,0,0,.85),0 4px 14px rgba(0,0,0,.7),0 12px 60px rgba(0,0,0,.6)}
+.ctrl{display:flex;align-items:center;gap:14px;color:var(--ink2);font-size:13px;font-variant-numeric:tabular-nums;flex:none}
+.rond{width:34px;height:34px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.12);display:grid;place-items:center;flex:none}
+/* la bande : coupes rouges numérotées en haut, notes bleues en bas */
+.strip{display:flex;height:58px;border-radius:10px;border:3px solid var(--yellow);position:relative;background:#000;cursor:pointer;touch-action:none}
+.strip .fr{height:52px;flex:1;background-size:cover;background-position:center}
+.strip .fr:first-child{border-radius:6px 0 0 6px}.strip .fr:last-of-type{border-radius:0 6px 6px 0}
+.tick,.pin{position:absolute;top:-3px;bottom:-3px;width:4px;margin-left:-2px;border-radius:2px;box-shadow:0 0 0 1.5px rgba(255,255,255,.8);cursor:pointer}
+.tick{background:var(--red)}.pin{background:var(--blue);width:3px;margin-left:-1.5px}
+.tick::before{content:"";position:absolute;inset:-26px -9px 0}.pin::before{content:"";position:absolute;inset:0 -9px -26px}
+.tick i,.pin i,.remis i{position:absolute;left:50%;transform:translateX(-50%);width:20px;height:20px;border-radius:50%;color:#fff;font:700 11px/20px -apple-system,system-ui;text-align:center;font-style:normal;transition:box-shadow .15s}
+.tick i,.remis i{top:-25px;background:var(--red);box-shadow:0 2px 6px rgba(255,59,48,.35)}
+.pin i{bottom:-25px;background:var(--blue);box-shadow:0 2px 6px rgba(0,113,227,.35)}
+.tick.on i,.remis.on i,.pin.on i{box-shadow:0 0 0 3px rgba(0,113,227,.4)}
+.remis{position:absolute;top:-3px;bottom:-3px;background:rgba(255,204,0,.28);border-left:2px solid var(--orange);border-right:2px solid var(--orange);cursor:pointer}
+.remis i{background:var(--orange)}
+.ph{position:absolute;top:-10px;bottom:-10px;width:3px;margin-left:-1.5px;border-radius:2px;background:#fff;box-shadow:0 0 0 .5px rgba(0,0,0,.3),0 1px 4px rgba(0,0,0,.3);pointer-events:none}
+.kbd{font-size:11px;color:var(--ink3)}.kbd b{font-weight:600;border:1px solid rgba(0,0,0,.15);border-bottom-width:2px;border-radius:5px;padding:0 6px;margin-right:4px;color:var(--ink2);background:#fff}
+/* écouter un passage coupé : le téléphone passe sur le rush */
+.scr #v-rush{position:absolute;inset:0;z-index:2}
+.ecoute{position:absolute;top:14px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:12px;font-weight:600;color:#fff;background:rgba(255,59,48,.92);padding:6px 12px;border-radius:980px;box-shadow:0 4px 14px rgba(0,0,0,.25);z-index:3}
+.ecbar{position:absolute;left:18px;right:18px;bottom:18px;height:4px;border-radius:2px;background:rgba(255,255,255,.35);z-index:3}.ecbar i{display:block;width:0;height:100%;border-radius:2px;background:#fff}
+.recoupe{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#fff;font-size:15px;font-weight:600;background:rgba(0,0,0,.45);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.recoupe .spin{width:28px;height:28px;border-color:rgba(255,255,255,.3);border-top-color:#fff;margin:0}
+.recoupe small{font-size:12px;font-weight:500;opacity:.8}
+/* ---------- la planche des 6 contenus ---------- */
+.planche{display:flex;flex-direction:column;align-items:center;gap:24px}
+.planche h2{font-size:22px;font-weight:700;letter-spacing:-.02em}
+.planche .sous{color:var(--ink2);font-size:13px;margin-top:-16px;font-variant-numeric:tabular-nums}
+.board{display:flex;gap:16px;align-items:flex-end}
+.it{text-align:center;font-size:12.5px;font-weight:600;transition:opacity .2s}
+.it.off{opacity:.45}
+.it .v{border-radius:14px;background:#000 center/cover;position:relative;overflow:hidden;box-shadow:0 10px 26px rgba(0,0,0,.16);margin:0 auto 7px}
+.it small{display:block;font-weight:400;color:var(--ink3);font-size:11.5px;margin-top:1px;white-space:nowrap}
+.it .date{color:var(--blue);font-weight:500;cursor:pointer;position:relative}
+.it .date input{position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none}
+.it .tog{position:absolute;top:8px;right:8px;z-index:3}
+.etat{position:absolute;inset:0;z-index:2;display:grid;place-items:center;background:rgba(0,0,0,.35);color:#fff;font-size:22px;font-weight:700}
+.etat .spin{width:26px;height:26px;border-color:rgba(255,255,255,.3);border-top-color:#fff;margin:0}
+.etat.ok{background:none;place-items:end start;padding:8px}.etat.ok b{width:24px;height:24px;border-radius:50%;background:var(--green);font-size:13px;display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.etat.ko{background:rgba(255,59,48,.45)}
+.tog{width:38px;height:23px;border-radius:12px;background:rgba(0,0,0,.25);position:relative;flex:none;transition:background .2s}
+.tog::after{content:"";position:absolute;left:2px;top:2px;width:19px;height:19px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .25s cubic-bezier(.3,1.3,.5,1)}
+.tog.on{background:var(--green)}.tog.on::after{transform:translateX(15px)}
+.res{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--ink3)}
+.res button{font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:980px;background:rgba(0,0,0,.05);color:var(--ink3)}
+.res button.on{background:rgba(0,113,227,.12);color:var(--blue)}
+.pied{display:flex;gap:10px}.pied .btn{padding:11px 20px;font-size:15px}
+.alerte{font-size:12.5px;color:#c93400;margin-top:6px}
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,10px);background:rgba(29,29,31,.9);color:#fff;backdrop-filter:blur(20px);padding:10px 18px;border-radius:980px;font-size:14px;opacity:0;transition:opacity .25s,transform .35s cubic-bezier(.2,.9,.3,1);pointer-events:none;z-index:50}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+/* 23/10 montage en 3 étapes (maquettes passes-r1 validées : A « étapes en haut » + r2-3b « moments forts ») */
+.steps{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px}
+.st{display:flex;align-items:center;gap:8px;padding:5px 14px 5px 5px;border-radius:980px;font-size:13px;background:rgba(0,0,0,.04);white-space:nowrap;transition:background .15s}
+.st i{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:700;font-size:12px;background:rgba(0,0,0,.1);color:var(--ink2)}
+.st.on{background:rgba(0,113,227,.1);color:var(--blue);font-weight:600}.st.on i{background:var(--blue);color:#fff}
+.st.ok i{background:var(--green);color:#fff}.st small{color:var(--ink3);font-size:12px;font-weight:400}.st u{color:var(--blue);text-decoration:none;font-size:12px;font-weight:600}
+.steps .fl{color:var(--ink3);font-size:12px}
+.btn.noir{background:#1d1d1f;color:#fff}
+.suivant{display:block;width:100%;margin-top:4px;padding:11px;border-radius:980px;background:var(--blue);color:#fff;font-weight:600;font-size:14px;transition:transform .1s ease-out}
+.suivant:active{transform:scale(.98)}
+.sous-suivant{font-size:12px;color:var(--ink3);text-align:center;margin-top:-2px}
+.chip{font-size:12px;font-weight:500;padding:5px 9px;border-radius:980px;background:#fff;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);color:var(--ink2);white-space:nowrap}
+.chip.on{background:var(--blue);color:#fff;box-shadow:none;font-weight:600}
+.chip:disabled{opacity:.45}
+.mk{position:absolute;bottom:-3px;width:3px;margin-left:-1.5px;top:-3px;background:var(--blue);border-radius:2px;cursor:pointer}
+.mk::before{content:"";position:absolute;inset:0 -9px -26px}
+.mk i{position:absolute;left:50%;bottom:-25px;transform:translateX(-50%);width:20px;height:20px;border-radius:50%;background:var(--blue);color:#fff;font:700 11px/20px -apple-system,system-ui;text-align:center;font-style:normal;box-shadow:0 2px 6px rgba(0,113,227,.35)}
+.scr #v-broll{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+.cache{display:none!important}
+body.lab #steps,body.lab #auto,body.lab #exporter,body.lab #retour{display:none!important}   /* Derush Lab : la timeline seule */
+/* étape 3 (maquettes etape3-r1 r1-a + r2-a) : la liste des moments, celui qu'on touche s'ouvre */
+.l8{display:flex;flex-direction:column;gap:5px}
+.mrow{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:10px;font-size:13px;background:#fff;box-shadow:0 0 0 .5px var(--line);text-align:left;width:100%}
+.mrow b{width:20px;height:20px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;display:grid;place-items:center;flex:none}
+.mrow .tm{color:var(--ink3);font-size:12px;width:30px;flex:none}
+.mrow .q{color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+.mrow .ef{font-size:12px;font-weight:600;color:var(--blue);white-space:nowrap}
+.mrow .ef small{color:var(--ink3);font-weight:400;margin-left:4px}
+.mrow.rien .ef{color:var(--ink3);font-weight:400}
+.mopen{background:#fff;border-radius:14px;box-shadow:0 0 0 1.5px var(--blue);padding:11px 12px;font-size:13.5px}
+.mopen .hd{display:flex;align-items:center;gap:9px}.mopen .hd span{color:var(--ink2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mopen .hd b.n{width:20px;height:20px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;display:grid;place-items:center;flex:none}
+.mopen .ch{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
+.mopen .sub{margin-top:10px;border-top:1px solid var(--line);padding-top:9px}
+.mopen .lb{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--ink3);text-transform:uppercase;margin:4px 0 6px}
+.mopen small{display:block;color:var(--ink3);font-size:12px;margin-top:6px}
+.seg.sg{display:flex;width:100%;border-radius:9px}.seg.sg button{flex:1;padding:6px 4px;border-radius:7px;font-size:12.5px}
+.ct{display:block;width:100%;border:0;background:var(--bg,#f5f5f7);border-radius:9px;padding:7px 10px;font:600 13px -apple-system,system-ui;margin-bottom:6px;text-transform:uppercase;outline:none}
+.ct:focus{box-shadow:0 0 0 2px var(--blue)}.ct2{color:#a07a00}#bq{text-transform:none;font-weight:400}
+.sw{display:flex;gap:8px}.sw button{width:30px;height:30px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}.sw button.on{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--blue)}
+.mvs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.mv{height:64px;border-radius:9px;background:#0f1522;position:relative;display:grid;place-items:center;padding-bottom:12px}
+.mv small{position:absolute!important;left:0;right:0;bottom:3px;margin:0!important;font-size:10.5px!important;color:#fff!important;text-align:center}
+.mv.on{box-shadow:0 0 0 2.5px var(--blue)}
+.bth{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.bth.biblio{max-height:330px;overflow:auto;padding:2px}
+.bt{height:118px;border-radius:9px;background:#000 center/cover;position:relative;box-shadow:inset 0 0 0 1px rgba(0,0,0,.1)}
+.bt.on{box-shadow:0 0 0 2.5px var(--blue)}
+.bt small{position:absolute!important;left:0;right:0;bottom:0;margin:0!important;font-size:10.5px!important;color:#fff!important;background:linear-gradient(transparent,rgba(0,0,0,.75));padding:12px 5px 4px;border-radius:0 0 9px 9px;line-height:1.25;text-align:left}
+.bt i{position:absolute;top:5px;right:5px;width:18px;height:18px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;display:grid;place-items:center;font-style:normal}
+.lien{font-size:12.5px;color:var(--blue);margin-top:8px;display:block}
+/* 23/10 v5 étape 1 : dérushage en TIMELINE (maquettes livrables/cockpit-montage/timeline-r2/1.png + courbe-1-bourse.png validées).
+   La conversation se range : un message + « Suivant » en bas ; toute la largeur pour la loupe et le reel bout à bout. */
+.main.e1 .chat{display:none}
+.main.e1 .stage{padding:16px 20px;justify-content:flex-start}
+.tl{width:100%;display:flex;flex-direction:column;gap:12px}
+.tl-haut{display:flex;gap:16px;flex:none}
+.dr-col{display:flex;flex-direction:column;align-items:center;gap:8px;flex:none}
+.carte{background:#fff;border-radius:16px;box-shadow:0 0 0 .5px var(--line);padding:12px 18px}
+.carte .h2{font-size:13px;color:var(--ink3);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.carte .h2>b{font-size:15px;color:var(--ink);font-weight:600}
+.carte .h2 .r{margin-left:auto;display:flex;gap:6px;align-items:center}
+.tl-loupe{flex:1;min-width:0;display:flex;flex-direction:column}
+.tl-in{position:relative;margin:46px 4px 0}
+.regle{position:relative;height:22px;font-size:10.5px;color:var(--ink3);font-variant-numeric:tabular-nums}
+.regle i{position:absolute;bottom:0;width:1px;background:rgba(0,0,0,.25)}
+.regle span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
+.tl-zone{position:relative;margin-top:6px;cursor:text;touch-action:none;user-select:none;-webkit-user-select:none}
+.tl-zone canvas,.ovw canvas{width:100%;height:100%;display:block;border-radius:8px}
+#tl-over,#ov-over{position:absolute;inset:0;pointer-events:none}
+.tl-bord{position:absolute;top:-6px;bottom:-6px;width:20px;margin-left:-10px;cursor:ew-resize;pointer-events:auto;touch-action:none}
+.tl-bord::before{content:"";position:absolute;left:9px;top:0;bottom:0;width:2px;background:#1d1d1f}
+.tl-bord b{position:absolute;left:5px;width:10px;height:44px;border-radius:4px;background:#1d1d1f;box-shadow:0 0 0 2px #fff,0 2px 6px rgba(0,0,0,.25)}
+.tl-bord.on b,.tl-bord:hover b{background:var(--blue)}
+.tl-sel{position:absolute;top:-4px;bottom:-4px;background:rgba(0,113,227,.16);border:2px solid var(--blue);border-radius:6px;pointer-events:none}
+.tl-poi{position:absolute;width:12px;height:44px;margin-left:-6px;border-radius:4px;background:var(--blue);box-shadow:0 1px 4px rgba(0,0,0,.3);cursor:ew-resize;pointer-events:auto;touch-action:none}
+.tl-poi::after{content:"";position:absolute;left:5px;top:12px;bottom:12px;width:2px;border-radius:1px;background:rgba(255,255,255,.8)}
+.tl-poi.on{box-shadow:0 0 0 3px rgba(0,113,227,.35),0 1px 4px rgba(0,0,0,.3)}
+.tl-marque{position:absolute;top:-6px;bottom:-6px;width:2px;margin-left:-1px;background:var(--blue);opacity:.7}
+.flot{position:absolute;top:-82px;transform:translateX(-50%);display:flex;gap:4px;background:#1d1d1f;border-radius:980px;padding:4px;box-shadow:0 8px 20px rgba(0,0,0,.25);white-space:nowrap;pointer-events:auto;z-index:3}
+.flot button{color:#fff;font-size:12.5px;font-weight:600;padding:5px 12px;border-radius:980px}
+.flot button.b{background:var(--blue)}.flot button.r{background:var(--red)}
+.tl-labels{position:relative;height:26px;margin-top:8px}
+.tag{position:absolute;transform:translateX(-50%);font-size:11px;font-weight:600;white-space:nowrap;padding:2px 8px;border-radius:980px}
+.tag.rep{background:rgba(255,59,48,.12);color:var(--red)}.tag.bl{background:rgba(0,0,0,.06);color:var(--ink2)}
+.tag.noir{background:#1d1d1f;color:#fff}.tag.court{background:rgba(255,149,0,.15);color:#c93400}
+.tl-loupe .kbd{margin-top:auto;padding-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-vue{flex:none}
+.tl-vue .tcg{font-size:15px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}.tl-vue .tcg span{color:var(--ink3);font-weight:500}
+.pill .k{font-size:10.5px;border:1px solid rgba(0,0,0,.15);border-radius:4px;padding:0 4px;margin-left:3px;color:var(--ink3)}
+.ovw{position:relative;height:110px;margin:34px 0 26px}
+.ob{position:absolute;top:0;bottom:0;border-radius:7px;cursor:pointer;pointer-events:auto;transition:box-shadow .12s}
+.ob.k{box-shadow:0 0 0 1.5px var(--blue)}.ob.c{box-shadow:0 0 0 1px rgba(0,0,0,.12)}
+.ob:hover{box-shadow:0 0 0 2.5px var(--blue)}.ob.on{box-shadow:0 0 0 2.5px #1d1d1f}
+.ob.court{box-shadow:0 0 0 2px var(--orange)}
+.tete{position:absolute;top:-8px;bottom:-8px;width:2px;margin-left:-1px;background:var(--red);pointer-events:none}
+.ovw .tete{top:-6px;bottom:-6px}
+/* 23/10 barre de lecture (maquette livrables/cockpit-montage/barre-r1/C, choix de Cyril : « barre en rouge sur la timeline et sur la
+   coupe en grand ») : la barre rouge s'attrape et se tire, dans le reel bout à bout ET dans la loupe ; l'image suit sous le doigt. */
+.tete.prise{pointer-events:auto;cursor:ew-resize;touch-action:none;z-index:4}
+.tete.prise::after{content:"";position:absolute;top:0;bottom:0;left:-9px;right:-9px}
+.tete.prise>b{position:absolute;bottom:100%;left:50%;transform:translate(-50%,-4px);background:var(--red);color:#fff;font:700 11.5px/1 -apple-system,system-ui;padding:4px 9px;border-radius:980px;white-space:nowrap;box-shadow:0 2px 8px rgba(255,59,48,.35);font-variant-numeric:tabular-nums;cursor:grab}
+.tete.prise.tire>b{cursor:grabbing}
+.tete .vign{position:absolute;bottom:100%;left:50%;transform:translate(-50%,-28px);width:54px;height:96px;border-radius:7px;box-shadow:0 6px 18px rgba(0,0,0,.3),0 0 0 2px #fff;display:none;background-repeat:no-repeat}
+.tete.tire .vign{display:block}
+.tl-bas{display:flex;gap:12px;align-items:center;flex:none}
+.tl-bas .msg{flex:1;max-width:none}
+.tl-bas .suivant{width:300px;margin:0;padding:13px;font-size:15px}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important;animation-duration:3s!important}}
+@media (prefers-reduced-transparency:reduce){.bar,.chat{background:#fff;backdrop-filter:none}}
+@media (max-width:900px){.main{flex-direction:column}.chat{width:auto;min-height:0;border-right:0}.stage{position:relative;top:0;height:auto;min-height:600px;width:100%}.board{flex-wrap:wrap;justify-content:center}}
+</style><style id="polices"></style></head><body>
+<div class="app">
+ <header class="bar">
+  <div class="brand"><img src="/logo.png" alt="">Le Monteur</div><div class="proj" id="proj"></div>
+  <div class="steps" id="steps"></div>
+  <div class="sp"></div>
+  <button class="btn noir" id="auto" title="Je fais les 3 étapes seul, avec mes conseils, et je fabrique le reel">⚡ Tout auto</button>
+  <button class="btn cache" id="retour">Revenir au montage</button>
+  <button class="btn blue" id="exporter">Exporter</button>
+ </header>
+ <div class="main">
+  <aside class="chat"><div id="fil"></div>
+   <div class="ask"><span class="tc cache" id="tc-ask"></span><input id="dis" placeholder="Dis-moi ce que tu veux changer…"><button class="mic" id="mic" aria-label="Dicter"><svg width="12" height="16" viewBox="0 0 12 16"><rect x="3" y="0" width="6" height="10" rx="3" fill="#fff"/><path d="M1 7a5 5 0 0010 0M6 12v3" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg></button></div>
+  </aside>
+  <section class="stage" id="stage"></section>
+ </div>
+ <input type="file" id="fichier-broll" accept="video/mp4,video/quicktime,.mp4,.mov,.m4v" class="cache">
+ <input type="file" id="fichier" accept="audio/mpeg,audio/mp4,audio/x-m4a,audio/wav,audio/aac,.mp3,.m4a,.wav,.aac" class="cache">
+ <div class="toast" id="toast"></div>
+</div>
+<script>
+const PLACES = {haut: -140, normal: 0, bas: 110};
+const NOMS_PLACE = {haut: "plus haut", normal: "au menton", bas: "plus bas"};
+const $ = s => document.querySelector(s);
+let E = null, G = [], KW = [], lecteurs = [], son = null, tic = null, choisie = null;
+let mode = "montage";        // « montage » (la vidéo) ou « export » (la planche des 6 contenus)
+let pick = null;             // le choix de look en cours : {id, affine, affiner}
+let ecoute = null;
+
+async function api(u, corps) {
+  const r = await fetch(u, corps ? {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(corps)} : {});
+  return r.json();
+}
+const fmt = s => { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+const virg = x => String(x).replace(".", ",");
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+function toast(t) { const e = $("#toast"); e.textContent = t; e.classList.add("on"); clearTimeout(e._t); e._t = setTimeout(() => e.classList.remove("on"), 2800); }
+const C = () => E.choix;
+const sauver = v => { Object.assign(E.choix, v); return api("/api/choix", v); };
+const derushEnCours = () => E.job.etat === "en cours" && E.job.nom !== "Tout fabriquer";
+const fabEnCours = () => E.job.etat === "en cours" && E.job.nom === "Tout fabriquer";
+
+// ---------- looks : polices + couleur du texte (+ rythme au rendu). Aucun filtre sur la vidéo. ----------
+const famille = f => "F" + f.replace(/\W/g, "");
+function chargerPolices() {
+  const fs = new Set(Object.keys(E.noms_polices || {}));
+  E.looks.forEach(l => { fs.add(l.sans); fs.add(l.serif); });
+  (E.polices || []).forEach(p => ["t1", "t2", "sub"].forEach(k => fs.add(p[k].font)));
+  $("#polices").textContent = [...fs].map(f => `@font-face{font-family:${famille(f)};src:url(/polices/${f});font-weight:100 900;font-stretch:50% 200%;font-style:${/Italic/.test(f) ? "italic" : "normal"}}`).join("\n");
+}
+function lookDe(id, aff = {}) {
+  const L = {...(E.looks.find(l => l.id === id) || E.looks[0])}, p = E.looks.find(l => l.id === aff.polices);
+  if (p) { L.sans = p.sans; L.serif = p.serif; }
+  if (aff.couleur) L.serif_couleur = aff.couleur;
+  if (aff.rythme) L.rythme = aff.rythme;
+  return L;
+}
+const lookVu = () => pick ? lookDe(pick.id, pick.affine) : (E.look || lookDe(E.looks[0].id));
+const varsLook = L => `--sans:${famille(L.sans)},-apple-system;--serif:${famille(L.serif)},Georgia;--txt:${L.texte || "#fff"};--sercol:${L.serif_couleur || "#fff"}`;
+const nomPolices = L => `${E.noms_polices[L.sans] || L.sans} + ${E.noms_polices[L.serif] || L.serif}`;
+const nomCouleur = c => (E.noms_couleurs || {})[String(c).toUpperCase()] || "couleur perso";
+function appliquerLook() { const p = $("#p-reel"); if (p) { p.style.cssText = p.style.cssText.replace(/--[^;]+;?/g, "") + ";" + varsLook(lookVu()); lecteurs.forEach(L => L.dernier = ""); } }
+
+// ---------- 23/10 personnalisation : le style = 1 police (sur 6) + taille, couleurs, position, plus. Même règles que build.mjs. ----------
+let spick = null;   // le style en cours de réglage : {...style, ouvert: "police" | "taille" | "couleurs" | "position" | "plus" | null}
+const PALETTE = [["#FFFFFF", "blanc"], ["#F4EBDD", "ivoire"], ["#F2D37A", "or"], ["#A9D1FF", "bleu"], ["#8FF0C8", "menthe"], ["#FF8A8A", "corail"]];
+const STYLE_DEF = () => ({police: "combo", titre: "M", couleurs: {t1: "#FFFFFF", t2: "#FFFFFF", sub: "#FFFFFF"}, titre_place: "haut", align: "centre", majuscules: null, ombre: "douce", mots: 4});
+const styleVu = () => spick || E.style || null;
+const polDe = id => (E.polices || []).find(p => p.id === id) || E.polices[0];
+const TT = {S: .85, M: 1, L: 1.15, XL: 1.3}, TPL = {haut: 280, bas: 420};
+const TPj = t => String(t || "").replace(/\s*[,.;:…]+/g, "").replace(/\s{2,}/g, " ").trim();   // comme build.mjs : pas de ponctuation dans le titre
+const mesures = new Map();
+let regle = null;   // un span caché : la mesure suit TOUT le CSS de la ligne (largeur étirée d'Archivo comprise, que le canvas ignore)
+function fitJS(text, s, base) {   // titre : chaque ligne reste sur UNE ligne, sa taille baisse jusqu'à tenir dans 940 px (Cyril : jamais 3 lignes)
+  const t = s.caps ? text.toUpperCase() : text, f = `${s.italic ? "italic " : ""}${s.weight || 400} 100px ${famille(s.font)}`, cle = f + (s.stretch || 100) + (s.track || 0) + t;
+  let L = mesures.get(cle);
+  if (L == null) {
+    if (!regle) { regle = document.createElement("span"); regle.style.cssText = "position:absolute;left:-9999px;top:0;white-space:nowrap;visibility:hidden"; document.body.appendChild(regle); }
+    regle.style.cssText = regle.style.cssText.replace(/font[^;]*;|letter-spacing[^;]*;|text-transform[^;]*;/g, "") + cssLigne({...s, caps: false}, 100, 1);
+    regle.textContent = t; L = regle.getBoundingClientRect().width / 100;
+    if (document.fonts.status === "loaded" && document.fonts.check(f)) mesures.set(cle, L);   // jamais garder une mesure faite avec la police de secours
+  }
+  return Math.min(base, Math.floor(940 / (L * 1.03)));
+}
+// une police arrive : on oublie les mesures et on redessine (sinon le titre peut déborder dans la zone interdite)
+document.fonts.addEventListener("loadingdone", () => { mesures.clear(); lecteurs.forEach(L => L.dernier = ""); if (spick && spick.ouvert === "police") rendreScene(); });
+const cssLigne = (s, fs, k) => `font-family:${famille(s.font)},sans-serif;font-weight:${s.weight || 400};font-style:${s.italic ? "italic" : "normal"};font-stretch:${s.stretch || 100}%;letter-spacing:${(s.track || 0) * k}px;text-transform:${s.caps ? "uppercase" : "none"};color:${s.color || "#fff"};font-size:${fs * k}px`;
+function typoJS(S, blanc) {   // = typo() de cockpit.py ; blanc = la galerie montre la police seule (la couleur se règle à part)
+  const p = polDe(S.police), f = TT[S.titre] || 1, c = blanc ? STYLE_DEF().couleurs : S.couleurs, sub = {...p.sub, color: c.sub};
+  if (S.majuscules != null) sub.caps = !!S.majuscules;
+  return {t1: {...p.t1, size: Math.round(p.t1.size * f), color: c.t1}, t2: {...p.t2, size: Math.round(p.t2.size * f), color: c.t2}, sub,
+          forte: S.ombre === "forte", gauche: S.align === "gauche", top: TPL[S.titre_place] || 280};
+}
+
+// ---------- 23/10 les 3 étapes : 1 Dérushage, 2 Style (sautée dès la 2e vidéo), 3 Motion / B-roll (facultative) ----------
+const passe = () => E.lab ? 1 : (C().passe || 1);   // Derush Lab : toujours l'étape 1
+const styleFait = () => !!(E.style || E.look);
+const nomStyle = () => E.style ? polDe(E.style.police).nom : E.look ? E.look.nom : "";
+const sautee3 = () => C().passe3 === "sautee";
+function rendreSteps() {
+  const p = mode === "export" ? 0 : passe(), z = $("#steps");
+  const st = (n, cls, html) => `<button class="st ${cls}" data-pa="${n}">${html}</button>`;
+  z.innerHTML = st(1, p === 1 ? "on" : "ok", `<i>${p === 1 ? 1 : "✓"}</i>Dérushage`) + '<span class="fl">›</span>'
+    + st(2, p === 2 ? "on" : p === 0 ? "ok" : "", `<i>${p === 0 ? "✓" : 2}</i>Style${p !== 2 && styleFait() ? ` <small>${esc(nomStyle())}</small>` : ""}`);
+  z.querySelectorAll("[data-pa]").forEach(b => b.onclick = () => +b.dataset.pa === 2 && passe() === 1 && mode === "montage" ? suivant1() : allerPasse(+b.dataset.pa));
+}
+async function allerPasse(n) {
+  finEcoute(); pick = null; mode = "montage";
+  spick = n === 2 && !styleFait() ? {...STYLE_DEF(), ouvert: "police"} : null;   // 23/10 v4 : l'étape 2 = l'aperçu habillé ; la galerie seulement à la 1re vidéo
+  await sauver({passe: n}); window.scrollTo(0, 0); rendre();
+}
+// étape 3 : les moments forts que Claude a repérés, avec le choix de la personne (aperçu = ce que le moteur fabriquera)
+const momentsVus = () => sautee3() ? [] : (E.moments || []);
+const zoomsVus = () => momentsVus().filter(m => m.choix === "zoom").map(m => ({a: Math.max(0, m.t0 - 0.4), b: m.t1 + 1.6, out: m.reglage.zoom === "arriere"}));
+function echelleZoom(t) {   // = plan.zooms de build.mjs : entrée 0,9 s, dérive lente, sortie 0,9 s ; zoom arrière = s'avance avant, recule sur le moment
+  const ez = x => 0.5 - Math.cos(Math.PI * Math.min(1, Math.max(0, x))) / 2;
+  for (const z of zoomsVus()) {
+    if (z.out) {
+      const pre = Math.min(1.4, Math.max(0.6, z.a - 0.2));
+      if (t >= z.a - pre && t < z.a) return 1 + 0.1 * ez((t - z.a + pre) / pre);
+      if (t >= z.a && t < z.a + 0.7) return 1.1 - 0.1 * (1 - Math.pow(1 - (t - z.a) / 0.7, 2));
+      continue;
+    }
+    const d = Math.max(2, z.b - z.a), mv = Math.min(0.9, d / 3), u = t - z.a;
+    if (u < 0 || u > d) continue;
+    if (u < mv) return 1 + 0.08 * ez(u / mv);
+    if (u > d - mv) return 1 + 0.095 * (1 - ez((u - d + mv) / mv));
+    return 1.08 + 0.015 * (u - mv) / (d - 2 * mv);
+  }
+  return 1;
+}
+const brollsVus = () => momentsVus().filter(m => m.choix === "broll" && m.reglage.broll && (m.reglage.broll !== "perso" || m.broll))
+  .map(m => ({id: m.id, a: m.t0 - 0.1, b: Math.max(m.t1 + 0.4, m.t0 + 2.2),
+              src: m.reglage.broll === "perso" ? `/broll/${m.id}?v=${brollV}` : `/biblio/apercu?f=${encodeURIComponent(m.reglage.broll)}`}));
+const motsSous = () => momentsVus().filter(m => m.choix === "mot" && m.mot && m.reglage.mot === "sous").map(m => ({txt: m.mot, t0: m.t0 - 0.05, t1: m.t1 + 0.3}));
+const cartonsVus = () => momentsVus().filter(m => m.choix === "carton").map(m => ({...m.reglage.carton, a: Math.max(0, m.t0 - 0.1), b: Math.max(m.t1 + 0.6, m.t0 + 1.8), t: m.t0}));
+const motionsVus = () => { let n = 0; const ms = momentsVus().filter(m => m.choix === "motion"), tot = Math.min(4, ms.filter(m => m.reglage.motion === "chiffres").length);
+  return ms.map((m, i) => ({kind: m.reglage.motion, a: m.t0, b: Math.min(Math.max(m.t1 + 0.8, m.t0 + 1.8), ms[i + 1] ? ms[i + 1].t0 - 0.02 : 1e9), b0: Math.max(m.t1 + 0.8, m.t0 + 1.8),
+                            mot: m.mot, illus: m.reglage.illus, n: m.reglage.motion === "chiffres" ? Math.min(4, ++n) : 0, tot})); };
+function hookVu() {   // l'ouverture choisie + les mots géants de l'étape 3 (le moteur les reçoit dans plan.bigwords)
+  const h = hookChoisi(), T = h.title || {}, mots = momentsVus().filter(m => m.choix === "mot" && m.mot && m.reglage.mot !== "sous" && m.t0 > (T.end ?? -1))
+    .map(m => ({text: m.mot, start: m.t0, end: Math.max(m.t1 + 0.3, m.t0 + 1.6)}));
+  const out = mots.length ? {...h, bigwords: [...(h.bigwords || []), ...mots]} : {...h};
+  hookVu.dernier = out;
+  return out;
+}
+
+// ---------- sous-titres de l'aperçu (le vrai découpage est fait par le moteur au rendu) ----------
+const norm = s => s.toLowerCase().replace(/[.,!?;:«»"]/g, "").trim();
+function joindre(ws) { let t = ""; ws.forEach(w => { const x = w.text.trim(); t += (x.startsWith("'") || !t) ? x : " " + x; }); return t; }
+function preparerTexte() {
+  const fx = E.base.fixes || {}, W = E.words.map(w => ({...w, text: fx[w.text] || w.text}));
+  const out = []; let cur = [];
+  const pousse = () => { if (cur.length) { out.push({t0: cur[0].start, t1: cur[cur.length - 1].end, txt: joindre(cur)}); cur = []; } };
+  W.forEach(w => {
+    const prev = cur[cur.length - 1];
+    if (cur.length && !w.text.trim().startsWith("'") && (cur.length >= Math.min(3, (styleVu() || {}).mots || 3) || joindre([...cur, w]).length > 16 || w.start - prev.end > 0.3)) pousse();
+    cur.push(w);
+  });
+  pousse();
+  for (let i = 0; i < out.length - 1; i++) if (out[i + 1].t0 - out[i].t1 < 0.4) out[i].t1 = out[i + 1].t0;
+  G = out; KW = [];
+  (E.keywords || []).forEach(k => {
+    const p = k.split(/\s+/).map(norm);
+    for (let i = 0; i + p.length <= W.length; i++)
+      if (p.every((x, j) => norm(W[i + j].text) === x)) KW.push({t0: W[i].start - 0.05, t1: W[i + p.length - 1].end + 0.25, txt: k});
+  });
+}
+const hookChoisi = () => E.hooks.find(h => h.id === C().hook) || {};
+// 23/10 (retour n6) : le mot géant au même endroit que le rendu (build.mjs : 820 px de large, haut de la tête - 0,7 x taille,
+// jamais au-dessus de 270 px) ; la tête (mesurée par headtop.py, E.tetes) cache le bas du mot comme le détourage du rendu.
+// Sans tête à l'image : devant, au milieu, ombre forte (comme le rendu). Mesure pas encore prête : en haut, sans masque.
+function motGeant(b, k) {
+  const tt = (E.tetes || {})[`${b.start.toFixed(2)}-${b.end.toFixed(2)}`];
+  let fs = Math.round(Math.min(330, 820 / (b.text.length * 0.47 * 1.06))), top = 270, masque = "", cls = "bw";
+  if (tt && tt.aucune) { top = 760; cls += " devant"; }
+  else if (tt) {
+    fs = Math.min(fs, Math.max(150, Math.round((tt.top - 270) / 0.7)));
+    top = Math.max(270, Math.round(tt.top - 0.7 * fs));
+    const rx = tt.hw * 1.12, ry = tt.hw * 1.5, cy = tt.top + ry - top;   // la tête = une ellipse posée sous le haut des cheveux
+    const g = `radial-gradient(ellipse ${rx * k}px ${ry * k}px at ${tt.cx * k}px ${cy * k}px,transparent 97%,#000 100%)`;
+    masque = `-webkit-mask-image:${g};mask-image:${g};`;
+  }
+  return `<div class="${cls}" style="top:${top * k}px;font-size:${fs * k}px;${masque}">${esc(b.text)}</div>`;
+}
+// les calques à l'instant t pour une largeur d'écran W (vidéo, vignettes des looks, des ouvertures, de la planche)
+function calques(t, hook, W, S = styleVu(), blanc = false) {
+  const k = W / 1080, ch = C(), Y = S && E.polices ? typoJS(S, blanc) : null;
+  let h = "";
+  const T = hook.title;
+  if (T && t >= (T.start || 0) && t <= T.end && Y) {
+    const a = TPj(T.l1), b = TPj(T.l2);
+    h += `<div class="ht sty${Y.forte ? " forte" : ""}" style="top:${Y.top * k}px;padding:${30 * k}px ${70 * k}px ${38 * k}px;text-align:${Y.gauche ? "left" : "center"};white-space:nowrap">`
+      + `<div style="${cssLigne(Y.t1, fitJS(a, Y.t1, Y.t1.size), k)};line-height:1.25">${esc(a)}</div><div style="${cssLigne(Y.t2, fitJS(b, Y.t2, Y.t2.size), k)};line-height:1.1">${esc(b)}</div></div>`;
+  } else if (T && t >= (T.start || 0) && t <= T.end)
+    h += `<div class="ht" style="top:${(T.top ?? 280) * k}px;padding:${30 * k}px ${60 * k}px ${38 * k}px"><div class="ht1" style="font-size:${Math.round(ch.taille * 46 / 52) * k}px">${esc(T.l1)}</div><div class="ht2" style="font-size:${104 * k}px">${esc(T.l2)}</div></div>`;
+  if (hook === hookVu.dernier) {   // la vidéo du reel (pas les vignettes) : les effets de l'étape 3
+    const ct = cartonsVus().find(c => t >= c.a && t <= c.b);
+    if (ct) {   // = plan.mini card de build.mjs : plein écran, texte sans serif, 2 lignes, mot par mot (ici d'un bloc)
+      const bg = ct.fond === "flou" ? `url(/image/${ct.t.toFixed(1)}) center/cover` : (FONDS_C[ct.fond] || FONDS_C.nuit);
+      return `<div class="cart" style="background:${bg}"><div style="${ct.fond === "flou" ? "backdrop-filter:blur(" + 34 * k + "px) brightness(.8);" : ""}position:absolute;inset:0;display:grid;place-content:center;gap:${4 * k}px;text-align:center">`
+        + [ct.l1, ct.l2].filter(Boolean).map((l, i) => `<div style="font:800 ${Math.min(104, 840 / Math.max(1, l.length * 0.62)) * k}px/1.02 var(--sans);letter-spacing:${k}px;color:${i ? "var(--sercol,#F2D37A)" : "#fff"};white-space:nowrap">${esc(l)}</div>`).join("") + "</div></div>";
+    }
+    motionsVus().filter(x => t >= x.a && t <= x.b).forEach(x => {   // = plan.motions de build.mjs (chiffres derrière la tête, illustration au trait)
+      const tt = (E.tetes || {})[`${x.a.toFixed(2)}-${x.b0.toFixed(2)}`] || {}, ht = tt.top || 500;
+      if (x.kind === "chiffres") {
+        const top = Math.max(330, ht - 160), w = 260, gap = x.tot > 3 ? 20 : 40, x0 = 540 - (x.tot * w + (x.tot - 1) * gap) / 2;
+        const masque = tt.top ? (g => `-webkit-mask-image:${g};mask-image:${g};`)(`radial-gradient(ellipse ${tt.hw * 1.12 * k}px ${tt.hw * 1.5 * k}px at ${tt.cx * k}px ${(tt.top + tt.hw * 1.5) * k}px,transparent 97%,#000 100%)`) : "";
+        h += `<div style="position:absolute;inset:0;${masque}">` + Array.from({length: x.tot}, (_, i) => i + 1).map(n => `<div class="mxc" style="left:${(x0 + (n - 1) * (w + gap)) * k}px;top:${top * k}px;width:${w * k}px;font-size:${330 * k}px;`
+          + `${n === x.n ? "color:#fff" : `color:transparent;-webkit-text-stroke:${Math.max(1, 3 * k)}px rgba(255,255,255,${n <= x.n ? .85 : .35})`}">${n}</div>`).join("") + "</div>"
+          + `<div class="mxw" style="left:${(x0 + (x.n - 1) * (w + gap) + w / 2 - 200) * k}px;top:${(top - 45) * k}px;width:${400 * k}px;font-size:${30 * k}px">${esc(x.mot)}</div>`;
+      } else if (x.kind === "trait") {
+        const gauche = (tt.cx || 640) >= 540;
+        h += `<img src="/illus/${x.illus}-trait.svg" class="mxt" style="${gauche ? "left" : "right"}:${65 * k}px;top:${290 * k}px;width:${420 * k}px;height:${350 * k}px">`
+          + `<div class="mxl" style="${gauche ? "left:" + 90 * k + "px" : "right:" + 130 * k + "px"};top:${650 * k}px;font-size:${32 * k}px;letter-spacing:${4 * k}px">${esc(x.mot)}</div>`;
+      }
+    });
+  }
+  const bws = (hook.bigwords || []).filter(b => t >= b.start && t <= b.end);
+  bws.forEach(b => { h += motGeant(b, k); });
+  const y = (E.base.subY + PLACES[ch.place]) * k;
+  const sous = hook === hookVu.dernier ? motsSous().find(s => t >= s.t0 && t <= s.t1) : null;   // mot géant « dans le sous-titre »
+  const kw = sous || ((!T && ch.mots_forts && !bws.length) ? KW.find(s => t >= s.t0 && t <= s.t1) : null);   // le mot géant passe avant le mot fort
+  if (kw) h += `<div class="kw" style="top:${y - 50 * k}px;font-size:${132 * k}px">${esc(kw.txt)}</div>`;
+  else { let g = G.find(g => t >= g.t0 && t <= g.t1);
+    if (g && bws.length) {   // comme le rendu (build.mjs onScreen) : le mot géant sort du sous-titre, le reste de la phrase reste
+      const sq = x => norm(x).replace(/\s/g, ""), out = bws.map(b => sq(b.text));
+      const txt = g.txt.split(/\s+/).filter(m => !out.includes(sq(m))).join(" ");
+      g = txt ? {...g, txt} : null;
+    }
+    if (g) h += Y ? `<div class="cap${Y.forte ? " forte" : ""}" style="top:${y}px;${cssLigne(Y.sub, ch.taille * (Y.sub.scale || 1), k)}">${esc(g.txt)}</div>`
+                 : `<div class="cap" style="top:${y}px;font-size:${ch.taille * k}px">${esc(g.txt)}</div>`; }
+  return h;
+}
+
+// ---------- la vidéo : calques + musique choisie ----------
+function arreterSon() { if (son) { son.pause(); son = null; } }
+function musiqueSur(v) {
+  const mus = C().musique === "sans" ? null : E.musiques.find(x => x.id === C().musique);
+  if (!mus) return arreterSon();
+  if (!son || son._id !== mus.id || son._v !== E.musique_v) { arreterSon(); son = new Audio("/musique/" + mus.id + "?v=" + E.musique_v); son._id = mus.id; son._v = E.musique_v; son.volume = 0.22; }
+  son.currentTime = Math.max(0, (mus.from || 0) + v.currentTime); son.play().catch(() => {});
+}
+function brancherReel() {
+  const v = $("#v-reel"), p = $("#p-reel");
+  lecteurs = [{v, ov: $("#o-reel"), w: v.parentElement.clientWidth, dernier: ""}];
+  const t0 = new URLSearchParams(location.search).get("t");   // ?t=2.6 : vidéo figée (captures de contrôle de Claude)
+  if (t0) v.addEventListener("loadedmetadata", () => { v.pause(); v.currentTime = +t0; }, {once: true});
+  p.querySelector(".play").onclick = lireOuPause;
+  v.addEventListener("play", () => { p.classList.add("joue"); musiqueSur(v); majAsk(); });
+  v.addEventListener("pause", () => { p.classList.remove("joue"); if (son) son.pause(); majAsk(); });
+  v.addEventListener("seeked", () => { if (!v.paused) musiqueSur(v); majAsk(); });
+  v.addEventListener("ended", () => { v.currentTime = 0; });
+}
+function lireOuPause() {
+  if (ecoute) return finEcoute();
+  const v = $("#v-reel"); if (v) v.paused ? v.play() : v.pause();
+}
+// barre espace = lecture / pause (sauf quand on écrit à Claude)
+document.addEventListener("keydown", ev => {
+  if (ev.code !== "Space" || ev.target.closest("input,textarea,[contenteditable]")) return;
+  ev.preventDefault(); lireOuPause();
+});
+function boucle() {
+  if (etape1()) boucleDR();
+  lecteurs.forEach(L => {
+    if (!L.v.isConnected) return;
+    const t = L.v.currentTime, h = calques(t, hookVu(), L.w);
+    if (h !== L.dernier) { L.ov.innerHTML = h; L.dernier = h; }
+    const zs = echelleZoom(t); L.v.style.transform = zs > 1.0005 ? `scale(${zs.toFixed(4)})` : "";
+    const br = $("#v-broll"), b = brollsVus().find(x => t >= x.a && t <= x.b);
+    if (br) {
+      if (b && !ecoute) {
+        const src = b.src;
+        if (br.dataset.src !== src) { br.dataset.src = src; br.src = src; }
+        if (Math.abs(br.currentTime - (t - b.a)) > 0.3) br.currentTime = t - b.a;
+        if (L.v.paused !== br.paused) L.v.paused ? br.pause() : br.play().catch(() => {});
+        br.classList.remove("cache");
+      } else if (!br.classList.contains("cache")) { br.pause(); br.classList.add("cache"); }
+    }
+    const ph = $("#ph"), d = L.v.duration || E.projet.reel;
+    if (ph) ph.style.left = (100 * L.v.currentTime / d) + "%";
+    const tc = $("#tc"); if (tc) tc.textContent = `${fmt(L.v.currentTime)} / ${fmt(d)}`;
+  });
+  requestAnimationFrame(boucle);
+}
+
+// ---------- coupes et notes, placées sur la durée du reel ----------
+// une coupe du rush [a, b] tombe dans le reel à : a − (tout ce qui est coupé avant a)
+function placeDansReel(t) {
+  return t - E.coupes.filter(c => c.etat === "coupe" && c.b <= t + 0.01).reduce((s, c) => s + c.b - c.a, 0);
+}
+// pendant le dérush, un passage remis apparaît aussi comme « coupé » (le moteur n'a pas fini) : on ne le montre qu'une fois
+const remettables = () => E.coupes.filter(c => c.remettable && !(c.etat === "coupe" && E.coupes.some(x => x.etat === "remis" && x.id === c.id)));
+const numero = c => remettables().findIndex(x => x.id === c.id) + 1;
+const notesPlacees = () => E.notes.filter(n => n.t != null);
+const numeroNote = n => remettables().length + notesPlacees().findIndex(x => x.id === n.id) + 1;
+function bande() {
+  const D = E.projet.reel || 1;
+  const N = 11, imgs = Array.from({length: N}, (_, i) => `<div class="fr" style="background-image:url(/image/${((i + 0.5) * D / N).toFixed(1)})"></div>`).join("");
+  const pct = t => Math.min(100, Math.max(0, 100 * t / D));
+  const ticks = remettables().filter(c => c.etat === "coupe").map(c => `<div class="tick ${c.id === choisie ? "on" : ""}" data-sel="${c.id}" style="left:${pct(placeDansReel(c.a))}%"><i>${numero(c)}</i></div>`).join("");
+  const zones = remettables().filter(c => c.etat === "remis").map(c => `<div class="remis ${c.id === choisie ? "on" : ""}" data-sel="${c.id}" style="left:${pct(placeDansReel(c.a))}%;width:${100 * (c.b - c.a) / D}%"><i>${numero(c)}</i></div>`).join("");
+  const mks = mode === "montage" && passe() === 3 ? momentsVus().map((m, i) => `<div class="mk" data-mom="${m.id}" style="left:${pct(m.t0)}%"><i>${i + 1}</i></div>`).join("") : "";
+  const pins = passe() === 3 ? "" : notesPlacees().map(n => `<div class="pin ${n.id === choisie ? "on" : ""}" data-note="${n.id}" style="left:${pct(n.t)}%" title="${esc(n.texte)}"><i>${numeroNote(n)}</i></div>`).join("");
+  return `<div class="strip" id="strip">${imgs}${pins}<div class="ph" id="ph"></div></div>`;   // 23/10 v4 : les coupes se règlent à l'étape 1, plus sur la bande
+}
+function brancherBande() {
+  const s = $("#strip"), v = $("#v-reel");
+  s.onpointerdown = ev => {
+    const cible = ev.target.closest("[data-sel]"), note = ev.target.closest("[data-note]"), mom = ev.target.closest("[data-mom]");
+    if (mom) return allerMoment(mom.dataset.mom);
+    if (cible) return choisir(cible.dataset.sel);
+    if (note) return allerNote(note.dataset.note);
+    finEcoute();
+    s.setPointerCapture(ev.pointerId);
+    const aller = e => { const r = s.getBoundingClientRect(); v.currentTime = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * (v.duration || E.projet.reel); };
+    aller(ev); s.onpointermove = aller;
+    s.onpointerup = () => { s.onpointermove = null; };
+  };
+}
+function majBande() { const ctl = $("#ctl-bande"); if (!ctl) return; ctl.innerHTML = bande(); brancherBande(); }
+function aller(t, lire) { const v = $("#v-reel"); if (!v) return; finEcoute(); v.pause(); v.currentTime = Math.max(0, t); if (lire) v.play(); }
+// toucher une coupe (bulle ou bande) : la bulle s'allume et la vidéo va juste avant
+function choisir(id) {
+  const c = E.coupes.find(x => x.id === id);
+  if (!c) return;
+  choisie = id; aller(placeDansReel(c.a) - 1.5);
+  rendreFil(); majBande();
+  const m = document.querySelector(`[data-bulle="${id}"]`); if (m) m.scrollIntoView({block: "nearest", behavior: "smooth"});
+}
+function allerMoment(id) { const m = (E.moments || []).find(x => x.id === id); if (m) aller(Math.max(0, m.t0 - 1.2), true); }
+function allerNote(id) {
+  const n = E.notes.find(x => x.id === id);
+  if (!n || n.t == null) return;
+  choisie = id; aller(n.t);
+  rendreFil(); majBande();
+  const m = document.querySelector(`[data-bulle="${id}"]`); if (m) m.scrollIntoView({block: "nearest", behavior: "smooth"});
+}
+
+// « Écouter » : un passage coupé n'existe que dans le rush, le téléphone passe donc sur le rush le temps du passage
+function ecouter(id) {
+  const c = E.coupes.find(x => x.id === id), v = $("#v-reel");
+  if (!c || !v) return;
+  if (ecoute && ecoute.id === id) return finEcoute();
+  finEcoute(); v.pause(); choisie = id;
+  if (c.etat === "remis") { v.currentTime = Math.max(0, placeDansReel(c.a) - 0.8); v.play(); rendreFil(); majBande(); return; }   // déjà dans le reel
+  const r = $("#v-rush"), a = Math.max(0, c.a - 0.8), b = c.b + 0.4;
+  ecoute = {id, a, b};
+  r.classList.remove("cache"); $("#o-reel").classList.add("cache"); $("#p-reel").classList.add("joue");
+  $("#ecoute").textContent = `▶ Tu écoutes le passage coupé · ${virg(c.duree)} s`;
+  $("#ecoute").classList.remove("cache"); $("#ecbar").parentElement.classList.remove("cache");
+  r.currentTime = a;
+  r.ontimeupdate = () => {
+    $("#ecbar").style.width = Math.min(100, 100 * (r.currentTime - a) / (b - a)) + "%";
+    if (r.currentTime >= b) finEcoute();
+  };
+  r.play();
+  rendreFil(); majBande();
+}
+function finEcoute() {
+  if (!ecoute) return;
+  ecoute = null;
+  const r = $("#v-rush");
+  if (r) { r.pause(); r.ontimeupdate = null; r.classList.add("cache"); }
+  if ($("#o-reel")) $("#o-reel").classList.remove("cache");
+  if ($("#ecoute")) $("#ecoute").classList.add("cache");
+  if ($("#ecbar")) $("#ecbar").parentElement.classList.add("cache");
+  if ($("#p-reel")) $("#p-reel").classList.remove("joue");
+  rendreFil();
+}
+
+// ---------- 23/10 v5 étape 1 : dérushage en TIMELINE (maquettes livrables/cockpit-montage/timeline-r2/1.png + courbe-1-bourse.png validées) ----------
+// Plus de texte. En haut à gauche le téléphone joue le RUSH en sautant ce qui est coupé (montage virtuel, instantané) ; à droite la
+// LOUPE : le bloc ouvert en grand (image + son) avec 1,6 s autour ; en bas le reel bout à bout, les coupes en PETIT (image + son en gris).
+// Dans la loupe on tire une sélection : dans le gris « Remettre ce bout », dans le bleu « Retirer » (un petit mot). Les bords des blocs
+// se tirent aussi. ← → = 10 ms. Le son = courbe « Bourse » EXACTE (Cyril : « très précis ») : la vraie valeur toutes les 10 ms, le pic
+// de chaque pixel, aucun lissage. Choix = les plages GARDÉES (secondes du rush) -> /api/derush -> plages.json (derush.py --plages) à « Suivant ».
+let DR = null, ONDE = null, SPR = null, vue = null, ouvertT = null, sel = null, actif = null, marque = null, rejoue = null, drT = null, rejT = null;
+const CTX = 1.6;
+const etape1 = () => mode === "montage" && passe() === 1 && !spick && !pick;
+const DUR = () => E.projet.rush;
+function initDR() { DR = {plages: E.derush.plages.map(p => [...p])}; }
+const drJSON = () => ({plages: DR.plages});
+function drSauver() { clearTimeout(drT); drT = setTimeout(() => api("/api/derush", drJSON()), 300); }
+const keepRanges = () => DR.plages;
+const fmtc = s => { s = Math.max(0, s); const m = Math.floor(s / 60), r = s - m * 60; return m + ":" + r.toFixed(2).padStart(5, "0").replace(".", ","); };
+const sec = d => d.toFixed(1).replace(".", ",") + " s";
+function normaliser() {
+  const out = [];
+  DR.plages.map(([a, b]) => [Math.max(0, a), Math.min(DUR(), b)]).filter(([a, b]) => b - a > 0.05).sort((x, y) => x[0] - y[0])
+    .forEach(([a, b]) => { if (out.length && a <= out.at(-1)[1] + 0.02) out.at(-1)[1] = Math.max(out.at(-1)[1], b); else out.push([+a.toFixed(3), +b.toFixed(3)]); });
+  DR.plages = out;
+}
+function blocs() {   // la suite du rush : gardé (k) ou coupé
+  const out = []; let t = 0;
+  for (const [a, b] of DR.plages) { if (a - t > 0.02) out.push({k: false, a: t, b: a}); out.push({k: true, a, b}); t = b; }
+  if (DUR() - t > 0.02) out.push({k: false, a: t, b: DUR()});
+  return out;
+}
+const garde = t => DR.plages.some(([a, b]) => t >= a && t < b);
+function raison(c) {   // une coupe : par Claude (son 1er dérush) ou par toi ; reprise (des mots dedans) ou blanc
+  const cl = E.derush.claude, dedans = (x, y) => Math.max(0, Math.min(y, c.b) - Math.max(x, c.a));
+  let parClaude = c.b - c.a; cl.forEach(([a, b]) => { parClaude -= dedans(a, b); });
+  const mots = E.rush_mots.some(w => (w.start + w.end) / 2 > c.a && (w.start + w.end) / 2 < c.b);
+  return {claude: parClaude > (c.b - c.a) / 2, rep: mots, nom: mots ? "Reprise" : "Blanc"};
+}
+const dureeVirt = () => DR.plages.reduce((s, [a, b]) => s + b - a, 0);
+function rushVersVirt(t) { let s = 0; for (const [a, b] of DR.plages) { if (t <= a) break; s += Math.min(t, b) - a; } return s; }
+function virtVersRush(x) { for (const [a, b] of DR.plages) { if (x <= b - a) return a + x; x -= b - a; } return DR.plages.length ? DR.plages.at(-1)[1] : 0; }
+function sautVirtuel(v) {
+  const t = v.currentTime;
+  if (rejoue && rejoue.brut) { if (t >= rejoue.fin) { v.pause(); rejoue = null; } return; }   // « Écouter » un bout : le rush tel quel
+  if (rejoue && rushVersVirt(t) >= rejoue.fin) { v.pause(); rejoue = null; return; }
+  const R = DR.plages;
+  if (R.some(([a, b]) => t >= a - 0.005 && t < b - 0.01)) return;
+  const n = R.find(([a]) => a > t - 0.01);
+  if (n) v.currentTime = n[0]; else { v.pause(); v.currentTime = R.length ? R[0][0] : 0; }
+}
+function rejouerAutour(e) {   // après un geste : 1 s avant, 1 s après (montage virtuel)
+  const v = $("#v-reel"); if (!v) return;
+  const x = rushVersVirt(e); rejoue = {fin: x + 1};
+  v.currentTime = virtVersRush(Math.max(0, x - 1)); v.play();
+}
+function ouvrir(t, garderVue) {   // ouvre dans la loupe le bloc qui contient t
+  const b = blocs().find(x => t >= x.a && t < x.b) || blocs().at(-1);
+  ouvertT = (b.a + b.b) / 2;
+  if (!garderVue) vue = {t0: Math.max(0, b.a - CTX), t1: Math.min(DUR(), b.b + CTX)};
+  sel = null; marque = null;
+}
+const blocOuvert = () => blocs().find(x => ouvertT >= x.a && ouvertT < x.b) || blocs()[0];
+const coupes = () => blocs().filter(x => !x.k);
+
+// ----- dessin du son : courbe « Bourse » exacte -----
+function niveauxPixels(t0, t1, W) {   // 1 valeur par pixel : le pic des tranches de 10 ms du pixel (jamais lissé) ; zoom fort = valeur interpolée
+  const v = new Float32Array(W), n = ONDE.length;
+  for (let x = 0; x < W; x++) {
+    const ta = (t0 + (t1 - t0) * x / W) * 100, tb = (t0 + (t1 - t0) * (x + 1) / W) * 100;
+    if (tb - ta >= 1) { let m = 0; for (let k = Math.floor(ta); k < Math.min(n, Math.ceil(tb)); k++) m = Math.max(m, ONDE[k] || 0); v[x] = m; }
+    else { const k = Math.floor(ta), f = ta - k; v[x] = (ONDE[Math.min(n - 1, k)] || 0) * (1 - f) + (ONDE[Math.min(n - 1, k + 1)] || 0) * f; }
+  }
+  return v;
+}
+function courbe(g, x0, y0, W, H, t0, t1, zonesBleues) {
+  if (!ONDE || W < 2) return;
+  const v = niveauxPixels(t0, t1, Math.round(W)), haut = H * 0.06, Y = k => y0 + H - 1 - v[k] * (H - 1 - haut);
+  const trace = () => { g.beginPath(); g.moveTo(x0, Y(0)); for (let k = 1; k < v.length; k++) g.lineTo(x0 + k, Y(k)); };
+  const peindre = (c1, c0, trait, lw) => {
+    trace(); g.lineTo(x0 + v.length - 1, y0 + H); g.lineTo(x0, y0 + H); g.closePath();
+    const gr = g.createLinearGradient(0, y0, 0, y0 + H); gr.addColorStop(0, c1); gr.addColorStop(1, c0); g.fillStyle = gr; g.fill();
+    trace(); g.strokeStyle = trait; g.lineWidth = lw; g.lineJoin = "round"; g.lineCap = "round"; g.stroke();
+  };
+  peindre("rgba(174,174,178,.30)", "rgba(174,174,178,0)", "#c7c7cc", 1.2);
+  g.save(); g.beginPath(); zonesBleues.forEach(([a, b]) => g.rect(a, y0 - 2, b - a, H + 4)); g.clip();
+  peindre("rgba(0,113,227,.32)", "rgba(0,113,227,0)", "#0071e3", 1.6);
+  g.restore();
+}
+function film(g, x0, y0, W, h, t0, t1, gris) {   // les images du rush (planche 2 images / s)
+  const P = E.planche, sw = h * 9 / 16;
+  g.save(); g.beginPath(); g.rect(x0, y0, W, h); g.clip();
+  if (!SPR || !SPR.complete || !P) { g.fillStyle = "#e5e5ea"; g.fillRect(x0, y0, W, h); g.restore(); return; }
+  if (gris) { g.filter = "grayscale(1)"; g.globalAlpha = 0.45; }
+  for (let x = 0; x < W; x += sw) {
+    const t = t0 + (t1 - t0) * Math.min(1, (x + sw / 2) / W), f = Math.min(P.n - 1, Math.max(0, Math.floor(t * P.fps)));
+    g.drawImage(SPR, (f % P.cols) * P.w, Math.floor(f / P.cols) * P.h, P.w, P.h, x0 + x, y0, sw, h);
+  }
+  g.restore();
+}
+function hachures(g, x, y, w, h) {
+  g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip(); g.fillStyle = "rgba(255,255,255,.5)";
+  for (let k = -h; k < w; k += 12) { g.beginPath(); g.moveTo(x + k, y + h); g.lineTo(x + k + 6, y + h); g.lineTo(x + k + 6 + h, y); g.lineTo(x + k + h, y); g.fill(); }
+  g.restore();
+}
+function canvasPret(cv) {
+  const dpr = devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr; const g = cv.getContext("2d"); g.scale(dpr, dpr); return [g, W, H];
+}
+
+// ----- la loupe -----
+let LG = null;   // géométrie de la loupe : {W, hv, ha}
+const tX = t => (t - vue.t0) / (vue.t1 - vue.t0) * LG.W, xT = x => vue.t0 + (vue.t1 - vue.t0) * x / LG.W;
+function regleTL(t0, t1, W) {
+  const pas = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 30].find(p => p / (t1 - t0) * W >= 64) || 60, out = [];
+  const mini = pas / 5, dec = pas < 0.1 ? 2 : pas < 1 ? 1 : 0;
+  for (let t = Math.ceil(t0 / mini) * mini; t <= t1 + 1e-9; t += mini) {
+    const x = (t - t0) / (t1 - t0) * W, big = Math.abs(t / pas - Math.round(t / pas)) < 1e-6;
+    out.push(`<i style="left:${x.toFixed(1)}px;height:${big ? 8 : 4}px"></i>`);
+    if (big) out.push(`<span style="left:${x.toFixed(1)}px">${t.toFixed(dec).replace(".", ",")} s</span>`);
+  }
+  return out.join("");
+}
+function dessinerLoupe() { peindreLoupe(); calqueLoupe(); }
+function peindreLoupe() {   // le canvas, la règle, les étiquettes (jamais les éléments qu'on tire : ils perdraient le doigt)
+  const cv = $("#tl-cv"); if (!cv || !vue) return;
+  const [g, W] = canvasPret(cv), {hv, ha} = LG; LG.W = W;
+  const bl = blocs(), R = DR.plages;
+  film(g, 0, 0, W, hv, vue.t0, vue.t1, false);
+  g.fillStyle = "#fbfbfd"; g.beginPath(); g.roundRect(0, hv + 8, W, ha, 8); g.fill();
+  const bleus = R.filter(([a, b]) => b > vue.t0 && a < vue.t1).map(([a, b]) => [Math.max(0, tX(a)), Math.min(W, tX(b))]);
+  courbe(g, 0, hv + 8, W, ha, vue.t0, vue.t1, bleus);
+  bl.filter(b => !b.k && b.b > vue.t0 && b.a < vue.t1).forEach(b => {   // le coupé : image pâlie, son en gris
+    const x = Math.max(0, tX(b.a)), w = Math.min(W, tX(b.b)) - x;
+    g.fillStyle = "rgba(245,245,247,.62)"; g.fillRect(x, 0, w, hv); hachures(g, x, 0, w, hv);
+  });
+  $("#tl-regle").innerHTML = regleTL(vue.t0, vue.t1, W);
+  $("#tl-labels").innerHTML = bl.filter(b => b.b > vue.t0 && b.a < vue.t1).map(b => {
+    const x = (Math.max(0, tX(b.a)) + Math.min(W, tX(b.b))) / 2, r = b.k ? null : raison(b);
+    return `<span class="tag ${b.k ? "bl" : "rep"}" style="left:${x}px">${b.k ? "gardé" + (b.b - b.a < 2 ? " · " + sec(b.b - b.a) + " (2 s min)" : "") : `✂ coupé par ${r.claude ? "Claude" : "toi"} · ${r.nom} ${sec(b.b - b.a)}`}</span>`;
+  }).join("");
+  const b = blocOuvert(), cs = coupes(), n = b.k ? DR.plages.findIndex(([a]) => Math.abs(a - b.a) < 1e-6) + 1 : cs.findIndex(c => Math.abs(c.a - b.a) < 1e-6) + 1;
+  $("#tl-titre").textContent = b.k ? `Bloc gardé ${n} en grand` : `Coupe ${n} en grand`;
+  $("#tl-tout").textContent = b.k ? "Retirer ce bloc" : "Tout remettre";
+}
+function calqueLoupe() {   // bords des blocs (tirables), sélection et ses poignées, la barre « Remettre / Retirer »
+  if (!$("#tl-over") || !vue) return;
+  const {hv, ha, W} = LG, bl = blocs(), R = DR.plages;
+  let h = "";
+  R.forEach(([a, b], i) => [["a", a], ["b", b]].forEach(([c, t]) => {
+    if (t < vue.t0 || t > vue.t1 || (c === "a" && t < 0.01) || (c === "b" && t > DUR() - 0.01)) return;
+    const on = actif && actif.bord && actif.bord[0] === i && actif.bord[1] === c;
+    h += `<div class="tl-bord ${on ? "on" : ""}" data-i="${i}" data-c="${c}" style="left:${tX(t).toFixed(1)}px"><b style="top:${hv + 8 + ha / 2 - 22}px"></b></div>`;
+  }));
+  if (sel) {
+    const x0 = tX(sel.a), x1 = tX(sel.b), surCoupe = bl.some(b => !b.k && b.b > sel.a + 0.01 && b.a < sel.b - 0.01), surGarde = R.some(([a, b]) => b > sel.a + 0.01 && a < sel.b - 0.01);
+    h += `<div class="tl-sel" style="left:${x0}px;width:${x1 - x0}px"></div>
+      <span class="tl-poi ${actif && actif.sel === "a" ? "on" : ""}" data-s="a" style="left:${x0}px;top:${hv + 8 + ha / 2 - 22}px"></span><span class="tl-poi ${actif && actif.sel === "b" ? "on" : ""}" data-s="b" style="left:${x1}px;top:${hv + 8 + ha / 2 - 22}px"></span>
+      <div class="flot" style="left:${Math.min(W - 150, Math.max(150, (x0 + x1) / 2))}px">${surCoupe ? `<button class="b" id="tl-remettre">↺ Remettre ce bout · ${sec(sel.b - sel.a)}</button>` : ""}${surGarde ? `<button class="${surCoupe ? "" : "r"}" id="tl-retirer">✂ Retirer${surCoupe ? "" : " ce bout · " + sec(sel.b - sel.a)}</button>` : ""}<button id="tl-ecoute">▶ Écouter</button></div>`;
+  }
+  if (marque != null && marque >= vue.t0 && marque <= vue.t1) h += `<div class="tl-marque" style="left:${tX(marque)}px"></div>`;
+  $("#tl-over").innerHTML = h + '<div class="tete prise" id="tl-tete"><b></b></div>';
+  brancherLoupe(); brancherTete("#tl-tete", "#tl-zone", xT);
+}
+function placerSel() {   // pendant qu'on tire une poignée de la sélection : on déplace, on ne redessine pas
+  const x0 = tX(sel.a), x1 = tX(sel.b), s = $(".tl-sel"), f = $(".flot");
+  if (s) { s.style.left = x0 + "px"; s.style.width = x1 - x0 + "px"; }
+  document.querySelectorAll(".tl-poi").forEach(p => p.style.left = (p.dataset.s === "a" ? x0 : x1) + "px");
+  if (f) f.style.left = Math.min(LG.W - 150, Math.max(150, (x0 + x1) / 2)) + "px";
+}
+
+// ----- la vue d'ensemble : le reel bout à bout, les coupes en petit -----
+let OV = null;   // [{k, a, b, x, w}]
+const gw = d => d < 1 ? 18 : d < 3.5 ? 40 : 58;
+function dessinerVue() {
+  const cv = $("#ov-cv"); if (!cv) return;
+  const [g, W, H] = canvasPret(cv), hv = Math.round(H * 0.55), ha = H - hv - 6, bl = blocs();
+  const fixe = bl.filter(b => !b.k).reduce((s, b) => s + gw(b.b - b.a), 0), px = (W - fixe) / Math.max(0.1, dureeVirt());
+  let x = 0; OV = bl.map(b => { const w = b.k ? (b.b - b.a) * px : gw(b.b - b.a), o = {...b, x, w}; x += w; return o; });
+  OV.forEach(o => {
+    const x0 = o.x + 1, w = o.w - 2;
+    g.save(); g.beginPath(); g.roundRect(x0, 0, w, H, 7); g.clip();
+    film(g, x0, 0, w, hv, o.a, o.b, !o.k);
+    g.fillStyle = "#fbfbfd"; g.fillRect(x0, hv, w, H - hv);
+    courbe(g, x0, hv + 6, w, ha, o.a, o.b, o.k ? [[x0, x0 + w]] : []);
+    if (!o.k) hachures(g, x0, 0, w, H);
+    g.restore();
+  });
+  const ob = blocOuvert();
+  $("#ov-over").innerHTML = OV.map((o, n) => {
+    const r = o.k ? null : raison(o), on = Math.abs(o.a - ob.a) < 1e-6, court = o.k && o.b - o.a < 2;
+    return `<div class="ob ${o.k ? "k" : "c"} ${on ? "on" : ""} ${court ? "court" : ""}" data-t="${(o.a + o.b) / 2}" style="left:${o.x + 1}px;width:${o.w - 2}px"></div>`
+      + (o.k ? (court ? `<span class="tag court" style="left:${o.x + o.w / 2}px;bottom:-26px">${sec(o.b - o.a)}</span>` : "")
+        : `<span class="tag ${r.rep ? "rep" : "bl"} ${on ? "noir" : ""}" style="left:${o.x + o.w / 2}px;top:-26px">✂${o.w > 30 ? " " + sec(o.b - o.a) : ""}</span>`);
+  }).join("") + '<div class="tete prise" id="ov-tete"><b></b><div class="vign"></div></div>';
+  brancherTete("#ov-tete", ".ovw", ovVersRush);
+  document.querySelectorAll("#ov-over .ob").forEach(d => d.onclick = () => {
+    ouvrir(+d.dataset.t); const b = blocOuvert(), v = $("#v-reel");
+    if (v) { rejoue = null; v.pause(); v.currentTime = b.k ? b.a : b.a; }
+    dessinerTL();
+  });
+}
+const ovVersRush = x => { const o = OV.find(o => x >= o.x && x < o.x + o.w) || (x < 0 ? OV[0] : OV.at(-1)); return o.a + Math.min(1, Math.max(0, (x - o.x) / o.w)) * (o.b - o.a); };
+// la barre rouge qu'on tire : la vidéo suit (en pause), l'image du rush s'affiche au-dessus du doigt (reel bout à bout)
+let tireTete = false;
+function brancherTete(id, boite, versRush) {
+  const el = $(id); if (!el) return;
+  el.onpointerdown = ev => {
+    ev.preventDefault(); ev.stopPropagation(); el.setPointerCapture(ev.pointerId);
+    const v = $("#v-reel"); if (!v) return; rejoue = null; v.pause(); tireTete = true; el.classList.add("tire");
+    el.onpointermove = e => {
+      const r = $(boite).getBoundingClientRect(), t = Math.min(DUR(), Math.max(0, versRush(Math.min(r.width, Math.max(0, e.clientX - r.left)))));
+      v.currentTime = t; const vg = el.querySelector(".vign"), P = E.planche;
+      if (vg && P && SPR) { const f = Math.min(P.n - 1, Math.floor(t * P.fps)); vg.style.backgroundImage = "url(/api/planche)"; vg.style.backgroundPosition = `${-(f % P.cols) * P.w}px ${-Math.floor(f / P.cols) * P.h}px`; }
+    };
+    el.onpointerup = () => { el.onpointermove = null; tireTete = false; el.classList.remove("tire"); };
+  };
+}
+const rushVersOV = t => { if (!OV) return 0; const o = OV.find(o => t >= o.a && t < o.b) || OV.at(-1); return o.x + Math.min(1, (t - o.a) / (o.b - o.a)) * o.w; };
+
+function dessinerTL() {
+  if (!$("#tl-cv")) return;
+  if (!vue) ouvrir(coupes().length ? coupes()[0].a + 0.01 : 0);
+  dessinerLoupe(); dessinerVue();
+  const tv = $("#tl-total"); if (tv) tv.textContent = fmt(dureeVirt());
+  const m = $("#tl-msg"); if (m) m.innerHTML = msgTL();
+  if (E.lab) majBoutonLab();
+}
+function msgTL() {
+  const cs = coupes().map(raison), rep = cs.filter(r => r.rep).length, bl = cs.length - rep;
+  if (derushEnCours()) return `<span class="spin"></span>${esc(E.job.nom || "Je coupe ta vidéo")}… elle revient dans quelques secondes.`;
+  if (E.lab && labValide()) return msgLab();
+  return `<b>1er dérush fait : ${fmt(DUR())} → ${fmt(dureeVirt())}</b> (${rep} reprise${rep > 1 ? "s" : ""}, ${bl} blanc${bl > 1 ? "s" : ""}). Clique un bloc pour le voir en grand : tu remets un bout du gris ou tu retires un mot du bleu.`;
+}
+
+// ----- les gestes -----
+function remettre(a, b) { DR.plages.push([a, b]); normaliser(); }
+function retirer(a, b) { DR.plages = DR.plages.flatMap(([x, y]) => b <= x || a >= y ? [[x, y]] : [[x, a], [b, y]].filter(([u, w]) => w - u > 0.05)); normaliser(); }
+function apres(t, quoi) { sel = null; actif = null; drSauver(); dessinerTL(); if (quoi) toast(quoi); if (t != null && DR.plages.length) rejouerAutour(t); }
+function agirSel(quoi) {
+  if (!sel) return;
+  const {a, b} = sel;
+  if (quoi === "remettre") { remettre(a, b); apres(a, `Bout remis · ${sec(b - a)}`); }
+  else { if (DR.plages.every(([x, y]) => x >= a && y <= b)) return toast("Il faut garder au moins un bout."); retirer(a, b); apres(a, `Bout retiré · ${sec(b - a)}`); }
+}
+function bougerBord(i, c, t) {   // un bord de bloc : libre jusqu'au bloc voisin (le touche = les deux se collent) ; un bloc fait au moins 0,15 s
+  const P = DR.plages, [a, b] = P[i];
+  if (c === "a") P[i][0] = Math.min(b - 0.15, Math.max(i > 0 ? P[i - 1][1] : 0, t));
+  else P[i][1] = Math.max(a + 0.15, Math.min(i + 1 < P.length ? P[i + 1][0] : DUR(), t));
+}
+function brancherLoupe() {
+  const un = s => document.querySelector(s);
+  if (un("#tl-remettre")) un("#tl-remettre").onclick = () => agirSel("remettre");
+  if (un("#tl-retirer")) un("#tl-retirer").onclick = () => agirSel("retirer");
+  if (un("#tl-ecoute")) un("#tl-ecoute").onclick = () => { const v = $("#v-reel"); if (!v || !sel) return; rejoue = {brut: true, fin: sel.b}; v.currentTime = sel.a; v.play(); };
+  document.querySelectorAll(".tl-bord").forEach(d => d.onpointerdown = ev => {
+    ev.preventDefault(); ev.stopPropagation(); const i = +d.dataset.i, c = d.dataset.c, box = $("#tl-zone");
+    actif = {bord: [i, c]}; sel = null; d.setPointerCapture(ev.pointerId);
+    d.onpointermove = e => { const r = box.getBoundingClientRect(); bougerBord(i, c, xT(Math.min(r.width, Math.max(0, e.clientX - r.left)))); peindreLoupe(); d.style.left = tX(DR.plages[i][c === "a" ? 0 : 1]) + "px"; };
+    d.onpointerup = () => { d.onpointermove = null; const t = DR.plages[i] ? DR.plages[i][c === "a" ? 0 : 1] : null; normaliser(); actif = DR.plages[i] ? actif : null; drSauver(); dessinerTL(); if (t != null) rejouerAutour(t); };
+  });
+  document.querySelectorAll(".tl-poi").forEach(d => d.onpointerdown = ev => {
+    ev.preventDefault(); ev.stopPropagation(); const s = d.dataset.s, box = $("#tl-zone");
+    actif = {sel: s}; d.setPointerCapture(ev.pointerId);
+    d.onpointermove = e => { const r = box.getBoundingClientRect(), t = xT(Math.min(r.width, Math.max(0, e.clientX - r.left)));
+      if (s === "a") sel.a = Math.min(sel.b - 0.02, t); else sel.b = Math.max(sel.a + 0.02, t); placerSel(); };
+    d.onpointerup = () => { d.onpointermove = null; calqueLoupe(); };
+  });
+}
+function brancherZone() {   // tirer dans le son = choisir un bout ; un simple clic = la vidéo va là
+  const z = $("#tl-zone");
+  z.onpointerdown = ev => {
+    if (ev.target.closest(".tl-bord,.tl-poi,.flot,.tete")) return;
+    ev.preventDefault(); z.setPointerCapture(ev.pointerId);
+    const r = z.getBoundingClientRect(), t0 = xT(ev.clientX - r.left); let tire = false;
+    z.onpointermove = e => {
+      const x = Math.min(r.width, Math.max(0, e.clientX - r.left));
+      if (!tire && Math.abs(e.clientX - ev.clientX) < 4) return;
+      tire = true; const t = xT(x); sel = {a: Math.min(t0, t), b: Math.max(t0, t)}; actif = {sel: t > t0 ? "b" : "a"}; dessinerLoupe();
+    };
+    z.onpointerup = () => {
+      z.onpointermove = null;
+      if (!tire) { sel = null; actif = null; const v = $("#v-reel"); if (v) { rejoue = null; v.pause(); v.currentTime = t0; } dessinerLoupe(); }
+    };
+  };
+  z.onwheel = ev => {   // pincer / ctrl + molette = zoom autour du curseur ; glisser = avancer dans le temps
+    ev.preventDefault(); const r = z.getBoundingClientRect(), d = vue.t1 - vue.t0;
+    if (ev.ctrlKey || ev.metaKey) zoomer(Math.exp(ev.deltaY * 0.01), xT(ev.clientX - r.left));
+    else { const dx = (Math.abs(ev.deltaX) > Math.abs(ev.deltaY) ? ev.deltaX : ev.deltaY) / r.width * d; decaler(dx); }
+  };
+}
+function zoomer(f, centre) {
+  const d = Math.min(DUR(), Math.max(0.3, (vue.t1 - vue.t0) * f)), c = centre ?? (vue.t0 + vue.t1) / 2, k = (c - vue.t0) / (vue.t1 - vue.t0);
+  vue = {t0: c - d * k, t1: c - d * k + d}; decaler(0);
+}
+function decaler(dt) {
+  const d = vue.t1 - vue.t0; let t0 = Math.min(DUR() - d, Math.max(0, vue.t0 + dt));
+  vue = {t0, t1: t0 + d}; dessinerLoupe();
+}
+function naviguer(pas) {   // ‹ › : coupe précédente / suivante
+  const cs = coupes(), b = blocOuvert(), m = (b.a + b.b) / 2;
+  const c = pas > 0 ? cs.find(x => x.a > m) : [...cs].reverse().find(x => x.b < m);
+  if (!c) return toast(pas > 0 ? "C'était la dernière coupe." : "C'était la première coupe.");
+  ouvrir(c.a + 0.001); const v = $("#v-reel"); if (v) { rejoue = null; v.pause(); v.currentTime = Math.max(0, c.a - 1); } dessinerTL();
+}
+function couperIci() {   // C : 1er appui = début du bout à la barre rouge, 2e = fin
+  const v = $("#v-reel"); if (!v) return;
+  const t = v.currentTime;
+  if (marque == null) { marque = t; sel = null; if (t < vue.t0 || t > vue.t1) ouvrir(t); toast("Début marqué. Avance, puis C pour la fin."); dessinerLoupe(); return; }
+  sel = {a: Math.min(marque, t), b: Math.max(marque, t)}; marque = null; actif = {sel: "b"};
+  if (sel.b - sel.a < 0.02) { sel = null; return dessinerLoupe(); }
+  if (sel.a < vue.t0 || sel.b > vue.t1) vue = {t0: Math.max(0, sel.a - CTX), t1: Math.min(DUR(), sel.b + CTX)};
+  v.pause(); dessinerLoupe();
+}
+document.addEventListener("keydown", ev => {
+  if (!etape1() || ev.target.closest("input,textarea,[contenteditable]")) return;
+  const pas = ev.shiftKey ? 0.1 : 0.01;
+  if ((ev.key === "ArrowLeft" || ev.key === "ArrowRight") && actif) {
+    ev.preventDefault(); const d = ev.key === "ArrowLeft" ? -pas : pas;
+    if (actif.sel && sel) { if (actif.sel === "a") sel.a = Math.min(sel.b - 0.02, sel.a + d); else sel.b = Math.max(sel.a + 0.02, sel.b + d); dessinerLoupe(); }
+    else if (actif.bord) {
+      const [i, c] = actif.bord; if (!DR.plages[i]) return;
+      bougerBord(i, c, DR.plages[i][c === "a" ? 0 : 1] + d); dessinerLoupe(); drSauver();   // (clavier : pas de doigt à garder)
+      clearTimeout(rejT); rejT = setTimeout(() => { const t = DR.plages[i][c === "a" ? 0 : 1]; normaliser(); dessinerTL(); rejouerAutour(t); }, 450);
+    }
+  } else if (ev.key === "Backspace" || ev.key === "Delete") { if (sel) { ev.preventDefault(); agirSel("retirer"); } }
+  else if (ev.key === "Enter") { if (sel) { ev.preventDefault(); agirSel("remettre"); } }
+  else if (ev.key === "Escape") { sel = null; actif = null; marque = null; dessinerLoupe(); }
+  else if (ev.key === "c" || ev.key === "C") { ev.preventDefault(); couperIci(); }
+});
+function sceneDR(st) {
+  const H = st.clientHeight - 32, Wst = st.clientWidth - 40, loupeH = Math.max(330, H - 52 - 222 - 24);
+  const ph = loupeH - 32, pw = Math.min(Math.round(ph * 9 / 16), Math.round(Wst * 0.24)), phh = Math.round(pw * 16 / 9);
+  const avail = loupeH - 46 - 52 - 22 - 8 - 34 - 30, hv = Math.max(56, Math.min(96, Math.round(avail * 0.4)));
+  LG = {hv, ha: Math.max(70, avail - hv), W: 0};
+  return `<div class="tl" style="height:${H}px"><div class="tl-haut" style="height:${loupeH}px">
+      <div class="dr-col"><div class="phone" id="p-reel" style="width:${pw}px;height:${phh}px"><div class="scr">
+        <video id="v-reel" src="/video/rush#t=0.5" playsinline preload="auto"></video><div class="play"><b></b></div></div></div>
+        <div class="ctrl" id="tl-cap"></div></div>
+      <div class="carte tl-loupe"><div class="h2"><b id="tl-titre"></b><span>clique n'importe quel bloc en bas pour l'ouvrir ici</span>
+          <span class="r"><button class="pill gris" id="tl-prec">‹ Précédent</button><button class="pill gris" id="tl-suiv">Suivant ›</button>
+          <button class="pill gris" id="tl-moins" title="Voir plus large">−</button><button class="pill gris" id="tl-plus" title="Zoomer">+</button><button class="pill gris" id="tl-tout"></button></span></div>
+        <div class="tl-in"><div class="regle" id="tl-regle"></div>
+          <div class="tl-zone" id="tl-zone" style="height:${hv + 8 + LG.ha}px"><canvas id="tl-cv"></canvas><div id="tl-over"></div></div>
+          <div class="tl-labels" id="tl-labels"></div></div>
+        <div class="kbd"><b>tire dans le son</b>pour choisir un bout · dans le gris : <b>↵</b>Remettre · dans le bleu : <b>⌫</b>Retirer (un petit mot) · <b>←</b><b>→</b>10 ms · pince pour zoomer</div></div></div>
+    <div class="carte tl-vue"><div class="h2"><button class="pill plein" id="tl-lire">▶ Lire</button><span class="tcg"><b id="tl-tc">0:00,00</b> / <span id="tl-total">${fmt(dureeVirt())}</span></span>
+        <button class="pill gris" id="tl-c" title="1er appui = début du bout, 2e appui = fin">✂ Couper ici <b class="k">C</b></button><button class="pill gris" id="tl-claude">↺ Remettre comme Claude</button>
+        <span class="r">Ton reel bout à bout · le gris = ce qui est coupé, en petit</span></div>
+      <div class="ovw"><canvas id="ov-cv"></canvas><div id="ov-over"></div></div></div>
+    <div class="tl-bas"><div class="msg" id="tl-msg"></div><button class="suivant" id="tl-suivant">${E.lab ? "✓ Valider le dérush" : "Suivant : étape 2 Style ›"}</button></div></div>`;
+}
+function chargerPlanche() { if (SPR || !E.planche) return; SPR = new Image(); SPR.onload = () => { if (etape1()) dessinerTL(); }; SPR.src = "/api/planche"; }
+function brancherSceneDR() {
+  const v = $("#v-reel"), p = $("#p-reel");
+  p.querySelector(".play").onclick = lireOuPause;
+  v.addEventListener("play", () => { p.classList.add("joue"); $("#tl-lire").textContent = "❚❚ Pause"; });
+  v.addEventListener("pause", () => { p.classList.remove("joue"); $("#tl-lire").textContent = "▶ Lire"; majAsk(); });
+  v.addEventListener("loadedmetadata", () => { const R = DR.plages; if (R.length && v.currentTime < R[0][0]) v.currentTime = R[0][0]; }, {once: true});
+  $("#tl-lire").onclick = lireOuPause;
+  $("#tl-prec").onclick = () => naviguer(-1); $("#tl-suiv").onclick = () => naviguer(1);
+  $("#tl-plus").onclick = () => zoomer(0.5); $("#tl-moins").onclick = () => zoomer(2);
+  $("#tl-tout").onclick = () => {
+    const b = blocOuvert();
+    if (b.k) { if (DR.plages.length < 2) return toast("Il faut garder au moins un bout."); retirer(b.a, b.b); ouvrir(b.a); apres(b.a, "Bloc retiré"); }
+    else { remettre(b.a, b.b); ouvrir(b.a); apres(b.a, `Coupe remise · ${sec(b.b - b.a)}`); }
+  };
+  $("#tl-c").onclick = couperIci;
+  $("#tl-claude").onclick = () => { DR.plages = E.derush.claude.map(p => [...p]); normaliser(); ouvrir(ouvertT ?? 0); apres(null, "Remis comme mon 1er dérush"); };
+  $("#tl-suivant").onclick = E.lab ? valider : suivant1;
+  brancherZone(); chargerPlanche();
+  if (ONDE) dessinerTL(); else { dessinerTL(); api("/api/onde").then(o => { ONDE = o; dessinerTL(); }); }
+}
+function boucleDR() {   // le téléphone saute les coupes ; la barre rouge suit dans la loupe et dans le reel bout à bout
+  const v = $("#v-reel"); if (!v) return;
+  if (!v.paused) sautVirtuel(v);
+  const t = v.currentTime, tt = $("#tl-tete");
+  if (tt && vue && LG.W) { const x = tX(t); tt.style.display = x < 0 || x > LG.W ? "none" : ""; tt.style.left = x + "px"; }
+  const ot = $("#ov-tete"); if (ot) ot.style.left = rushVersOV(t) + "px";
+  const lab = garde(t) ? fmtc(rushVersVirt(t)) : "coupé";   // l'étiquette des barres rouges : l'instant du reel (ou « coupé »)
+  [ot, tt].forEach(e => { const b = e && e.querySelector("b"); if (b && b.textContent !== lab) b.textContent = lab; });
+  const tc = $("#tl-tc"); if (tc) tc.textContent = fmtc(rushVersVirt(t));
+  const cap = $("#tl-cap"); if (cap) cap.innerHTML = `<span><b>${fmtc(t)}</b> du rush${garde(t) ? "" : " · <span style='color:var(--red)'>coupé</span>"}</span>`;
+  if ((!v.paused || tireTete) && vue && !actif && !sel && (t > vue.t1 || t < vue.t0) && !(rejoue && rejoue.brut)) { const d = vue.t1 - vue.t0; vue = {t0: Math.max(0, Math.min(DUR() - d, t - d * 0.1)), t1: 0}; vue.t1 = vue.t0 + d; dessinerLoupe(); }
+}
+async function attendreJob() { while ((E = await api("/api/etat")).job.etat === "en cours") await new Promise(r => setTimeout(r, 1200)); }
+// ----- Derush Lab (23/10, maquette derushlab-r1/A.png) : « ✓ Valider le dérush » → clip.mp4 + Gardien du dérush -----
+const r2 = x => JSON.stringify((x || []).map(([a, b]) => [Math.round(a * 100), Math.round(b * 100)]));
+const labValide = () => !!(E.lab && E.lab.valide && r2(E.lab.valide) === r2(DR.plages));   // une retouche après = à revalider
+const labOK = () => labValide() && E.lab.groupes.every(g => g.ok);
+function msgLab() {
+  const G = E.lab.groupes, rouges = G.filter(g => !g.ok);
+  const liste = G.map(g => `<span style="color:${g.ok ? "#0a8a3a" : "var(--red)"};font-weight:600">${g.ok ? "✓" : "✗"} ${esc(g.nom)}</span>`).join(" · ");
+  if (rouges.length) return `<b>❌ ${rouges.length} point${rouges.length > 1 ? "s" : ""} à régler</b> : ${esc(rouges[0].detail)}<br>${liste}`;
+  return `<b>✅ Dérush validé : ${fmt(DUR())} → ${fmt(dureeVirt())}.</b> Le Gardien a tout contrôlé : ${liste}`;
+}
+function majBoutonLab() {
+  const b = $("#tl-suivant"); if (!b) return;
+  const ok = labOK() && !derushEnCours();
+  b.textContent = ok ? "▶ Revoir le dérush" : "✓ Valider le dérush";
+  b.style.background = ok ? "#0a8a3a" : "";
+  b.onclick = ok ? revoirDerush : valider;
+}
+function revoirDerush() { const v = $("#v-reel"); if (!v || !DR.plages.length) return; v.currentTime = DR.plages[0][0]; v.play(); }
+async function valider() {
+  finEcoute();
+  if (derushEnCours()) return toast("Attends la fin de la tâche en cours.");
+  const r = await api("/api/valider", drJSON());
+  if (!r.ok) return toast(r.vide ? "Il faut garder au moins un bout." : "Attends la fin de la tâche en cours.");
+  toast("Je coupe ta vidéo, puis le Gardien la contrôle.");
+  await recharger(true);
+}
+async function suivant1() {
+  finEcoute();
+  const r = await api("/api/derush", {...drJSON(), appliquer: true});
+  if (!r.ok) return toast(r.vide ? "Il faut garder au moins un bout." : "Attends la fin de la tâche en cours.");
+  spick = styleFait() ? null : {...STYLE_DEF(), ...(E.style || {}), ouvert: "police"};
+  await sauver({passe: 2}); window.scrollTo(0, 0); await recharger(true);
+  if (r.recoupe) toast("Je coupe ta vidéo : elle revient dans quelques secondes.");
+}
+
+// ---------- la conversation : chaque bulle de Claude vient de l'état du montage ----------
+const claude = (html, attr = "", cls = "") => `<div class="msg ${cls}" ${attr}>${html}</div>`;
+const WHO_C = '<div class="who">CLAUDE</div>', WHO_M = '<div class="who moi">TOI</div>';
+function vignetteLook(L, i) {
+  const t = 1.2, w = 112, h = 150, hook = E.hooks.find(x => x.title) || hookChoisi();
+  return `<button class="lk ${pick && pick.id === L.id ? "on" : ""}" data-lk="${L.id}"><div class="v" style="height:${h}px;background-image:url(/image/${t});${varsLook(L)}"><div class="ov">${calques(t, hook, w)}</div></div>${esc(L.nom)}<small>${esc(nomPolices(L))} · ${esc(nomCouleur(L.serif_couleur))}</small></button>`;
+}
+function bullesLook() {
+  let h = "";
+  if (!E.look) h += WHO_C + claude("Bienvenue ! Avant ta 1re vidéo, on choisit ton style. Une seule fois, il servira pour toutes les suivantes.");
+  else h += WHO_C;
+  h += claude(`J'ai regardé ta vidéo. Je te propose ${E.looks.length} looks complets, le 1er est mon conseil :
+    <div class="looks">${E.looks.map(vignetteLook).join("")}</div>
+    <div class="ch" style="margin-top:12px"><button class="pill plein" id="garder">Je garde celui-ci</button><button class="pill gris" id="affiner">${pick.affiner ? "Fermer" : "Affiner"}</button>${E.look ? '<button class="pill gris" id="annuler-look">Annuler</button>' : ""}</div>`, "", "large");
+  if (pick.affiner) {
+    const L = lookDe(pick.id, pick.affine), a = pick.affine;
+    const couleurs = [...new Set(["#FFFFFF", ...E.looks.map(l => l.serif_couleur.toUpperCase())])];
+    h += claude(`Affine ton look, la vidéo suit :
+      <div class="reg"><b>Polices</b>${E.looks.map(l => `<button class="pill ${L.sans === l.sans && L.serif === l.serif ? "plein" : "gris"}" data-pol="${l.id}">${esc(nomPolices(l))}</button>`).join("")}</div>
+      <div class="reg"><b>Mots forts</b>${couleurs.map(c => `<button class="dot ${L.serif_couleur.toUpperCase() === c ? "on" : ""}" data-coul="${c}" style="background:${c}" title="${esc(nomCouleur(c))}"></button>`).join("")}</div>
+      ${E.base.zoom ? `<div class="reg"><b>Rythme</b><span class="seg">${[["pose", "Posé"], ["nerveux", "Nerveux"]].map(([k, n]) => `<button data-ry="${k}" class="${(a.rythme || L.rythme) === k ? "on" : ""}">${n}</button>`).join("")}</span></div>` : ""}`, "", "large");
+  }
+  return h;
+}
+function bullesStyle() {
+  const S = spick, p = polDe(S.police), ch = C(), o = S.ouvert, maj = S.majuscules ?? p.sub.caps;
+  const ligne = (id, n, titre, resume, corps) => `<div class="acc ${o === id ? "open" : ""}"><button data-acc="${id}"><b>${n} · ${titre}</b><span>${o === id ? "Fermer" : esc(resume) + " ›"}</span></button>${o === id ? `<div class="in">${corps}</div>` : ""}</div>`;
+  const seg = (attr, val, opts) => `<span class="seg">${opts.map(([k, n]) => `<button data-${attr}="${k}" class="${String(val) === String(k) ? "on" : ""}">${n}</button>`).join("")}</span>`;
+  const dots = cle => PALETTE.map(([c, n]) => `<button class="dot ${S.couleurs[cle].toUpperCase() === c ? "on" : ""}" data-cl="${cle}" data-cv="${c}" style="background:${c}" title="${n}"></button>`).join("")
+    + `<input type="color" class="coul" data-pick="${cle}" value="${S.couleurs[cle].toLowerCase()}" title="Une autre couleur">`;
+  const nomC = c => (PALETTE.find(x => x[0] === c.toUpperCase()) || [0, "perso"])[1];
+  let h = WHO_C;
+  if (!E.style && !E.look) h += claude("Bienvenue ! Avant ta 1re vidéo, on règle ton style. Une seule fois, il servira pour toutes les suivantes.");
+  h += claude(`Ton style en 5 réglages, la vidéo suit en direct :
+    ${ligne("police", 1, "Police", p.nom, "Touche un style au centre. Couleur, taille et place se règlent dans les lignes suivantes.")}
+    ${ligne("position", 2, "Position", `titre ${S.titre_place === "haut" ? "en haut" : "plus bas"}, ${S.align === "gauche" ? "à gauche" : "centré"}`, `<div class="reg"><b>Titre</b>${seg("tp", S.titre_place, [["haut", "En haut"], ["bas", "Plus bas"]])}${seg("al", S.align, [["centre", "Centré"], ["gauche", "À gauche"]])}</div>
+      <div class="reg"><b>Sous-titres</b>${seg("pl", ch.place, [["haut", "Haut"], ["normal", "Menton"], ["bas", "Bas"]])}</div>`)}
+    ${ligne("taille", 3, "Taille", `titre ${S.titre} · sous-titres ${ch.taille} px`, `<div class="reg"><b>Titre</b>${seg("tt", S.titre, [["S", "S"], ["M", "M"], ["L", "L"], ["XL", "XL"]])}</div>
+      <div class="reg"><b>Sous-titres</b><button class="pill gris" id="moins" ${ch.taille <= 44 ? "disabled" : ""} aria-label="Plus petit">−</button><span style="min-width:50px;text-align:center;font-weight:600">${ch.taille} px</span><button class="pill gris" id="plus" ${ch.taille >= 58 ? "disabled" : ""} aria-label="Plus grand">+</button></div>`)}
+    ${ligne("couleurs", 4, "Couleurs", `${nomC(S.couleurs.t1)} · ${nomC(S.couleurs.t2)} · ${nomC(S.couleurs.sub)}`, `<div class="reg"><b>Titre l. 1</b>${dots("t1")}</div><div class="reg"><b>Titre l. 2</b>${dots("t2")}</div><div class="reg"><b>Sous-titres</b>${dots("sub")}</div>`)}
+    ${ligne("plus", 5, "Plus", `${maj ? "majuscules" : "minuscules"} · ${S.mots === 1 ? "mot à mot" : S.mots + " mots"} · ombre ${S.ombre}`, `<div class="reg"><b>Casse</b>${seg("mj", maj ? 1 : 0, [[1, "MAJUSCULES"], [0, "minuscules"]])}</div>
+      <div class="reg"><b>Mots</b>${seg("mo", S.mots, [[1, "1"], [2, "2"], [3, "3"], [4, "4"]])}</div><div class="reg"><b>Ombre</b>${seg("om", S.ombre, [["douce", "Douce"], ["forte", "Forte"]])}</div>`)}
+    <div class="ch" style="margin-top:12px"><button class="pill plein" id="garder-style">Enregistrer mon style</button>${E.style || E.look ? '<button class="pill gris" id="annuler-style">Annuler</button>' : ""}</div>`, "", "large");
+  return h;
+}
+function bulleCoupe(c) {
+  const occ = derushEnCours() ? "disabled" : "", ok = C().coupes_ok.includes(c.id), on = c.id === choisie ? "on" : "";
+  const ec = `<button class="pill plein" data-ec="${c.id}">${ecoute && ecoute.id === c.id ? "❚❚ Arrêter" : "▶ Écouter"}</button>`;
+  if (c.etat === "remis")
+    return claude(`J'ai remis le passage de <b>${fmt(placeDansReel(c.a))}</b> (${virg(c.duree)} s)${c.texte ? " : " + esc(c.texte) : ""}.
+      <div class="ch">${ec}<button class="pill gris" data-c="${c.id}" ${occ}>Couper à nouveau</button></div>`, `data-bulle="${c.id}"`, on);
+  const quoi = c.type === "reprise" ? `J'ai coupé une reprise à <b>${fmt(placeDansReel(c.a))}</b> : ${esc(c.texte)}.` : `J'ai raccourci un blanc de ${virg(c.duree)} s à <b>${fmt(placeDansReel(c.a))}</b>.`;
+  return claude(`${quoi}<div class="ch">${ec}<button class="pill gris" data-r="${c.id}" ${occ}>Remettre</button>${ok ? '<span class="pill fait">✓ C\'est bon</span>' : `<button class="pill gris" data-ok="${c.id}">C'est bon</button>`}</div>`, `data-bulle="${c.id}"`, on);
+}
+function bulleOuverture() {
+  const reco = E.reco.hook || (E.hooks[0] || {}).id, L = lookVu();
+  const vig = h => {
+    const t = h.bigwords ? h.bigwords[0].start + 0.4 : 1.2;
+    // vignette de 64 px : le texte à l'échelle ferait 6 px, on grossit l'idée (titre ou mot géant) pour qu'elle se lise
+    const txt = h.title ? h.title.l2 : h.bigwords ? h.bigwords[0].text : "";
+    const mot = Math.max(...txt.split(/\s+/).map(x => x.length), 1), fs = Math.min(15, 58 / (mot * 0.55));
+    const ov = txt ? `<div class="kw" style="top:${h.title ? 22 : 40}px;font-size:${fs.toFixed(1)}px;line-height:1.05;white-space:normal">${esc(txt)}</div>` : "";
+    return `<button class="${C().hook === h.id ? "on" : ""}" data-h="${h.id}" title="${esc(h.detail || "")}" style="background-image:url(/image/${t.toFixed(1)});${varsLook(L)}"><div class="ov">${ov}</div><span>${esc(h.nom.replace(" 2 lignes", ""))}</span></button>`;
+  };
+  const n = E.hooks.findIndex(h => h.id === reco) + 1;
+  return claude(`Pour l'ouverture, je te conseille la ${n === 1 ? "1re" : n + "e"} :<div class="cprev">${E.hooks.map(vig).join("")}</div>`);
+}
+function bulleSousTitres() {
+  const ch = C(), titre = !!hookChoisi().title;
+  return claude(`Tes sous-titres : <b>${esc(styleVu() ? polDe(styleVu().police).nom : E.noms_polices[lookVu().sans] || "")} ${ch.taille} px, ${NOMS_PLACE[ch.place]}</b>.${titre ? "" : (ch.mots_forts ? " Tes mots forts sortent en grand." : " Sans mots forts.")} Aucun texte dans la zone rouge (cachée par Insta).
+    <div class="ch"><button class="pill gris" id="moins" ${ch.taille <= 44 ? "disabled" : ""}>Plus petit</button><button class="pill gris" id="plus" ${ch.taille >= 58 ? "disabled" : ""}>Plus grand</button>
+    <span class="seg">${[["haut", "Haut"], ["normal", "Menton"], ["bas", "Bas"]].map(([k, n]) => `<button data-pl="${k}" class="${ch.place === k ? "on" : ""}">${n}</button>`).join("")}</span>
+    ${titre ? "" : `<button class="pill gris" id="mf">${ch.mots_forts ? "Sans mots forts" : "Avec mots forts"}</button>`}</div>`);
+}
+function bulleMusique() {
+  const ch = C(), lib = E.musiques.filter(m => m.id !== "perso"), perso = E.musiques.find(m => m.id === "perso");
+  const mus = E.musiques.find(m => m.id === ch.musique);
+  let txt;
+  if (ch.musique === "sans" || !mus) txt = lib.length || perso ? "Sans musique : tu l'ajoutes dans Insta au moment de publier." : "Je n'ai pas de musique pour toi : ajoute la tienne, ou ajoute-la dans Insta à la publication.";
+  else if (mus.id === "perso") txt = `Ta musique : <b>${esc(mus.titre)}</b>. Lance la vidéo pour l'écouter.`;
+  else txt = `Ta musique : <b>${esc(mus.nom)}</b> · ${esc(mus.titre)}.${mus.pourquoi ? " " + esc(mus.pourquoi[0].toUpperCase() + mus.pourquoi.slice(1)) + "." : ""}${lib.length > 1 ? " Tes émotions :" : ""}`;
+  return claude(`${txt}<div class="ch">${lib.length > 1 || (lib.length && ch.musique !== lib[0].id) ? lib.map(m => `<button class="pill ${ch.musique === m.id ? "plein" : "gris"}" data-m="${m.id}">${esc(m.nom)}</button>`).join("") : ""}
+    ${perso ? `<button class="pill ${ch.musique === "perso" ? "plein" : "gris"}" data-m="perso">Ta musique</button>` : ""}
+    <button class="pill" id="ajout-mus">+ ${perso ? "Changer ta musique" : "Ajoute ta musique"}</button>
+    ${ch.musique === "sans" ? "" : '<button class="pill gris" data-m="sans">Sans musique</button>'}</div>`);
+}
+// 23/10 étape 3 (maquettes etape3-r1 validées : r1-a « liste » + r2-a « 3 idées de B-roll ») : tous les moments forts en liste,
+// celui qu'on touche s'ouvre avec ses 6 effets et le réglage de l'effet choisi (retours n3, n4, n7). Jamais d'IA.
+// 23/10 (Cyril) : seuls les effets de /api/etat "effets" sont proposés (Zoom, Carton plein, Rien) ; Mot géant, Motion design et
+// Ton B-roll restent ci-dessous, cachés, pour pouvoir les remettre (cockpit.py CHOIX_MOMENT).
+const NOMS_EF = {zoom: "Zoom", mot: "Mot géant", carton: "Carton plein", motion: "Motion design", broll: "Ton B-roll", rien: "Rien"};
+const VAR = {zoom: {avant: "Zoom avant", arriere: "Zoom arrière"}, mot: {tete: "Derrière la tête", sous: "Dans le sous-titre"},
+             motion: {chiffres: "Chiffres géants", trait: "Illustration"}};   // 23/10 maquettes motion-r2 F + L validées
+// fonds du carton plein = les mêmes dégradés que cockpit.py FONDS (jamais de couleur unie, Cyril 23/10)
+const FONDS_C = {nuit: "radial-gradient(85% 60% at 100% 0%,#2f74ff 0%,transparent 70%),radial-gradient(90% 65% at 0% 100%,#132b66 0%,transparent 75%),linear-gradient(165deg,#0d1836 0%,#060a1c 60%,#03050d 100%)",
+                 noir: "radial-gradient(80% 55% at 100% 0%,#3a3f4a 0%,transparent 70%),radial-gradient(70% 50% at 0% 100%,#1a1d24 0%,transparent 75%),linear-gradient(165deg,#15171c 0%,#050506 70%)",
+                 bleu: "radial-gradient(85% 60% at 100% 0%,#7fb2ff 0%,transparent 70%),radial-gradient(90% 65% at 0% 100%,#0a2a6b 0%,transparent 75%),linear-gradient(165deg,#2b6fff 0%,#0b3b8c 60%,#061f4d 100%)",
+                 flou: "rgba(20,24,30,.55)"};
+const MOTION_SVG = {
+  coeur: '<svg viewBox="0 0 48 48" width="30" height="30"><path d="M24 42S5.5 31 5.5 17.8A10 10 0 0 1 24 12.6a10 10 0 0 1 18.5 5.2C42.5 31 24 42 24 42z" fill="#FF3B5C"/></svg>',
+  entoure: '<svg viewBox="0 0 60 30" width="56" height="28"><ellipse cx="30" cy="15" rx="26" ry="11" fill="none" stroke="#F2D37A" stroke-width="3" stroke-dasharray="130 40"/></svg>',
+  souligne: '<svg viewBox="0 0 60 30" width="56" height="28"><path d="M5 22 Q30 14 55 21" fill="none" stroke="#F2D37A" stroke-width="4" stroke-linecap="round"/></svg>'};
+let momOuvert = null, biblioRes = null, biblioQ = "";
+const onglets = {};
+const vig = f => `/biblio/vignette?f=${encodeURIComponent(f)}`;
+const nomPlan = f => f.split("/").pop().replace(/\.[^.]+$/, "").replace(/^(TEL_)?[A-Z-]+_/, "").replace(/_[VH]_.*$/, "").replace(/-/g, " ");
+function varianteTxt(m) {
+  const r = m.reglage;
+  if (m.choix === "broll") return r.broll === "perso" ? "ta vidéo" : m.idees.includes(r.broll) ? "proposé par Claude" : "ta bibliothèque";
+  if (m.choix === "carton") return FONDS_C[r.carton.fond] ? {nuit: "bleu nuit", noir: "noir", bleu: "bleu", flou: "ta vidéo floutée"}[r.carton.fond] : "";
+  return (VAR[m.choix] || {})[r[m.choix]] || "";
+}
+function reglageMoment(m) {
+  const r = m.reglage, lb = t => `<div class="lb">${t}</div>`;
+  const seg = (cle, opts) => `<div class="seg sg">${Object.entries(opts).map(([k, n]) => `<button data-rg="${m.id}" data-rk="${cle}" data-rv="${k}" class="${r[cle] === k ? "on" : ""}">${n}</button>`).join("")}</div>`;
+  if (m.choix === "zoom") return lb("Zoom · lequel ?") + seg("zoom", VAR.zoom) + `<small>${r.zoom === "arriere" ? "La caméra s'avance doucement juste avant, puis recule sur ta phrase." : "La caméra avance doucement sur toi pendant ta phrase."}</small>`;
+  if (m.choix === "mot") return lb("Mot géant · où ?") + seg("mot", VAR.mot) + `<small>« ${esc(m.mot)} » ${r.mot === "sous" ? "sort en géant à la place de ton sous-titre." : "sort en géant, ta tête passe devant."}</small>`;
+  if (m.choix === "carton") return lb("Carton plein · ton texte (2 lignes max)")
+    + `<input class="ct" data-ct="${m.id}" data-cl="l1" maxlength="22" value="${esc(r.carton.l1)}"><input class="ct ct2" data-ct="${m.id}" data-cl="l2" maxlength="22" value="${esc(r.carton.l2)}">`
+    + lb("Fond") + `<div class="sw">${Object.entries(FONDS_C).map(([k, c]) => `<button data-fond="${k}" data-fm="${m.id}" title="${k === "flou" ? "ta vidéo floutée" : k}" class="${r.carton.fond === k ? "on" : ""}" style="background:${k === "flou" ? "url(/image/" + m.t0.toFixed(1) + ") center/cover" : c}"></button>`).join("")}</div>`;
+  if (m.choix === "motion") {
+    const n = momentsVus().filter(x => x.choix === "motion" && x.reglage.motion === "chiffres").findIndex(x => x.id === m.id) + 1;
+    const tuiles = `<div class="mvs mv2"><button class="mv ${r.motion === "chiffres" ? "on" : ""}" data-rg="${m.id}" data-rk="motion" data-rv="chiffres"><b class="mvn">1<i>2</i><i>3</i></b><small>Chiffres géants</small></button>`
+      + `<button class="mv ${r.motion === "trait" ? "on" : ""}" data-rg="${m.id}" data-rk="motion" data-rv="trait"><img src="/illus/${r.illus}-trait.svg" class="mvi"><small>Illustration</small></button></div>`;
+    if (r.motion === "chiffres") return lb("Motion design · lequel ?") + tuiles + `<small>Le chiffre ${n || 1} sort en géant derrière ta tête, avec « ${esc(m.mot)} » au-dessus. Les autres moments « chiffres » font 2, 3…</small>`;
+    return lb("Motion design · lequel ?") + tuiles + lb("Quelle illustration ?") + `<div class="ils">${Object.entries(E.illus || {}).map(([k, nom]) => `<button class="il ${r.illus === k ? "on" : ""}" data-rg="${m.id}" data-rk="illus" data-rv="${k}" title="${esc(nom)}"><img src="/illus/${k}-trait.svg" class="mvi"></button>`).join("")}</div><small>Dessinée au trait blanc, à côté de ta tête, avec « ${esc(m.mot)} » dessous. Jamais d'IA.</small>`;
+  }
+  if (m.choix === "broll") {
+    const og = onglets[m.id] || (r.broll && r.broll !== "perso" && !m.idees.includes(r.broll) ? "biblio" : "idees");
+    const tab = `<div class="seg sg"><button data-bo="${m.id}" data-ov="idees" class="${og === "idees" ? "on" : ""}">Proposé par Claude</button><button data-bo="${m.id}" data-ov="biblio" class="${og === "biblio" ? "on" : ""}">Ma bibliothèque</button></div>`;
+    const bt = (f, nom, src) => `<button class="bt ${r.broll === f ? "on" : ""}" data-bf="${esc(f)}" data-bm2="${m.id}" style="background-image:url(${src})">${r.broll === f ? "<i>✓</i>" : ""}<small>${esc(nom)}</small></button>`;
+    let corps;
+    if (og === "idees") corps = `<div class="bth">${(m.broll ? bt("perso", "Ta vidéo", `/image/${m.t0.toFixed(1)}`).replace(/background-image:url\([^)]*\)/, "background:#1d1d1f") : "") + m.idees.map(f => bt(f, nomPlan(f), vig(f))).join("")}</div>`
+      + (m.idees.length ? "" : "<small>Je n'ai pas trouvé de plan pour cette phrase : regarde dans ta bibliothèque.</small>");
+    else corps = `<input class="ct" id="bq" data-bq="${m.id}" placeholder="Chercher : caméra, bureau, ville…" value="${esc(biblioQ)}">`
+      + (biblioRes ? `<div class="bth biblio">${biblioRes.map(x => bt(x.f, x.nom, vig(x.f))).join("") || "<small>Rien trouvé.</small>"}</div>` : `<small><span class="spin"></span>J'ouvre ta bibliothèque…</small>`);
+    return lb("Ton B-roll · lequel ?") + tab + corps + `<button class="lien" data-bc="${m.id}">+ Envoyer une autre vidéo</button>`;
+  }
+  return "<small>Rien ne bouge ici.</small>";
+}
+function bullesMoments() {
+  const ms = E.moments || [], whoC = '<div class="who">CLAUDE · ÉTAPE 3 SUR 3 · FACULTATIVE</div>';
+  if (sautee3()) return whoC + claude(`Étape sautée : ta vidéo reste telle quelle, sans habillage.<div class="ch"><button class="pill plein" id="reprendre3">Reprendre l'étape</button></div>`) + bulleMusique()
+    + '<button class="suivant" id="fin3">Terminer → Exporter</button>';
+  if (!ms.find(m => m.id === momOuvert)) momOuvert = (ms[0] || {}).id;
+  const ecart = ms.length > 1 ? Math.max(1, Math.round((ms.at(-1).t0 - ms[0].t0) / (ms.length - 1))) : 0;
+  let h = whoC + claude(ms.length ? `J'ai repéré <b>${ms.length === 1 ? "1 moment fort" : ms.length + " moments forts"}</b>${ecart ? `, un toutes les ${ecart} s` : ""}. Touche-en un pour le régler.` : "Je n'ai pas trouvé de moment fort à habiller : passe à l'export.");
+  h += '<div class="l8">' + ms.map((m, i) => {
+    if (m.id !== momOuvert) return `<button class="mrow ${m.choix === "rien" ? "rien" : ""}" data-mo="${m.id}"><b>${i + 1}</b><span class="tm">${fmt(m.t0)}</span><span class="q">« ${esc(m.texte)} »</span><span class="ef">${NOMS_EF[m.choix]}<small>${esc(varianteTxt(m))}</small></span></button>`;
+    const chips = Object.entries(NOMS_EF).filter(([k]) => (E.effets || Object.keys(NOMS_EF)).includes(k)).map(([k, n]) => `<button class="chip ${m.choix === k ? "on" : ""}" data-mc="${m.id}" data-mv="${k}">${n}</button>`).join("");
+    return `<div class="mopen" data-bm="${m.id}"><div class="hd"><b class="n">${i + 1}</b><b>${fmt(m.t0)}</b><span>« ${esc(m.texte)} »</span></div><div class="ch">${chips}</div><div class="sub">${reglageMoment(m)}</div></div>`;
+  }).join("") + "</div>";
+  return h + bulleMusique() + `<div style="display:flex;justify-content:space-between;align-items:center"><button class="pill gris" id="sauter3">Sauter l'étape</button><button class="pill plein" id="fin3">Terminer → Exporter</button></div>`;
+}
+async function chercherBiblio(q) { biblioQ = q; biblioRes = await api("/api/biblio?q=" + encodeURIComponent(q)); rendreFil(); }
+async function regler(id, cle, v) {
+  const m = E.moments.find(x => x.id === id), r = {...((C().moments_reglages || {})[id] || {}), [cle]: v};
+  if (m) m.reglage = {...m.reglage, [cle]: v};
+  await sauver({moments_reglages: {...(C().moments_reglages || {}), [id]: r}});
+  rendreFil(); majBande(); await recharger();
+}
+function bullesNotes() {
+  return E.notes.map(n => {
+    const tc = n.t != null ? `<span class="tc">${fmt(n.t)}</span>` : "";
+    let h = WHO_M + `<div class="msg moi ${n.id === choisie ? "on" : ""}" data-bulle="${n.id}">${tc}${esc(n.texte)}</div>`;
+    if (n.statut === "corrigé") h += WHO_C + claude(`Fait ✓ ${esc(n.reponse || "")}${n.t != null ? `<div class="ch"><button class="pill plein" data-revoir="${n.t}">▶ Revoir ${fmt(Math.max(0, n.t - 2))}</button></div>` : ""}`);
+    else h += `<div class="attente">Je le corrige quand tu reviens dans ton chat avec moi.</div>`;
+    return h;
+  }).join("");
+}
+function bullesExport() {
+  const j = E.job, pub = E.publication && E.publication.contenus ? E.publication : null, n = E.contenus.length;
+  let h = WHO_M + '<div class="msg moi">C\'est bon, exporte</div>' + WHO_C;
+  if (fabEnCours()) {
+    const faits = j.taches.filter(t => t.etat === "fini").length;
+    h += claude(`<span class="spin"></span>Je fabrique ${j.taches.length > 1 ? `tes ${j.taches.length} contenus, un par un` : "ta vidéo"} (${faits} sur ${j.taches.length}). Le Gardien vérifie chaque vidéo.`);
+  } else if (j.nom === "Tout fabriquer" && j.etat === "erreur") {
+    const t = j.taches.find(x => x.etat === "erreur") || {};
+    h += claude(`${esc(t.nom || "Un contenu")} a bloqué : ${esc(t.detail || "voir le journal")}. Rien n'est programmé tant qu'il y a une erreur. Ce qui est prêt n'est pas refait.
+      <div class="ch"><button class="pill plein" id="relancer">Relancer</button></div>`);
+  } else if (pub) {
+    h += claude(`Tes ${pub.contenus.length} contenus sont prêts ✓ Dis « OK programme » dans ton chat avec moi : rien ne part sans ça.
+      ${(pub.alertes || []).map(x => `<div class="alerte">⚠ ${esc(x)}</div>`).join("")}
+      <div class="ch"><button class="pill gris" id="changer">Changer quelque chose</button></div>`);
+  } else if (j.nom === "Tout fabriquer" && j.etat === "fini" && E.final.existe) {
+    h += claude(`Ton reel est prêt : Gardien ${E.final.gardien_ok ? "✓" : "à revoir"} · ${fmt(E.final.duree)}.<div class="ch"><a class="pill plein" style="text-decoration:none" href="/video/final" download="reel.mp4">Télécharger le reel</a></div>`);
+  } else h += claude(C().extras === "oui" ? `Voilà tes ${n} contenus au centre. Décoche ceux que tu ne veux pas, touche une date pour la changer.`
+                                          : "Voilà ton reel au centre. Fabrique-le ou programme-le.");
+  // 23/10 (Cyril) : carrousel, story et reels d'essai décochés par défaut, proposés seulement à la fin (pour ne pas perdre de temps)
+  if (n > 1 && !C().extras && !fabEnCours())
+    h += claude(`Je te fais aussi ${[E.contenus.some(c => c.type === "carrousel") && "un carrousel", E.contenus.some(c => c.type === "story") && "une story",
+                   (ne => ne > 1 ? ne + " reels d'essai" : ne ? "un reel d'essai" : "")(E.contenus.filter(c => c.essai).length)].filter(Boolean).join(", ").replace(/, ([^,]*)$/, " et $1")} avec cette vidéo ?
+      <div class="ch"><button class="pill plein" id="extras-oui">Oui, fais-les</button><button class="pill gris" id="extras-non">Non merci</button></div>`);
+  return h;
+}
+function rendreFil() {
+  let h;
+  if (mode === "export") h = bullesExport();
+  else if (spick) h = bullesStyle();
+  else if (pick) h = bullesLook();
+  else if (passe() >= 2) {   // 23/10 v4 : étape 2 = la vidéo habillée (style, ouverture, sous-titres, musique), puis l'export
+    h = '<div class="who">CLAUDE · ÉTAPE 2 SUR 2</div>' + claude(`Ton style : <b>${esc(nomStyle() || "pas encore choisi")}</b>.<div class="ch"><button class="pill gris" id="changer-style">Changer de style</button></div>`);
+    if (derushEnCours()) h += claude(`<span class="spin"></span>${esc(E.job.nom || "Je recoupe")}… ta vidéo revient dans quelques secondes.`);
+    h += bulleOuverture() + bulleSousTitres() + bulleMusique() + bullesNotes() + '<button class="suivant" id="fin3">Terminer → Exporter</button>';
+  } else {
+    // v5 : à l'étape 1 la conversation est rangée (message + « Suivant » sous la timeline) ; ce fil ne sert qu'en petit écran
+    h = '<div class="who">CLAUDE · ÉTAPE 1 SUR 2</div>' + claude(DR ? msgTL() : "");
+    if (derushEnCours()) h += claude(`<span class="spin"></span>${esc(E.job.nom || "Je recoupe")}… ta vidéo revient dans quelques secondes.`);
+    h += bullesNotes() + '<button class="suivant" id="suivant">Suivant : étape 2 Style ›</button>';
+  }
+  $("#fil").innerHTML = h;
+  brancherFil();
+}
+function brancherFil() {
+  const F = $("#fil"), q = s => F.querySelectorAll(s), un = s => F.querySelector(s);
+  const majTout = () => { rendreFil(); majBande(); appliquerLook(); };
+  // looks
+  q("[data-lk]").forEach(b => b.onclick = () => { pick.id = b.dataset.lk; pick.affine = {}; majTout(); });
+  if (un("#garder")) un("#garder").onclick = async () => {
+    const nom = lookDe(pick.id, pick.affine).nom;
+    await sauver({look: pick.id, affine: pick.affine}); pick = null; await recharger(); appliquerLook(); toast(`Look gardé : ${nom}`);
+  };
+  if (un("#affiner")) un("#affiner").onclick = () => { pick.affiner = !pick.affiner; rendreFil(); };
+  if (un("#annuler-look")) un("#annuler-look").onclick = () => { pick = null; majTout(); };
+  if (un("#changer-look")) un("#changer-look").onclick = () => { pick = {id: C().look, affine: {...(C().affine || {})}, affiner: false}; majTout(); };
+  q("[data-pol]").forEach(b => b.onclick = () => { pick.affine.polices = b.dataset.pol; majTout(); });
+  q("[data-coul]").forEach(b => b.onclick = () => { pick.affine.couleur = b.dataset.coul; majTout(); });
+  q("[data-ry]").forEach(b => b.onclick = () => { pick.affine.rythme = b.dataset.ry; rendreFil(); });
+  // style (23/10) : 5 réglages ; taille et place des sous-titres = #moins, #plus, [data-pl] plus bas (enregistrés tout de suite)
+  const majStyle = () => { rendreFil(); appliquerLook(); };
+  const ouvrir = id => { const av = spick.ouvert; spick.ouvert = id; rendreFil(); if ((av === "police") !== (id === "police")) rendreScene(); else appliquerLook(); };
+  q("[data-acc]").forEach(b => b.onclick = () => ouvrir(spick.ouvert === b.dataset.acc ? null : b.dataset.acc));
+  q("[data-tt]").forEach(b => b.onclick = () => { spick.titre = b.dataset.tt; majStyle(); });
+  q("[data-cl]").forEach(b => b.onclick = () => { spick.couleurs = {...spick.couleurs, [b.dataset.cl]: b.dataset.cv}; majStyle(); });
+  q("[data-pick]").forEach(i => { i.oninput = () => { spick.couleurs = {...spick.couleurs, [i.dataset.pick]: i.value.toUpperCase()}; appliquerLook(); }; i.onchange = majStyle; });
+  q("[data-tp]").forEach(b => b.onclick = () => { spick.titre_place = b.dataset.tp; majStyle(); });
+  q("[data-al]").forEach(b => b.onclick = () => { spick.align = b.dataset.al; majStyle(); });
+  q("[data-mj]").forEach(b => b.onclick = () => { spick.majuscules = b.dataset.mj === "1"; majStyle(); });
+  q("[data-mo]").forEach(b => b.onclick = () => { spick.mots = +b.dataset.mo; preparerTexte(); majStyle(); });   // l'aperçu suit le découpage
+  q("[data-om]").forEach(b => b.onclick = () => { spick.ombre = b.dataset.om; majStyle(); });
+  if (un("#garder-style")) un("#garder-style").onclick = async () => {
+    const {ouvert, ...st} = spick;
+    await sauver({style: st, passe: 2}); spick = null; await recharger(true); toast(`Style gardé : ${polDe(st.police).nom}`);
+  };
+  if (un("#annuler-style")) un("#annuler-style").onclick = () => { spick = null; rendre(); };
+  // étape 1 → 2 (le moteur recoupe si les coupes ont changé)
+  if (un("#suivant")) un("#suivant").onclick = suivant1;
+  q("[data-mc]").forEach(b => b.onclick = async () => {
+    const id = b.dataset.mc, v = b.dataset.mv, m = E.moments.find(x => x.id === id);
+    if (v === "broll" && !m.broll && !m.idees.length && !m.reglage.broll) { brollPour = id; return $("#fichier-broll").click(); }
+    m.choix = v; await sauver({moments_choix: {...C().moments_choix, [id]: v}}); rendreFil(); majBande(); allerMoment(id); await recharger();
+  });
+  q("[data-mo]").forEach(b => b.onclick = () => { momOuvert = b.dataset.mo; rendreFil(); allerMoment(momOuvert); });
+  q("[data-rg]").forEach(b => b.onclick = () => regler(b.dataset.rg, b.dataset.rk, b.dataset.rv).then(() => allerMoment(b.dataset.rg)));
+  q("[data-fond]").forEach(b => b.onclick = () => { const m = E.moments.find(x => x.id === b.dataset.fm); regler(m.id, "carton", {...m.reglage.carton, fond: b.dataset.fond}); });
+  q("[data-ct]").forEach(i => i.onchange = () => { const m = E.moments.find(x => x.id === i.dataset.ct); regler(m.id, "carton", {...m.reglage.carton, [i.dataset.cl]: i.value.trim().toUpperCase()}); });
+  q("[data-bo]").forEach(b => b.onclick = () => { onglets[b.dataset.bo] = b.dataset.ov; if (b.dataset.ov === "biblio" && !biblioRes) chercherBiblio(biblioQ); rendreFil(); });
+  if (un("#bq")) un("#bq").onkeydown = ev => { if (ev.key === "Enter") chercherBiblio(ev.target.value); };
+  q("[data-bf]").forEach(b => b.onclick = async () => {
+    const id = b.dataset.bm2, m = E.moments.find(x => x.id === id);
+    m.choix = "broll"; await sauver({moments_choix: {...C().moments_choix, [id]: "broll"}});
+    await regler(id, "broll", b.dataset.bf); aller(Math.max(0, m.t0 - 0.6), true);
+  });
+  q("[data-bc]").forEach(b => b.onclick = () => { brollPour = b.dataset.bc; $("#fichier-broll").click(); });
+  q("[data-bm]").forEach(m => m.onclick = ev => { if (!ev.target.closest("button,input")) allerMoment(m.dataset.bm); });
+  if (un("#sauter3")) un("#sauter3").onclick = async () => { await sauver({passe3: "sautee"}); rendreFil(); majBande(); rendreSteps(); };
+  if (un("#reprendre3")) un("#reprendre3").onclick = async () => { await sauver({passe3: null}); rendreFil(); majBande(); rendreSteps(); };
+  if (un("#fin3")) un("#fin3").onclick = () => { finEcoute(); mode = "export"; window.scrollTo(0, 0); rendre(); };
+  if (un("#changer-style")) un("#changer-style").onclick = () => { spick = {...STYLE_DEF(), ...(E.style || {}), ouvert: null}; rendreFil(); rendreScene(); };
+  // coupes
+  q("[data-ec]").forEach(b => b.onclick = () => ecouter(b.dataset.ec));
+  q("[data-r]").forEach(b => b.onclick = async () => { finEcoute(); await api("/api/remettre", {id: b.dataset.r}); await recharger(); });
+  q("[data-c]").forEach(b => b.onclick = async () => { finEcoute(); await api("/api/couper", {id: b.dataset.c}); await recharger(); });
+  q("[data-ok]").forEach(b => b.onclick = async () => { await sauver({coupes_ok: [...C().coupes_ok, b.dataset.ok]}); rendreFil(); });
+  q("[data-bulle]").forEach(m => m.onclick = ev => {
+    if (ev.target.closest("button,a")) return;
+    const id = m.dataset.bulle;
+    if (E.notes.some(n => n.id === id)) allerNote(id); else if (id !== choisie) choisir(id);
+  });
+  // ouverture, sous-titres, musique
+  q("[data-h]").forEach(b => b.onclick = async () => { await sauver({hook: b.dataset.h}); rendreFil(); aller(0, true); });
+  if (un("#moins")) un("#moins").onclick = async () => { await sauver({taille: Math.max(44, C().taille - 2)}); rendreFil(); };
+  if (un("#plus")) un("#plus").onclick = async () => { await sauver({taille: Math.min(58, C().taille + 2)}); rendreFil(); };
+  q("[data-pl]").forEach(b => b.onclick = async () => { await sauver({place: b.dataset.pl}); rendreFil(); });
+  if (un("#mf")) un("#mf").onclick = async () => { await sauver({mots_forts: !C().mots_forts}); rendreFil(); };
+  q("[data-m]").forEach(b => b.onclick = async () => {
+    await sauver({musique: b.dataset.m}); arreterSon(); const v = $("#v-reel"); if (v && !v.paused) musiqueSur(v); rendreFil();
+  });
+  if (un("#ajout-mus")) un("#ajout-mus").onclick = () => $("#fichier").click();
+  q("[data-revoir]").forEach(b => b.onclick = () => aller(+b.dataset.revoir - 2, true));
+  // export
+  if (un("#relancer")) un("#relancer").onclick = async () => { await api("/api/tout", {coches: C().coches, prog: C().prog, programmer: true}); await recharger(); };
+  if (un("#changer")) un("#changer").onclick = async () => { await api("/api/changer", {}); await recharger(); };
+  if (un("#extras-oui")) un("#extras-oui").onclick = async () => { await sauver({extras: "oui", coches: E.contenus.map(c => c.id)}); rendreScene(); rendreFil(); toast("Décoche ceux que tu ne veux pas, puis Programmer."); };
+  if (un("#extras-non")) un("#extras-non").onclick = async () => { await sauver({extras: "non", coches: ["reel"]}); rendreScene(); rendreFil(); };
+}
+
+// « Ajoute ta musique » : le fichier part tel quel au cockpit (pas de traitement), puis la vidéo le joue
+async function envoyerMusique(f) {
+  if (!f) return;
+  toast("J'ajoute ta musique…");
+  const r = await (await fetch("/api/musique", {method: "POST", headers: {"X-Nom": encodeURIComponent(f.name || "musique.mp3")}, body: f})).json();
+  if (!r.ok) return toast(r.erreur || "Ta musique n'est pas passée.");
+  await recharger();
+  toast("Ta musique est posée. Lance la vidéo pour l'écouter.");
+}
+// « Ton B-roll » (étape 3) : ta vidéo à toi, jamais générée par IA ; le cockpit la met en 9:16 (8 s max)
+let brollPour = null, brollV = 0;
+async function envoyerBroll(f) {
+  if (!f || !brollPour) return;
+  toast("J'ajoute ta vidéo…");
+  const r = await (await fetch("/api/broll", {method: "POST", headers: {"X-Nom": encodeURIComponent(f.name || "broll.mp4"), "X-Moment": brollPour}, body: f})).json();
+  if (!r.ok) return toast(r.erreur || "Ta vidéo n'est pas passée.");
+  brollV = Date.now(); await recharger(true); allerMoment(brollPour);
+  toast("Ta vidéo est posée sur ce moment.");
+}
+$("#fichier-broll").onchange = ev => { envoyerBroll(ev.target.files[0]); ev.target.value = ""; };
+$("#fichier").onchange = ev => { envoyerMusique(ev.target.files[0]); ev.target.value = ""; };
+
+// ---------- « Dis-moi ce que tu veux changer » : la phrase se colle à l'image si la vidéo est en pause ----------
+function instantPause() { const v = $("#v-reel"); return v && v.paused && mode === "montage" ? (etape1() ? rushVersVirt(v.currentTime) : v.currentTime) : null; }
+function majAsk() { const t = instantPause(), c = $("#tc-ask"); c.classList.toggle("cache", t == null); if (t != null) c.textContent = fmt(t); }
+$("#dis").addEventListener("keydown", async ev => {
+  if (ev.key !== "Enter" || !ev.target.value.trim()) return;
+  const t = instantPause(), texte = ev.target.value.trim();
+  const r = await api("/api/note", {texte, t});
+  if (!r.ok) return toast("Pas passé, réessaie.");
+  ev.target.value = ""; await recharger(); window.scrollTo({top: document.body.scrollHeight, behavior: "smooth"});
+  toast(t != null ? `Noté à ${fmt(t)}. Je le corrige dans ton chat.` : "Noté. Je le corrige dans ton chat.");
+});
+const Reco = window.SpeechRecognition || window.webkitSpeechRecognition;
+$("#mic").onclick = () => {
+  if (!Reco) { toast("Dictée indisponible ici : tape ta phrase."); $("#dis").focus(); return; }
+  const r = new Reco(); r.lang = "fr-FR"; r.interimResults = true;
+  $("#mic").classList.add("on");
+  r.onresult = e => { $("#dis").value = [...e.results].map(x => x[0].transcript).join(" "); };
+  r.onend = () => { $("#mic").classList.remove("on"); $("#dis").focus(); };
+  r.start();
+};
+
+// ---------- scène : la vidéo, ou la planche des 6 contenus ----------
+let dernierClip = null;
+function rendreScene() {
+  const ancienne = $("#v-reel"), garde = ancienne && dernierClip === E.projet.clip_v ? ancienne.currentTime : 0;
+  arreterSon(); ecoute = null; lecteurs = [];
+  const st = $("#stage");
+  $("#retour").classList.toggle("cache", mode !== "export");
+  $("#exporter").classList.toggle("cache", mode === "export");
+  if (mode === "export") { st.innerHTML = planche(); brancherPlanche(); majAsk(); return; }
+  if (spick && spick.ouvert === "police") { st.innerHTML = galerie(); brancherGalerie(); majAsk(); return; }
+  $(".main").classList.toggle("e1", etape1());
+  if (etape1()) { st.innerHTML = sceneDR(st); brancherSceneDR(); majAsk(); return; }
+  const h = Math.max(300, Math.min(640, st.clientHeight - 200)), w = Math.round(h * 9 / 16);
+  st.innerHTML = `<div class="phone" id="p-reel" style="width:${w}px;height:${h}px;${varsLook(lookVu())}"><div class="scr">
+      <video id="v-reel" src="/video/clip?v=${E.projet.clip_v}" poster="/image/${(+new URLSearchParams(location.search).get("t") || 0.1).toFixed(1)}" playsinline preload="auto"></video>
+      <video id="v-rush" class="cache" src="/video/rush" playsinline preload="metadata"></video>
+      <video id="v-broll" class="cache" muted playsinline preload="auto"></video>
+      <div class="ov" id="o-reel"></div>
+      <svg class="zones" viewBox="0 0 1080 1920" preserveAspectRatio="none"><path fill-rule="evenodd" fill="rgba(255,59,48,.22)" stroke="rgba(255,255,255,.7)" stroke-width="3" stroke-dasharray="14 10" d="M0 0H1080V1920H0Z M65 270H1015V1100H960V1480H65Z"/></svg>
+      <div class="play"><b></b></div>
+      <div class="ecoute cache" id="ecoute"></div><div class="ecbar cache"><i id="ecbar"></i></div>
+      ${derushEnCours() ? `<div class="recoupe"><span class="spin"></span>${esc(E.job.nom || "Je recoupe")}…<small>ta vidéo revient dans quelques secondes</small></div>` : ""}</div></div>
+    <div class="ctrl"><button class="rond" id="lire" aria-label="Lire"><svg width="12" height="14" viewBox="0 0 12 14"><path d="M1 1l10 6-10 6z" fill="#1d1d1f"/></svg></button>
+      <div id="ctl-bande" style="width:${Math.min(560, st.clientWidth - 200)}px"></div><span id="tc">0:00 / ${fmt(E.projet.reel)}</span></div>
+    <div class="kbd"><b>espace</b>lecture · ta phrase se colle à l'image en pause · <span style="color:#d70015">en rouge : zone cachée par Insta</span></div>`;
+  brancherReel();
+  dernierClip = E.projet.clip_v;
+  const ti = (hookChoisi().title || {});   // réglage du style : vidéo posée pendant le titre, pour le voir
+  if (spick && !garde && ti.end) $("#v-reel").addEventListener("loadedmetadata", e => { e.target.currentTime = Math.min(1.2, ti.end - 0.2); }, {once: true});
+  if (garde) $("#v-reel").addEventListener("loadedmetadata", e => { e.target.currentTime = garde; }, {once: true});
+  $("#lire").onclick = lireOuPause;
+  majBande(); majAsk();
+}
+
+function galerie() {
+  const hook = E.hooks.find(x => x.title) || hookChoisi(), t = hook.title ? Math.min(1.2, hook.title.end - 0.2) : 1.2;
+  const H = Math.round(Math.max(220, Math.min(330, ($("#stage").clientHeight - 170) / 2))), W = Math.round(H * 9 / 16);
+  return `<div style="display:flex;flex-direction:column;align-items:center;gap:14px"><div style="font-size:20px;font-weight:600">Choisis ta police</div>
+    <div class="galerie">${E.polices.map(p => `<button class="${spick.police === p.id ? "on" : ""}" data-pol2="${p.id}"><div class="v" style="width:${W}px;height:${H}px;background-image:url(/image/${t})"><div class="ov">${calques(t, hook, W, {...spick, police: p.id}, true)}</div></div>${esc(p.nom)}<small>${esc(p.desc)}</small></button>`).join("")}</div>
+    <div class="kbd">En blanc ici : la couleur se règle à part (ligne 4).</div></div>`;
+}
+function brancherGalerie() {
+  document.querySelectorAll("[data-pol2]").forEach(b => b.onclick = () => { spick.police = b.dataset.pol2; spick.ouvert = null; rendreFil(); rendreScene(); toast(`Police : ${polDe(spick.police).nom}`); });
+}
+
+// Rien ne part d'ici : « Programmer » fabrique les contenus cochés puis écrit publication.json,
+// une DEMANDE que Claude fait passer par le Publieur après un OK dans le chat.
+const JOURS = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
+function quandTxt(iso) {
+  if (!iso) return "";
+  const d = new Date(iso), j0 = new Date(); j0.setHours(0, 0, 0, 0);
+  const j = Math.round((new Date(d).setHours(0, 0, 0, 0) - j0) / 864e5);
+  const h = d.getHours() + "h" + (d.getMinutes() ? String(d.getMinutes()).padStart(2, "0") : "");
+  return (j === 0 ? "aujourd'hui" : j === 1 ? "demain" : JOURS[d.getDay()]) + " " + h;
+}
+const coches = () => ["reel", ...C().coches.filter(c => c !== "reel" && E.contenus.some(x => x.id === c))];
+const COURT = {reel: "Reel", carrousel: "Carrousel", story: "Story"};
+function planche() {
+  const j = E.job, tache = id => fabEnCours() || (j.nom === "Tout fabriquer" && j.etat !== "libre") ? (j.taches || []).find(t => t.id === id) : null;
+  const L = lookVu(), essais = E.contenus.filter(c => c.essai);
+  const carte = c => {
+    const on = c.id === "reel" || C().coches.includes(c.id), t = tache(c.id);
+    const etat = !t ? "" : t.etat === "en cours" ? '<div class="etat"><span class="spin"></span></div>' : t.etat === "fini" ? '<div class="etat ok"><b>✓</b></div>' : t.etat === "erreur" ? '<div class="etat ko">✗</div>' : "";
+    let w, h, fond, inner = "", info;
+    if (c.id === "reel") { w = 160; h = 284; fond = `/image/1.2`; inner = calques(1.2, hookChoisi(), w); info = `<span class="date" data-quand="reel">${quandTxt(E.cal.reel)}<input type="datetime-local" value="${E.cal.reel}"></span>${c.existe && c.pret ? ` · Gardien ${c.gardien ? "✓" : "à revoir"}` : ""}`; }
+    else if (c.type === "carrousel") { w = 140; h = 187; fond = c.existe ? `/sortie/carrousel/1?v=${c.v}` : `/image/${c.t}`; if (!c.existe) inner = `<div class="kw" style="top:12px;font-size:34px">${esc(c.mot)}</div>`; info = `${quandTxt(E.cal.carrousel)} · ${c.slides} slides`; }
+    else if (c.type === "story") { w = 110; h = 196; fond = c.existe ? `/sortie/story?v=${c.v}` : `/image/${c.t}`; info = quandTxt(E.cal.story); }
+    else { w = 100; h = 178; const t0 = (c.decal || 0) + 1.2; fond = `/image/${t0.toFixed(1)}`; inner = calques(1.2, c.hook, w); info = `<span class="date" data-quand="essais">${quandTxt(E.cal[c.id])}<input type="time" value="${C().prog.essais_heure || "18:00"}"></span>`; }
+    const nom = COURT[c.id] || `Essai ${essais.findIndex(x => x.id === c.id) + 1}`;
+    return `<div class="it ${on ? "" : "off"}"><div class="v" style="width:${w}px;height:${h}px;background-image:url(${fond});${varsLook(L)}"><div class="ov">${inner}</div>${etat}
+      ${c.id === "reel" ? "" : `<button class="tog ${on ? "on" : ""}" data-tog="${c.id}" aria-label="Garder ${esc(nom)}" ${fabEnCours() ? "disabled" : ""}></button>`}</div>${esc(nom)}<small>${info}</small></div>`;
+  };
+  const reel = E.contenus.find(c => c.id === "reel") || {}, pret = reel.existe && reel.pret, n = coches().length, p = C().prog;
+  const noms = p.reseaux.map(r => (E.reseaux[r] || r).replace(" Shorts", "").replace("Instagram", "Insta")).join(", ") || "aucun réseau";
+  const faits = (j.taches || []).filter(t => t.etat === "fini").length;
+  const sous = fabEnCours() ? `<div class="sous">Je fabrique · ${faits} sur ${j.taches.length} · ${fmt(Date.now() / 1000 - j.debut)}</div>` : "";
+  const occ = fabEnCours() ? "disabled" : "";
+  const vus = C().extras === "oui" ? E.contenus : E.contenus.filter(c => c.id === "reel");
+  return `<div class="planche"><h2>${vus.length > 1 ? `Tes ${vus.length} contenus` : "Ton reel"}</h2>${sous}<div class="board">${vus.map(carte).join("")}</div>
+    <div class="res">Le reel part sur ${Object.keys(E.reseaux).map(r => `<button data-res="${r}" class="${p.reseaux.includes(r) ? "on" : ""}" ${occ}>${esc(E.reseaux[r].replace(" Shorts", ""))}</button>`).join("")}</div>
+    <div class="pied">${pret ? '<a class="btn" href="/video/final" download="reel.mp4">Télécharger le reel</a>' : `<button class="btn" id="fab-reel" ${occ}>Fabriquer le reel</button>`}
+      <button class="btn blue" id="programmer" ${occ}>Programmer ${n} contenu${n > 1 ? "s" : ""} · ${esc(noms)}</button></div></div>`;
+}
+function brancherPlanche() {
+  const S = $("#stage");
+  S.querySelectorAll("[data-tog]").forEach(b => b.onclick = async () => {
+    const id = b.dataset.tog, co = C().coches;
+    await sauver({coches: co.includes(id) ? co.filter(x => x !== id) : [...co, id]}); rendreScene(); rendreFil();
+  });
+  S.querySelectorAll("[data-res]").forEach(b => b.onclick = async () => {
+    const p = C().prog, r = b.dataset.res, reseaux = p.reseaux.includes(r) ? p.reseaux.filter(x => x !== r) : [...p.reseaux, r];
+    await sauver({prog: {...p, reseaux}}); rendreScene();
+  });
+  S.querySelectorAll("[data-quand]").forEach(d => {
+    const inp = d.querySelector("input");
+    d.onclick = ev => { if (ev.target === inp) return; try { inp.showPicker(); } catch (e) { inp.focus(); } };
+    inp.onchange = async () => {
+      const p = C().prog;
+      await sauver({prog: d.dataset.quand === "reel" ? {...p, quand: inp.value} : {...p, essais_heure: inp.value}});
+      await recharger();
+    };
+  });
+  if ($("#fab-reel")) $("#fab-reel").onclick = () => lancerTout(["reel"], false);
+  $("#programmer").onclick = () => { if (!C().prog.reseaux.length) return toast("Choisis au moins un réseau."); lancerTout(coches(), true); };
+}
+async function lancerTout(ids, programmer) {
+  const r = await api("/api/tout", programmer ? {coches: ids, prog: C().prog, programmer} : {ids, prog: C().prog, programmer});
+  if (!r.ok) toast("Une autre tâche tourne déjà : attends qu'elle finisse.");
+  await recharger();
+}
+// « Tout auto » : un clic, Claude garde ses conseils pour les 3 étapes (coupes, ouverture, style, moments forts, musique) et fabrique le reel
+$("#auto").onclick = async () => {
+  if (fabEnCours() || derushEnCours()) return toast("Attends la fin de la tâche en cours.");
+  finEcoute();
+  const r = await api("/api/derush", {...drJSON(), appliquer: true});   // tes coupes d'abord (le moteur recoupe si besoin)
+  if (r.recoupe) { toast("Je coupe ta vidéo…"); await attendreJob(); }
+  const v = {passe: 2};
+  if (!styleFait()) v.style = STYLE_DEF();
+  await sauver(v); spick = null; pick = null; mode = "export"; await recharger(true);
+  toast("Tout auto : je fabrique ton reel avec mes conseils.");
+  lancerTout(["reel"], false);
+};
+$("#exporter").onclick = () => { finEcoute(); pick = null; mode = "export"; window.scrollTo(0, 0); rendre(); };
+$("#retour").onclick = () => { mode = "montage"; rendre(); };
+
+// ---------- état et suivi ----------
+function rendre() {
+  if (E.lab) { document.body.classList.add("lab"); document.title = "Derush Lab"; $(".brand").lastChild.textContent = "Derush Lab"; }
+  $("#proj").textContent = E.lab ? `· ${E.projet.titre} · ${fmt(E.projet.rush)} → ${fmt(dureeVirt())}` : `· ${E.projet.titre} · ${fmt(E.projet.reel)}`;
+  rendreSteps(); rendreScene(); rendreFil();
+}
+// deux signatures : ce qui oblige à recharger la vidéo (scène) et ce qui ne change que la conversation
+const sigScene = () => JSON.stringify([mode, E.job.etat, E.job.nom, E.rush_pret, E.projet.clip_v, E.final.v, !!E.publication, E.contenus.map(c => c.v), mode === "export" ? [E.job.taches.map(t => t.etat), E.cal] : 0]);
+const sigFil = () => JSON.stringify([E.notes, E.coupes.map(c => c.id + c.etat), E.choix, E.musiques.map(m => m.id), E.look, E.style, E.moments]);
+async function recharger(force) {
+  const avant = E && [sigScene(), sigFil()];
+  E = await api("/api/etat");
+  E.musique_v = (E.musiques.find(m => m.id === "perso") || {}).titre || "";
+  if (!avant) chargerPolices();
+  preparerTexte();
+  if (!DR) initDR();
+  if (E.planche && !SPR && etape1()) chargerPlanche();
+  if (passe() >= 2 && !pick && !spick && !styleFait()) spick = {...STYLE_DEF(), ouvert: "police"};   // étape 2 : 1re vidéo = la galerie des 6 polices
+  if ((fabEnCours() || E.publication) && !avant) mode = "export";
+  if (force || !avant || avant[0] !== sigScene()) rendre();
+  else if (avant[1] !== sigFil()) { rendreSteps(); rendreFil(); majBande(); }
+  else if (fabEnCours() && mode === "export") { const s = $(".sous"); if (s) s.textContent = `Je fabrique · ${E.job.taches.filter(t => t.etat === "fini").length} sur ${E.job.taches.length} · ${fmt(Date.now() / 1000 - E.job.debut)}`; }
+  clearTimeout(tic);
+  // tâche en cours : toutes les 1,5 s ; sinon toutes les 5 s (les réponses de Claude aux notes arrivent pendant que la page est ouverte)
+  tic = setTimeout(recharger, E.job.etat === "en cours" ? 1500 : 5000);
+}
+let redim = null;
+addEventListener("resize", () => { clearTimeout(redim); redim = setTimeout(rendreScene, 200); });
+(async () => { await recharger(); requestAnimationFrame(boucle); })();
+</script>
+</body></html>

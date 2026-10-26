@@ -1,6 +1,6 @@
 """Prépare la note /10 : mesure le reel et la réf monteur côte à côte, sort les planches à regarder.
   python3 score.py final.mp4 [ref.mp4]      -> score/ (metrics.json, compare.jpg, hook.jpg)
-ref par défaut : ../ref/FINAL.mp4 (réf validée par Cyril le 12/10/2026).
+ref par défaut : ../ref/FINAL.mp4 (réf validée par l'utilisateur le 12/10/2026).
 Les chiffres ne notent rien tout seuls : ils servent à juger la grille de SKILL.md sans se mentir.
 À lancer depuis le dossier du reel : words.json (débit, vitesse de lecture) et clip.mp4 (image de la cam) y sont lus s'ils existent.
 Repères experts 13/10 : débit 165-195 mots/min (alerte > 240), <= 20 car/s, cam P1 1-8 / P99 <= 235 / néon < 0,5 %,
@@ -10,7 +10,7 @@ import json, os, re, subprocess, sys
 
 final = sys.argv[1]
 ref = sys.argv[2] if len(sys.argv) > 2 else os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ref", "FINAL.mp4")
-if not os.path.exists(ref):   # chez un client : pas de réf de Cyril, la grille seule juge (process client, étape 5)
+if not os.path.exists(ref):   # chez un client : pas de réf validée, la grille seule juge (process client, étape 5)
     print("pas de vidéo de référence : mesures du montage seul (colonne ref = le montage lui-même)")
     ref = final
 os.makedirs("score", exist_ok=True)

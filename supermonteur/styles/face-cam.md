@@ -1,10 +1,10 @@
 # FACE CAMÉRA (le SEUL style face cam, 19/10/2026)
 
-**19/10 : un seul montage face caméra = mots géants derrière la tête + B-rolls + cartons plein écran sur les punchlines, avec SES sous-titres.** (23/10 : B-rolls plus obligatoires, par défaut aucun.) Les anciens degrés « sous-titres », « minimaliste », « high prod » sont supprimés (« ça veut rien dire ») : ne plus jamais les nommer ni les proposer. Anciens fichiers : `styles/_archive/`.
+**26/10 (remplace le 19/10) : le style DYNAMIQUE (la face caméra) = un MIX À ÉQUILIBRER de 4 plans : (1) split screen = face cam + animation, (2) face cam seule, (3) carton plein écran avec un DÉGRADÉ PROPRE (jamais de couleur unie, 23/10), (4) animation plein écran (motion design HyperFrames niveau Jun Yuh, jamais d'image IA). Toujours ses sous-titres + une musique.** Équilibre = aucun des 4 ne domine, jamais 2 pleins écrans du même type à la suite, la face cam revient entre deux. Les mots géants, chiffres, listes ci-dessous restent des outils pour les plans 1, 3 et 4. B-rolls seulement s'il les demande (23/10). Les anciens degrés « sous-titres », « high prod » restent supprimés (« minimaliste » = autre style depuis le 26/10, `styles/raw.md`). Anciens fichiers : `styles/_archive/`.
 
 Lu après `SKILL.md`. Tout l'arsenal : chiffres géants, mots géants, listes, preuves, B-rolls, images, CTA. On peut couvrir la tête : B-rolls et/ou motion design plein écran pendant qu'il parle. La tête n'a pas besoin d'être à l'écran tout le temps.
 Pas de question de degré ni de « Sobre / Dynamique » : le dosage se décide à l'œil selon la vidéo, puis se valide en maquettes (2 rounds).
-Étalon : la version de son monteur humain quand elle existe (`/Volumes/SSD Dreamax/1 - Contenu/2 - Vidéos finies/Reels business/<titre>.mp4`), sinon `ref/FINAL.mp4`. Le but : faire mieux que lui.
+Étalon : la version de son monteur humain quand elle existe (son disque externe), sinon `ref/FINAL.mp4`. Le but : faire mieux que lui.
 
 ## 1 bis. Fiche univers (après l'étape 1 de SKILL.md ; Bruce Block, Deakins : l'univers du reel = celui du rush)
 ```bash
@@ -30,11 +30,11 @@ Compléter `univers.json` à l'œil (source de lumière, espace, ligne, forme), 
 - **hook** (guide OPUS, 13/10) : `{}` = ouverture : impact grave seulement. Viseur REC = `"rec": true`, seulement si la vidéo parle de tournage (retour : « REC, ça n'a rien à voir »). **Jamais de bandes noires** (rejetées le 13/10 ; `bars: true` les remet, ne pas l'utiliser). Options : `rec`, `impact` (false pour couper), `recEnd`. Hook complet en 7 s : REC (0 s) → mot géant derrière la tête (~0,9 s) → plein écran éclair < 1 s (B-roll ou preuve) avant 3,5 s.
 - **bigwords** : `[{"text": "dangereux", "start": 3.6, "end": 4.95}]` = LE mot-clé en serif géant derrière la tête, lettre par lettre depuis le centre, 2 échos en contour qui dérivent, zoom d'impact + aspiration inversée. 1 à 2 par vidéo, surtout dans le hook. Passe par `matte.py` comme les chiffres. Le mot sort du sous-titre tout seul. Permis aussi avec un `title` depuis le 21/10 (L'utilisateur).
 - **proofs** = « montrer au lieu de dire » : quand la phrase porte une preuve, un chiffre ou une durée, plein écran pendant que la voix continue. **3 à 5 pleins écrans max en tout (listes + preuves + B-rolls plein écran), 1 à 5 s chacun, jamais deux types identiques à la suite.** Sous-titres masqués dessous.
-  - `{"type": "curve", "start", "end", "title": ["Copier un hook", "ou le construire"], "from": "Hook copié", "to": "16 principes", "levels": ["Débutant", "Expert"], "steps": [...], "climax": 20.9}` → papier ivoire : la ligne grise plafonne en bas, la ligne accent monte d'un coup (`climax` = l'instant où elle part, calé sur le mot fort). Pour : « même avec 6 mois », « ce que tout le monde fait vs ». (19/10 : courbe papier REFUSÉE, « jamais de motion design plein écran » ; ne plus l'utiliser. Plein écran autorisé = cartons typo, listes, B-rolls.)
+  - `{"type": "curve", "start", "end", "title": ["Copier un hook", "ou le construire"], "from": "Hook copié", "to": "16 principes", "levels": ["Débutant", "Expert"], "steps": [...], "climax": 20.9}` → papier ivoire : la ligne grise plafonne en bas, la ligne accent monte d'un coup (`climax` = l'instant où elle part, calé sur le mot fort). Pour : « même avec 6 mois », « ce que tout le monde fait vs ». (19/10 : courbe papier REFUSÉE, ne plus l'utiliser. 26/10 : l'animation plein écran redevient un des 4 plans du format, en motion design propre niveau Jun Yuh, pas cette courbe.)
   - ÉCARTÉS par l'utilisateur le 13/10 (ne pas utiliser ni proposer) : `clock` (horloge qui s'emballe) et `dashboard` (verre sombre 3D). Chiffres de preuve = ceux de la personne (vrais résultats), jamais inventés.
 
-## 5. B-rolls (23/10 : plus obligatoires. Par défaut AUCUN, montage dans le cockpit. Seulement s'il les demande : cinématiques, choisis par lui dans Style Lab, voir SKILL.md 4 bis)
-Densité quand il en demande = `high` : environ 1 par phrase quand un vrai plan colle. Préférer `VIDEOS/` (caméra) à `B-ROLL-TELEPHONE/`. Proposer 2-3 candidats par phrase dans Style Lab, monter avec ses choix.
+## 5. B-rolls (23/10 : plus obligatoires. Par défaut AUCUN, montage dans le cockpit. Seulement s'il les demande : cinématiques, choisis par moi sans round (26/10), corrigés dans le Cockpit, voir SKILL.md 4 bis)
+Densité quand il en demande = `high` : environ 1 par phrase quand un vrai plan colle. Préférer `VIDEOS/` (caméra) à `B-ROLL-TELEPHONE/`. Choisir seul le meilleur plan par phrase (règles de variété de SKILL.md 4 bis), il corrige dans le Cockpit.
 Décider la densité pour TOUTE la vidéo : `none` / `low` / `high`.
 ```bash
 python3 $S/broll.py slots plan.json words.json --density low     # créneaux réguliers + ce qui est dit à ce moment
@@ -79,4 +79,4 @@ Planches 1 i/s côte à côte + `analyse_ref.py` sur les deux (coupes, débit, S
 - **Concept nommé (effet Médicis…)** : motion design plein écran qui l'explique (ex. 2 cercles qui se croisent), choc calé sur le mot et la frappe de la musique, titre lisible ~2 s.
 - (OBSOLÈTE 19/10, IA interdite) **Images générées** (Higgsfield) : dans l'univers de la vidéo (nuit, bleu nuit, rouge de l'événement), jamais un plein jour gris ; voile sombre en haut si les sous-titres tombent sur un ciel clair.
 - **Visage très proche** (selfie voiture) : `subY` ~380 (au-dessus de la tête) ; les sous-titres s'effacent seuls sous chiffres, mots géants et captures.
-- **Durée demandée > 1 min** : garder la signature (« Mr Dreamax »), `fin_musique: false`, fin de musique recalée à la main.
+- **Durée demandée > 1 min** : garder la signature (« la signature »), `fin_musique: false`, fin de musique recalée à la main.

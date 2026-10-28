@@ -44,9 +44,10 @@ n = min(len(mdb), len(vdb)); mdb, vdb = mdb[:n], vdb[:n]; t = t_of(n)
 mref = np.percentile(mdb, 95)
 
 # 3. Voix : mots, débit, pauses
-from faster_whisper import WhisperModel
-segs, _ = WhisperModel("small", compute_type="int8").transcribe(voc_p, language=None if lang == "auto" else lang, word_timestamps=True)
-words = [{"w": w.word.strip(), "s": round(w.start, 2), "e": round(w.end, 2)} for s in segs for w in s.words]
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from mots import transcrire                                        # ElevenLabs d'abord, Whisper small en secours
+ws, _ = transcrire(voc_p, langue=None if lang == "auto" else lang)
+words = [{"w": w["text"], "s": round(w["start"], 2), "e": round(w["end"], 2)} for w in ws]
 gaps = [(round(a["e"], 2), round(b["s"] - a["e"], 2)) for a, b in zip(words, words[1:]) if b["s"] - a["e"] >= 0.3]
 speech_time = sum(w["e"] - w["s"] for w in words)
 in_speech = np.zeros(n, bool)

@@ -3,7 +3,7 @@
 #
 # Un mot ne s'arrête pas quand la voix forte s'arrête. Après la dernière note de voix il peut rester :
 #  - une voix douce qui traîne (« e » muet : « scrip-te », fin de voyelle) : suivie tant qu'elle reprend en moins de 0,30 s ;
-#  - une queue SOURDE collée (« x » de « Dreamax » 0,20 s, « s », « tre ») : gardée si elle dure 0,25 s au plus, sinon c'est
+#  - une queue SOURDE collée (« x » de « Dreamax » (la signature) 0,20 s, « s », « tre ») : gardée si elle dure 0,25 s au plus, sinon c'est
 #    un souffle collé au mot (on garde alors 0,12 s de queue, le reste peut être baissé) ;
 #  - l'explosion d'un « t », « p », « k » après 30-90 ms de fermeture (silence) : sourde et brutale (+10 dB en 30 ms),
 #    gardée 0,25 s au plus. Une reprise douce (inspiration) ou voisée (le mot suivant) n'en est pas une.

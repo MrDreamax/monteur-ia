@@ -15,6 +15,8 @@ model = os.path.expanduser("~/.cache/supermonteur/rvm_mobilenetv3_fp32.onnx")
 sess = ort.InferenceSession(model, providers=["CPUExecutionProvider"])
 W, H, FPS, WARM = 1080, 1920, 30, 0.5
 src = os.path.join(d, plan["cam"])
+# 28/10 (CAM20056-57) : 3 détourages en 1080x1920 + 10 vidéos = le rendu HyperFrames calait vers l'image 900 (Chrome ne répond
+# plus, Mac 8 Go). Écrits en 720x1280 (le navigateur les remet à 1080x1920 : bords doux identiques à l'œil), le rendu passe.
 
 # vidéo avec titre-question : pas de mot géant (règle 13/10), donc rien à détourer pour eux
 jobs = [(n, f"fg_{k}.webm") for k, n in enumerate(plan.get("numbers", []))] + [(w, f"fgw_{k}.webm") for k, w in enumerate(plan.get("bigwords", []))]   # 21/10 : mots géants permis avec un titre
@@ -29,7 +31,7 @@ for n, name in jobs:
     dec = subprocess.Popen(["ffmpeg", "-v", "error", "-ss", f"{a0:.3f}", "-i", src, "-t", f"{b - a0:.3f}",
                             "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], stdout=subprocess.PIPE)
     enc = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgba", "-s", f"{W}x{H}",
-                            "-r", str(FPS), "-i", "-", "-c:v", "libvpx-vp9", "-pix_fmt", "yuva420p", "-b:v", "6M",
+                            "-r", str(FPS), "-i", "-", "-vf", "scale=720:1280:flags=lanczos", "-c:v", "libvpx-vp9", "-pix_fmt", "yuva420p", "-b:v", "6M",
                             "-auto-alt-ref", "0", os.path.join(d, name)], stdin=subprocess.PIPE)
     rec = [np.zeros([1, 1, 1, 1], np.float32)] * 4
     ratio = np.array([0.25], np.float32)

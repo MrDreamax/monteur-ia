@@ -128,7 +128,7 @@ def classer(rows):
 
 
 if __name__ == "__main__":
-    if not os.path.exists(INDEX): sys.exit("Bibliothèque introuvable : SSD Dreamax branché ?")
+    if not os.path.exists(INDEX): sys.exit("Bibliothèque introuvable : disque externe branché ?")
     rows = list(csv.DictReader(open(INDEX, encoding="utf-8")))
     if sys.argv[1:2] != ["classe"]: mesurer(rows)
     classer(rows)

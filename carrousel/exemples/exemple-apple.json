@@ -1,0 +1,110 @@
+{
+ "name": "EXEMPLE FICTIF (style Apple) : quand tous les coachs se ressemblent",
+ "style": "apple",
+ "out": "~/Documents/Contenu/carrousels/2026-01-01-exemple-apple",
+ "photos": {
+  "p1": {
+   "src": "~/Documents/Contenu/medias/photos/TA-PHOTO-1.jpg",
+   "fx": 0.5,
+   "fy": 0.45
+  },
+  "p3": {
+   "src": "~/Documents/Contenu/medias/photos/TA-PHOTO-2.jpg",
+   "fx": 0.5,
+   "fy": 0.4
+  },
+  "p5": {
+   "src": "~/Documents/Contenu/medias/photos/TA-PHOTO-3.jpg",
+   "fx": 0.5,
+   "fy": 0.4
+  },
+  "p7": {
+   "src": "~/Documents/Contenu/medias/photos/TA-PHOTO-4.jpg",
+   "fx": 0.5,
+   "fy": 0.5
+  }
+ },
+ "slides": [
+  {
+   "type": "cover",
+   "photo": "p1",
+   "kicker": "Coachs, formateurs",
+   "title": "Tous pareils.<br>Sauf un.",
+   "note": "c&#39;est toi ↓",
+   "note_pos": {
+    "top": 470,
+    "right": 60
+   }
+  },
+  {
+   "type": "art",
+   "art": "apples_grid",
+   "title": "Même bio.<br>Mêmes hooks.",
+   "body": "Ton client ne voit plus la différence.",
+   "note": "lequel tu choisis ?",
+   "note_pos": {
+    "top": 50,
+    "right": 70
+   }
+  },
+  {
+   "type": "photo",
+   "photo": "p3",
+   "title": "Même si tu es<br>très bon…",
+   "body": "personne ne le voit si tu parles comme les autres."
+  },
+  {
+   "type": "art",
+   "art": "copies",
+   "title": "L’erreur n°1 :<br>copier les gros comptes.",
+   "title_size": 88,
+   "body": "Tu deviens une copie de plus."
+  },
+  {
+   "type": "photo",
+   "photo": "p5",
+   "title": "Copie le format.<br>Jamais la posture.",
+   "body": "Le format se copie. Ta posture, c’est toi."
+  },
+  {
+   "type": "art",
+   "art": "stairs",
+   "title": "Par où commencer",
+   "steps": [
+    "Ta première vie : c’est ta preuve.",
+    "Un format qui marche.",
+    "Ta voix, pas celle des autres."
+   ]
+  },
+  {
+   "type": "photo",
+   "photo": "p7",
+   "pop": false,
+   "title": "[TA PREUVE VRAIE]<br>[chiffre ou année]",
+   "title_size": 84,
+   "body": "[Ce que cette preuve change pour ton client.]"
+  },
+  {
+   "type": "art",
+   "art": "apples_grid",
+   "args": {
+    "red_at": [
+     1,
+     2
+    ]
+   },
+   "title": "On retient celui<br>qui est différent.",
+   "cta": "Position",
+   "cta_q": "Tu veux mon doc positionnement ?",
+   "cta_line": "Envoyé en DM. Bonne lecture."
+  }
+ ],
+ "caption": "Quand tous les coachs ont la même bio et les mêmes hooks, le client ne voit plus la différence.\n\nCopie un format qui marche. Jamais la posture : elle, c’est toi.\n\n[Ta preuve vraie] : je commence toujours par le positionnement.\n\nCommente POSITION et je t’envoie mon doc.",
+ "hashtags": [
+  "coach",
+  "formateur",
+  "positionnement",
+  "personalbranding",
+  "instagram"
+ ]
+}

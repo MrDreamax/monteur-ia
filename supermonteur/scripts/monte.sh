@@ -15,6 +15,13 @@ etape "B-rolls"
 python3 -E "$S/broll.py" prep plan.json > prep.log 2>&1 || { tail -5 prep.log; stop "broll.py prep"; }
 grep -E "HDR|INSTABLE" prep.log
 
+# 28/10 (CAM20056-57 : « les mots en gros derrière la tête ») : matte.py n'était lancé nulle part, la tête ne passait jamais
+# devant les mots géants / chiffres. Il tourne maintenant à chaque montage qui en a (détourage déjà fait = réutilisé).
+if python3 -c "import json,sys;p=json.load(open('plan.json'));sys.exit(0 if p.get('numbers') or p.get('bigwords') or any(m.get('kind')=='chiffres' for m in p.get('motions',[])) else 1)"; then
+  etape "Détourage (tête devant les mots géants)"
+  python3 "$S/matte.py" plan.json > matte.log 2>&1 || { tail -5 matte.log; stop "matte.py"; }
+fi
+
 etape "Composition"
 node "$S/build.mjs" --plan plan.json --out index.html > build.log 2>&1 || { tail -5 build.log; stop "build.mjs"; }
 tail -1 build.log
@@ -29,7 +36,9 @@ grep -q "le rendu peut partir" gardien-avant.log || stop "corriger plan.json pui
 
 etape "Rendu (~3 min, ne rien lancer de lourd à côté : Mac 8 Go)"
 mkdir -p _v0; mv renders/*.mp4 _v0/ 2>/dev/null
-$HF render . -q high > render.log 2>&1 || { tail -5 render.log; stop "rendu"; }
+# 28/10 (CAM20056-57 v2) : rendu calé à l'image 939 (« Chrome stopped answering ») parce qu'un autre chat faisait un ffmpeg
+# lourd en même temps. Un 2e essai automatique après 30 s, au lieu de s'arrêter au 1er calage.
+$HF render . -q high > render.log 2>&1 || { echo "rendu calé, 2e essai dans 30 s"; sleep 30; rm -f renders/*.mp4; $HF render . -q high > render.log 2>&1; } || { tail -5 render.log; stop "rendu"; }
 R=$(ls -t renders/*.mp4 | head -1)
 
 etape "Mix"

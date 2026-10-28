@@ -52,7 +52,8 @@ mkdirSync("fonts", { recursive: true });
 DA.fonts.sub = DA.fonts.sub || DA.fonts.sans;
 // 23/10 (cockpit, personnalisation) : plan.typo = { t1, t2, sub : {font, weight, size, caps, track, stretch, italic, color, scale}, shadow, align }
 // = police, graisse, taille, couleur de chaque ligne du titre et des sous-titres, choisis dans le cockpit. Absent = rendu inchangé.
-const TY = plan.typo || null;
+// 26/10 : la DA du setup peut porter la même typo (DA.typo) = défaut de tous les reels ; plan.typo l'écrase pour un reel
+const TY = plan.typo || DA.typo || null;
 if (TY) DA.fonts.sub = TY.sub.font;
 for (const f of new Set([DA.fonts.sans, DA.fonts.serif, DA.fonts.sub, ...(TY ? [TY.t1.font, TY.t2.font] : [])])) if (!existsSync(join("fonts", f))) copyFileSync(join(SKILL, "fonts", f), join("fonts", f));
 const SUBSIZE = Math.round((plan.subSize || DA.subSize || 52) * (TY?.sub.scale || 1)), SUBTRACK = TY ? TY.sub.track ?? .5 : plan.subTrack ?? DA.subTrack ?? .5;
@@ -124,7 +125,7 @@ const cards = (plan.mini || []).filter(m => m.type === "card");
 }
 // plages plein écran sans sous-titres dessous : cartons liste, preuves, feuille de commentaires
 // + B-rolls "nosub": true (graphique, capture d'écran : les sous-titres crème deviennent illisibles sur fond clair et cachent l'info, 13/10)
-const FULL = [...lists, ...proofs, ...cards, ...(cta ? [cta] : []), ...(plan.brolls || []).filter(b => b.nosub)];
+const FULL = [...lists, ...proofs, ...cards, ...(cta ? [cta] : []), ...(plan.ctaMenu ? [plan.ctaMenu] : []), ...(plan.brolls || []).filter(b => b.nosub)];
 // 17/10 (selfie voiture, visage trop proche) : sous-titres posés AU-DESSUS de la tête (plan.subY < 760) = même place que les
 // chiffres et mots géants -> masqués pendant qu'un chiffre / mot géant est à l'écran (sinon ils se chevauchent)
 const TOPBIG = (plan.subY ?? 9999) < 760 ? [...(plan.numbers || []), ...(plan.bigwords || []),
@@ -548,7 +549,8 @@ lists.forEach((l, li) => {
     // (prep garde 0,9 s de marge) : c'est toujours le cadre qui disparaît, jamais la vidéo avant lui.
     : `<div class="broll" id="b${i}"><div class="bw" id="b${i}m"><video id="b${i}v" class="clip bm" src="${esc(b.src)}" muted playsinline preload="auto" data-start="${b.start.toFixed(3)}" data-duration="${(+d + 0.1).toFixed(3)}" data-track-index="${10 + i}" data-has-audio="false"></video></div></div>`;
   V(`#b${i}`, b.start, b.end, "{}", "{}", 0.001);
-  ops += `tl.fromTo("#b${i}m",{scale:1.12},{scale:1.02,duration:${d},ease:"power2.out",force3D:true,immediateRender:false},${b.start.toFixed(3)});`;
+  // 28/10 (CAM20056-57, écran coupé pré-monté) : "push": false = pas de poussée 1,12 -> 1,02 (sinon le split est rogné)
+  if (b.push !== false) ops += `tl.fromTo("#b${i}m",{scale:1.12},{scale:1.02,duration:${d},ease:"power2.out",force3D:true,immediateRender:false},${b.start.toFixed(3)});`;
 });
 
 // ---------- incrustations : image sur-mesure (PNG détouré de préférence) posée sur la cam, entrée pop + flottement ----------
@@ -716,6 +718,47 @@ if (cta) {
   cues.push({ kind: "sheet", at: T + 0.25 }, { kind: "type", at: t0, dur: +(WD.length * step + 0.1).toFixed(3) }, { kind: "publish", at: tP });
 }
 
+// ---------- 28/10 (CAM20055 v2, retour : « pour le CTA de toutes mes vidéos, mets une animation pour mieux orienter le viewer sur
+//            quoi cliquer ») : CTA « clique sur les deux petits traits, ça m'intéresse ». Un anneau pulse SUR le bouton ≡ d'Instagram
+//            (colonne de droite), une flèche s'y dessine depuis « APPUIE ICI », puis le vrai menu monte et « Ça m'intéresse » s'allume.
+//            plan.ctaMenu = {start (« clique »), sheet (« ça m'intéresse »), end?, x?, y?, label?}. Position du bouton ≡ mesurée le
+//            28/10 sur une capture iPhone de son reel publié : vidéo affichée à 0,953, bouton à (954, 1724) px de la vidéo.
+//            L'anneau et la flèche sortent exprès de la zone sûre (ils montrent le bouton de l'appli) : décor pour zones.mjs. ----------
+if (plan.ctaMenu) {
+  const cm = plan.ctaMenu, X = cm.x ?? 954, Y = cm.y ?? 1724, S0 = cm.start, S1 = cm.sheet ?? cm.start + 1.2, E = cm.end ?? dur;
+  const ic = {
+    save: `<svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-5-6 5z" fill="none" stroke="#111" stroke-width="2" stroke-linejoin="round"/></svg>`,
+    info: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="#111" stroke-width="2"/><path d="M12 11v6M12 7.2v.1" stroke="#111" stroke-width="2.4" stroke-linecap="round"/></svg>`,
+    yes: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="#111" stroke-width="2"/><path d="M7.5 12.3l3 3 6-6.3" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+    no: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="#111" stroke-width="2"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg>` };
+  const r = (k, t, id = "") => `<div class="ctm-row"${id ? ` id="${id}"` : ""}>${ic[k]}<span>${esc(t)}</span></div>`;
+  const ax = X - 78, ay = Y - 14;   // pointe de la flèche, juste à gauche de l'anneau
+  layers += `<div class="ctm" id="ctm"><div class="ctm-veil" style="background:radial-gradient(420px 420px at ${X}px ${Y}px,rgba(0,0,0,.45),transparent 70%)"></div>
+    <div class="ctm-rip" id="ctmp1" style="left:${X - 70}px;top:${Y - 70}px"></div><div class="ctm-rip" id="ctmp2" style="left:${X - 70}px;top:${Y - 70}px"></div>
+    <div class="ctm-ring" id="ctmr" style="left:${X - 70}px;top:${Y - 70}px"></div>
+    <svg class="ctm-arrow" id="ctma" viewBox="0 0 1080 1920"><path id="ctmap" d="M700 1462 C 740 1560, 790 ${ay - 30}, ${ax} ${ay}" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"/>
+      <path id="ctmah" d="M${ax - 46} ${ay - 22} L ${ax} ${ay} L ${ax - 34} ${ay + 34}" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"/></svg>
+    <div class="ctm-lab" id="ctml">${esc(cm.label || "appuie ici")}</div>
+    <div class="ctm-sheet" id="ctms"><div class="ctm-grab"></div><div class="ctm-grp">${r("save", "Enregistrer")}</div>
+      <div class="ctm-grp">${r("info", "Pourquoi vous voyez ça")}${r("yes", "Ça m’intéresse", "ctmy")}${r("no", "Ça ne m’intéresse pas")}</div>
+      <div class="ctm-tap" id="ctmt"></div></div></div>`;
+  V("#ctm", S0, E, "{}", "{}", 0.2, 0);
+  F("#ctmr", "{scale:.4,opacity:0}", `scale:1,opacity:1,duration:.45,ease:"expo.out"`, S0);
+  ["#ctmp1", "#ctmp2"].forEach((id, k) => F(id, "{scale:1,opacity:.85}", `scale:1.9,opacity:0,duration:.9,ease:"power2.out",repeat:${Math.max(1, Math.ceil((E - S0) / 0.9))}`, S0 + 0.2 + k * 0.45));
+  F("#ctml", "{opacity:0,y:18}", `opacity:1,y:0,duration:.35,ease:"expo.out"`, S0 + 0.1);
+  F("#ctmap", "{strokeDashoffset:1}", `strokeDashoffset:0,duration:.45,ease:"power2.inOut"`, S0 + 0.2);
+  F("#ctmah", "{strokeDashoffset:1}", `strokeDashoffset:0,duration:.18,ease:"power2.out"`, S0 + 0.62);
+  // appui sur ≡ : l'anneau se serre, flèche et texte s'effacent, le menu monte
+  F("#ctmr", "{scale:1}", `scale:.8,duration:.12,yoyo:true,repeat:1,ease:"power2.inOut"`, S1 - 0.28);
+  F("#ctml,#ctma", "{opacity:1}", `opacity:0,duration:.2`, S1 - 0.05);
+  // 28/10 CAM20058 : départ à y:80 (160 puis 120 : le menu sortait 1 image à 1501 puis 1495 px, zone morte du bas)
+  F("#ctms", "{y:80,opacity:0}", `y:0,opacity:1,duration:.5,ease:"expo.out"`, S1);
+  F("#ctmt", "{scale:.3,opacity:0}", `scale:1.5,opacity:.55,duration:.35,ease:"power2.out"`, S1 + 0.38);
+  F("#ctmt", "{opacity:.55}", `opacity:0,duration:.3`, S1 + 0.73);
+  F("#ctmy", `{backgroundColor:"rgba(${RGB(ACC)},0)"}`, `backgroundColor:"rgba(${RGB(ACC)},.22)",duration:.25,ease:"power2.out"`, S1 + 0.4);
+  cues.push({ kind: "sheet", at: +(S1).toFixed(3) });
+}
+
 // ---------- pastilles 1-2-3 ----------
 if (plan.bullets) {
   const b = plan.bullets;
@@ -846,7 +889,7 @@ groups.forEach((grp, gi) => {
 // 21/10 (CAM20033 v1 : « dans le titre, ne mets jamais de virgule ou de points, et deux petits points aussi ») :
 // virgules, points, points de suspension, deux-points et points-virgules retirés du titre (le « ? » d'un titre-question reste).
 const TP = t => String(t || "").replace(/\s*[,.;:…]+/g, "").replace(/\s{2,}/g, " ").trim();
-// 23/10 (Cyril : « jamais trois lignes ») : chaque ligne du titre reste sur UNE ligne, sa taille baisse jusqu'à tenir dans 940 px
+// 23/10 (l'utilisateur : « jamais trois lignes ») : chaque ligne du titre reste sur UNE ligne, sa taille baisse jusqu'à tenir dans 940 px
 // (x 70-1010, zone interdite des côtés = 65 px). Mesure Pillow avec la graisse et la largeur (axes variables) de la police.
 const MESURE = "import sys\nfrom PIL import ImageFont\nf=ImageFont.truetype(sys.argv[1],1000)\ntry:\n v=[]\n for a in f.get_variation_axes():\n  n=a['name'];n=n.decode() if isinstance(n,bytes) else n\n  x=float(sys.argv[3]) if n=='Weight' else float(sys.argv[4]) if n=='Width' else a['default']\n  v.append(max(a['minimum'],min(a['maximum'],x)))\n f.set_variation_by_axes(v)\nexcept Exception: pass\nprint(f.getlength(sys.argv[2]))";
 const fitLigne = (text, file, base, { weight = 400, stretch = 100, track = 0, caps = false } = {}, maxW = 940) => {
@@ -854,8 +897,9 @@ const fitLigne = (text, file, base, { weight = 400, stretch = 100, track = 0, ca
   try { const L = +execFileSync("python3", ["-c", MESURE, join("fonts", file), t, String(weight), String(stretch)]).toString() / 1000;
         return Math.min(base, Math.floor((maxW - track * t.length) / (L * 1.03))); } catch { return base; }
 };
-const T1S = TY ? TY.t1 : { font: DA.fonts.sub, weight: 700, size: Math.round(SUBSIZE * 46 / 52), caps: true, track: plan.subTrack ?? DA.subTrack ?? 1 };
-const T2S = TY ? TY.t2 : { font: DA.fonts.serif, weight: 400, size: 104, track: 0 };
+// taille du titre fixée au setup (26/10) : DA.titleSize = [ligne 1, ligne 2]
+const T1S = TY ? TY.t1 : { font: DA.fonts.sub, weight: 700, size: DA.titleSize?.[0] || Math.round(SUBSIZE * 46 / 52), caps: true, track: plan.subTrack ?? DA.subTrack ?? 1 };
+const T2S = TY ? TY.t2 : { font: DA.fonts.serif, weight: 400, size: DA.titleSize?.[1] || 104, track: 0 };
 let FS1 = T1S.size, FS2 = T2S.size;
 if (plan.title) {
   const T = plan.title;
@@ -863,7 +907,11 @@ if (plan.title) {
   if (FS1 < T1S.size || FS2 < T2S.size) console.log(`titre rétréci pour tenir sur 2 lignes : ${T1S.size} -> ${FS1} px, ${T2S.size} -> ${FS2} px`);
   const tz = (plan.subYAt || []).find(z => (T.start ?? 0) >= z.start - 0.02 && (T.start ?? 0) < z.end);   // fond clair = pas de voile (14/10)
   layers += `<div class="htitle${tz && tz.light ? " onlight" : ""}" id="htitle" style="top:${T.top ?? 280}px"><div class="ht1">${esc(TP(T.l1))}</div><div class="ht2">${esc(TP(T.l2))}</div></div>`;
-  V("#htitle", T.start ?? 0, Math.min(T.end ?? 4, dur), `{y:10}`, `{y:0,ease:"power2.out"}`, 0.25);
+  // 28/10 (l'utilisateur : « pourquoi sur la toute première frame il n'y a pas de texte ? ») : un titre qui ouvre le reel est net dès
+  // l'image 0 (1re image = ce que le pouce voit), sans fondu d'entrée ; plus tard dans le reel, il garde son petit fondu.
+  const T0 = (T.start ?? 0) < 0.05;
+  V("#htitle", T0 ? 0 : T.start, Math.min(T.end ?? 4, dur), T0 ? `{}` : `{y:10}`, T0 ? `{}` : `{y:0,ease:"power2.out"}`, T0 ? 0 : 0.25);
+
 }
 
 // garde-fou (13/10, Meta Verified v3) : un objet suivi (badge sur la paume...) qui passe dans la bande des sous-titres pendant
@@ -910,7 +958,7 @@ const fitPx = (text, file, base, maxW, upper) => {   // taille qui tient dans ma
   try { const em = +execFileSync("python3", ["-c", "import sys;from PIL import ImageFont;print(ImageFont.truetype(sys.argv[1],1000).getlength(sys.argv[2])/1000)", join("fonts", file), upper ? String(text).toUpperCase() : String(text)]).toString();
         return Math.round(Math.min(base, maxW / (em * 1.04))); } catch { return base; }
 };
-// ---------- 23/10 cockpit étape 3 « Motion design » : 2 variantes VALIDÉES par Cyril (maquettes motion-r2 F + L, 23/10 ; leçon Jun Yuh :
+// ---------- 23/10 cockpit étape 3 « Motion design » : 2 variantes VALIDÉES par l'utilisateur (maquettes motion-r2 F + L, 23/10 ; leçon Jun Yuh :
 //            rien de « mignon », pas de rebond, tout arrive en coupe franche ; jamais d'IA). Les anciens coeur / entoure / souligne
 //            (« dégueulasses ») restent lus pour les vieux plans mais ne sont plus proposés.
 //   chiffres : 1, 2, 3 géants DERRIÈRE la tête (matte.py → fg), contour fin, le chiffre en cours plein, son mot au-dessus (couleur serif).
@@ -956,7 +1004,7 @@ const fitPx = (text, file, base, maxW, upper) => {   // taille qui tient dans ma
     // 4 coins comme la réf (sombre en haut à gauche, couleur vive en haut à droite, clair en bas) ; défaut = studio nuit + LED bleue
     const G = C.grad || ["#060a1c", "#2f74ff", "#132b66", "#9fbcf0", "#11235a"];
     // "blur" (19/10) = SA vidéo floutée et assombrie derrière le carton (on reste dans sa pièce)
-    // 23/10 (Cyril : « les cartes en plein écran, fais toujours des dégradés, jamais une couleur unie, c'est dégueulasse ») :
+    // 23/10 (l'utilisateur : « les cartes en plein écran, fais toujours des dégradés, jamais une couleur unie, c'est dégueulasse ») :
     // une couleur "#hex" ou "flat" devient un dégradé de cette couleur (coin éclairé en haut à droite, coin sombre en bas à gauche).
     const DEG = h => { const x = parseInt(h.slice(1).padEnd(6, "0").slice(0, 6), 16), r = x >> 16, g = (x >> 8) & 255, b2 = x & 255;
       const mix = (k, t) => `rgb(${Math.round(r + (t - r) * k)},${Math.round(g + (t - g) * k)},${Math.round(b2 + (t - b2) * k)})`;
@@ -1127,8 +1175,9 @@ const html = `<!doctype html><html><head><meta charset="utf-8"/>
   .cap em + em{margin-left:.16em}
   /* fond clair (green screen devant une page / une image blanche, 14/10) : ombre serrée + diffuse au lieu d'une bande grise */
   .cap.onlight,.cap.onlight em{text-shadow:0 0 2px rgba(0,0,0,.9),0 2px 5px rgba(0,0,0,.8),0 6px 26px rgba(0,0,0,.55)}
-  .htitle{position:absolute;left:0;right:0;z-index:11;opacity:0;text-align:center;color:#fff;text-shadow:0 3px 18px rgba(0,0,0,.55);
-          padding:30px 60px 38px;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.5) 22%,rgba(0,0,0,.5) 78%,rgba(0,0,0,0))}
+  /* 28/10 (CAM20062 : « pour le titre, enlève la bande noire ») : plus jamais de bande derrière le titre, même sans plan.typo ; ombre douce seule */
+  .htitle{position:absolute;left:0;right:0;z-index:11;opacity:0;text-align:center;color:#fff;
+          text-shadow:0 4px 26px rgba(0,0,0,.55),0 1px 3px rgba(0,0,0,.35);padding:30px 60px 38px;background:none}
   .htitle.onlight{background:none;text-shadow:0 0 2px rgba(0,0,0,.9),0 2px 5px rgba(0,0,0,.8),0 6px 26px rgba(0,0,0,.55)}
   .ht1{font-family:"Sub";font-weight:700;font-size:${FS1}px;letter-spacing:${plan.subTrack ?? DA.subTrack ?? 1}px;text-transform:uppercase;white-space:nowrap}
   .ht2{font-family:"SMSerif";font-style:italic;${C.serif ? `color:${C.serif};` : ""}font-size:${FS2}px;line-height:1.05;white-space:nowrap}
@@ -1224,6 +1273,24 @@ const html = `<!doctype html><html><head><meta charset="utf-8"/>
   .tile{flex:1;border-radius:30px;padding:26px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);opacity:0}
   .tlb{font-size:26px;color:rgba(255,255,255,.55);font-weight:500}
   .tv{font-size:54px;font-weight:600;margin-top:8px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  /* --- CTA menu ≡ « Ça m'intéresse » (28/10) --- */
+  .ctm{position:absolute;inset:0;z-index:31;opacity:0;pointer-events:none}
+  .ctm-veil{position:absolute;inset:0}
+  .ctm-ring,.ctm-rip{position:absolute;width:140px;height:140px;border-radius:50%;box-sizing:border-box}
+  .ctm-ring{border:6px solid #fff;box-shadow:0 0 34px rgba(255,255,255,.65),inset 0 0 18px rgba(255,255,255,.35)}
+  .ctm-rip{border:4px solid rgba(255,255,255,.9);opacity:0}
+  .ctm-arrow{position:absolute;left:0;top:0;width:1080px;height:1920px;overflow:visible;filter:drop-shadow(0 3px 10px rgba(0,0,0,.55))}
+  .ctm-arrow path{fill:none;stroke:#fff;stroke-width:9;stroke-linecap:round;stroke-linejoin:round}
+  .ctm-lab{position:absolute;left:470px;width:470px;top:1385px;text-align:center;font-family:"Sub";font-weight:800;font-size:50px;letter-spacing:2px;
+           text-transform:uppercase;color:#fff;text-shadow:0 3px 18px rgba(0,0,0,.6);opacity:0}
+  .ctm-sheet{position:absolute;left:110px;width:860px;top:900px;background:#fff;border-radius:44px;padding:0 24px 24px;box-sizing:border-box;opacity:0;
+             box-shadow:0 30px 80px rgba(0,0,0,.45);overflow:hidden;font-family:"Mont";color:#111}
+  .ctm-grab{width:84px;height:8px;border-radius:8px;background:#c7c7cc;margin:18px auto 20px}
+  .ctm-grp{background:#f0f1f5;border-radius:28px;margin-top:18px;overflow:hidden}
+  .ctm-row{height:104px;display:flex;align-items:center;gap:28px;padding:0 34px;font-size:38px;font-weight:500;border-top:1px solid #e3e4ea}
+  .ctm-row:first-child{border-top:0}
+  .ctm-row svg{width:50px;height:50px;flex:none}
+  .ctm-tap{position:absolute;left:300px;top:342px;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;background:rgba(0,0,0,.35);opacity:0}
   /* --- CTA commentaires --- */
   .cta{position:absolute;inset:0;z-index:30;opacity:0;background:rgba(0,0,0,.28)}
   .sheet{position:absolute;left:0;right:0;top:600px;bottom:0;background:#1c1c1e;border-radius:44px 44px 0 0;transform:translateY(1300px);

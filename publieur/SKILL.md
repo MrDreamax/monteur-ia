@@ -1,6 +1,6 @@
 ---
 name: publieur
-description: Le Publieur. Programme les reels déjà montés de l'utilisateur ou d'un client sur Instagram, Facebook, YouTube Shorts et TikTok via Metricool - fiche par reel, sans cover (22/10), 3 reels par jour maximum, un seul OK par lot, à la demande (aucune routine). Ne publie jamais sans ce OK, jamais sur les comptes perso. Use when "publie", "publication", "programme mes reels", "programme la semaine", "poste mes vidéos", "go semaine", "semaine de publication", "cover de reel", "légende", "Metricool", "publieur", "mets en ligne".
+description: Le Publieur. Programme les reels déjà montés de l'utilisateur ou d'un client sur Instagram, Facebook, YouTube Shorts et TikTok via Metricool - fiche par reel, cover = meilleure image du reel (28/10), 3 reels par jour maximum, un seul OK par lot, à la demande (aucune routine). Ne publie jamais sans ce OK, jamais sur les comptes perso. Use when "publie", "publication", "programme mes reels", "programme la semaine", "poste mes vidéos", "go semaine", "semaine de publication", "cover de reel", "légende", "Metricool", "publieur", "mets en ligne".
 ---
 
 ## Règle n°1 : maquette d'abord (19/10/2026)
@@ -61,7 +61,9 @@ Comment l'écrire (modèle validé : `livrables/publication/2026-10-16-echantill
 - **Trial reel** : jamais par défaut. Seulement pour reposter un reel GAGNANT de plus d'1 mois, avec 2 éléments changés, 5 par jour max (`02-Formations/experts-volume-frequence.md`).
 - Dernière passe : les règles du skill `anti-ia` (pas de tiret cadratin, pas de « ce n'est pas X, c'est Y », pas de triade forcée), voix posée, tutoiement, zéro argot.
 
-## 3. La cover : AUCUNE (22/10/2026)
+## 3. La cover : LA MEILLEURE IMAGE DU REEL (28/10/2026, remplace « aucune cover » du 22/10)
+**28/10 (« à chaque fois que tu publies, choisis la meilleure image dans le reel à mettre en couverture ») : à CHAQUE publication, je choisis seul une image DU reel (pas de planche, pas de vote).** Méthode : `ffmpeg -v error -i final.mp4 -vf fps=2,scale=270:-1,tile=8x8 <dossier>/candidats.jpg`, je regarde (Read) ; je garde visage net, yeux ouverts, expression forte, visage dans le carré 3:4 du milieu, pas de menu CTA ni de sous-titre coupé en plein visage ; un plan avec un mot géant derrière la tête est un bon candidat. Envoyée comme MOMENT de la vidéo (`videoCoverMilliseconds` et l'équivalent TikTok / YouTube dans Metricool), jamais une image générée ou retouchée. Je montre l'image choisie dans la fiche. Le texte ci-dessous (22/10) ne vaut plus.
+Ancienne règle du 22/10 :
 **22/10 (« ne mets plus de couverture ») : on n'envoie plus de cover.** Pas de planche de 3 covers, pas de `videoThumbnailUrl`, pas de `videoCoverMilliseconds` : chaque réseau prend lui-même une image de la vidéo. Pour l'aperçu de la fiche seulement (jamais envoyé) : `ffmpeg -v error -y -ss 0.5 -i final.mp4 -frames:v 1 <dossier>/image1.png` puis `python3 -E $P/cover.py --photo <dossier>/image1.png --out <dossier>` (sort cover_480.jpg et grille.jpg pour fiche.py).
 
 Ancien process, **seulement si l'utilisateur redemande une cover** :
@@ -105,7 +107,7 @@ Historique de toutes les vidéos terminées : `<config.json → archive_dir>/AAA
 ## Ce que le Publieur ne fait jamais
 - Programmer ou publier sans le OK du lot. Toucher aux comptes perso (`comptes_interdits`). Chez un client : toucher au Metricool, au Higgsfield ou au disque du coach qui l'a installé.
 - Une promesse, un chiffre ou un résultat client qui n'est pas dans la vidéo.
-- Une cover, sauf si l'utilisateur la redemande (22/10). Et jamais une cover générée de zéro par IA.
+- Une cover qui n'est pas une image du reel (28/10 : toujours la meilleure image du reel). Et jamais une cover générée de zéro par IA.
 - Répondre aux commentaires ou aux DM (la relation reste humaine).
 - Un trial reel par défaut.
 - Inventer une info absente du Brain ou de la vidéo : dis « je ne l'ai pas ».

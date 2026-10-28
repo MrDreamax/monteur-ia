@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SuperCarrousel</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<header class="top">
+  <h1>SuperCarrousel</h1>
+  <span class="f" id="hd-titre">Nouveau carrousel</span>
+  <span class="pill" id="hd-modele" hidden></span>
+  <div class="r"><button class="btn" id="btn-da" type="button">Ma DA</button></div>
+</header>
+
+<!-- Écran 0 : départ -->
+<main class="ecran depart" id="e-depart">
+  <h2>Ton carrousel part de quoi ?</h2>
+  <p class="sub">Je le fabrique en entier avec ta DA, tu corriges ensuite.</p>
+  <div class="cards" role="radiogroup" aria-label="Départ du carrousel">
+    <button class="c on" data-depart="reel" role="radio" aria-checked="true" type="button">
+      <div class="vis"><div class="reel"></div><span class="arr">→</span><div class="mini"><img src="/static/img/s3.png" alt=""></div></div>
+      <h3>Un reel</h3><p>Je prends les images et le texte de ta vidéo.</p>
+    </button>
+    <button class="c" data-depart="reprendre" role="radio" aria-checked="false" type="button">
+      <div class="vis"><div class="conc">5 hooks qui marchent<small>par un compte de ta niche</small></div><span class="arr">→</span><div class="mini"><img src="/static/img/s1.png" alt=""></div></div>
+      <h3>Un carrousel à reprendre</h3><p>Tu colles le lien d'un carrousel qui marche, je le refais à ta façon.</p>
+    </button>
+    <button class="c" data-depart="idee" role="radio" aria-checked="false" type="button">
+      <div class="vis"><div class="idea">« Pourquoi le téléprompteur te rend raide »</div><span class="arr">→</span><div class="mini"><img src="/static/img/s2.png" alt=""></div></div>
+      <h3>Une idée</h3><p>Tu écris ou dictes ton sujet, j'écris tout.</p>
+    </button>
+  </div>
+
+  <div class="zone" id="zone-fichier">
+    <label class="drop" id="drop">
+      <input type="file" id="fichier" hidden>
+      <b id="drop-titre">Dépose ta vidéo ici</b>
+      <span id="drop-sous">ou <a href="#" id="lien-montages">choisis-la dans tes montages</a></span>
+    </label>
+    <span class="or">ou</span>
+    <div class="fld"><span aria-hidden="true">🔗</span><input id="lien" type="url" placeholder="Colle un lien Instagram, TikTok ou YouTube" autocomplete="off"></div>
+  </div>
+  <div class="zone-idee" id="zone-idee" hidden>
+    <textarea id="idee" rows="2" placeholder="Écris ou dicte ton sujet… ex. « Pourquoi le téléprompteur te rend raide »"></textarea>
+    <button class="mic" type="button" data-mic="idee" aria-label="Dicter">🎙</button>
+  </div>
+  <div class="choix" id="choix" hidden></div>
+
+  <button class="da" id="pastille" type="button">Fait avec ta DA : <b id="pastille-txt">…</b> <i>Changer</i></button>
+  <button class="go" id="fabriquer" type="button" disabled>Fabriquer le carrousel</button>
+  <p class="err" id="err-depart" role="alert"></p>
+
+  <div class="mes" id="mes" hidden>
+    <div class="mes-hd">Tes carrousels</div>
+    <div class="mes-l" id="mes-l"></div>
+  </div>
+
+  <div class="pop" id="pop-montages" hidden>
+    <div class="pop-in">
+      <div class="pop-hd"><b>Tes montages</b><button type="button" class="x" data-ferme="pop-montages" aria-label="Fermer">×</button></div>
+      <div class="liste-videos" id="liste-videos"></div>
+    </div>
+  </div>
+</main>
+
+<!-- Écran 1 : je fabrique -->
+<main class="ecran fab" id="e-fab" hidden>
+  <h2 id="fab-titre">J'écris ton carrousel…</h2>
+  <p class="sub" id="fab-sous">Ton carrousel se construit. Environ 1 min.</p>
+  <div class="grille" id="grille"></div>
+  <div class="barre"><i id="barre"></i></div>
+  <p class="aide" id="fab-aide" hidden></p>
+</main>
+
+<!-- Écrans 2 et 4 : retours / publier -->
+<div class="wrap" id="e-travail" hidden>
+  <section class="main">
+    <div class="nav">
+      <button class="ar" id="prec" type="button" aria-label="Slide précédente">‹</button>
+      <div class="sl big"><img id="grande" alt=""></div>
+      <button class="ar" id="suiv" type="button" aria-label="Slide suivante">›</button>
+    </div>
+    <div class="cnt" id="compteur">Slide 1 sur 8</div>
+    <div class="strip" id="strip"></div>
+    <form class="new" id="form-retour">
+      <span class="at" id="at">slide 1</span>
+      <input id="retour" placeholder="Écris ou dicte ce qui ne va pas sur cette slide…" autocomplete="off">
+      <button class="mic" type="button" data-mic="retour" aria-label="Dicter">🎙</button>
+      <button class="send" type="submit" aria-label="Ajouter le retour">↑</button>
+    </form>
+    <div class="pret" id="pret" hidden>
+      <b>Ton carrousel est prêt ✓</b>
+      <span id="pret-sous">8 slides · 1080 × 1440</span>
+      <button type="button" class="lien" id="rouvrir">Modifier encore</button>
+    </div>
+  </section>
+
+  <aside class="side" id="side-retours">
+    <h2>Tes retours <span id="compte-retours"></span></h2>
+    <div class="liste" id="liste-retours"></div>
+    <p class="vide" id="vide-retours">Clique une slide, écris ce qui ne va pas. Tout passe par tes retours : texte, photo, ordre, slide en trop.</p>
+    <div class="end">
+      <p id="fin-txt">Fini ? Je corrige tout et je te renvoie la version 2.</p>
+      <button class="fabb" id="suivant" type="button">Suivant : corrige mes retours</button>
+      <button class="perf" id="parfait" type="button">C'est parfait, on publie</button>
+    </div>
+  </aside>
+
+  <aside class="side" id="side-publier" hidden>
+    <div id="pub-branche" hidden>
+      <h2>Publier</h2>
+      <div class="badge" id="badge">✓ <b>Metricool branché</b> · <span id="compte"></span></div>
+      <div id="pub-etat"></div>
+      <div class="res"><span>Instagram</span><input type="checkbox" class="sw" data-res="instagram" checked aria-label="Instagram"></div>
+      <div class="res"><span>TikTok<small>en mode photos</small></span><input type="checkbox" class="sw" data-res="tiktok" checked aria-label="TikTok"></div>
+      <div class="res"><span>Facebook</span><input type="checkbox" class="sw" data-res="facebook" checked aria-label="Facebook"></div>
+      <div class="res"><span>LinkedIn<small>en document à faire défiler</small></span><input type="checkbox" class="sw" data-res="linkedin" checked aria-label="LinkedIn"></div>
+      <label class="quand">Programmer le <input type="datetime-local" id="quand"></label>
+      <div class="end">
+        <p class="essai" id="essai" hidden>Mode essai : rien ne part sur les réseaux.</p>
+        <p class="essai" id="vrai">Ça part pour de vrai : 2e clic pour confirmer.</p>
+        <button class="bleu" id="pub-now" type="button">Publier maintenant</button>
+        <button class="fabb" id="pub-prog" type="button">Programmer</button>
+        <button class="lien" id="pub-dl" type="button">Juste télécharger</button>
+      </div>
+    </div>
+    <div id="pub-dl-seul" hidden>
+      <h2>Télécharger</h2>
+      <p class="gris">Metricool n'est pas branché : tu télécharges les <span id="nb-img">8</span> images + leurs 4 légendes (une par réseau) et tu postes toi-même.</p>
+      <div class="end">
+        <p class="ok" id="dl-ok" hidden></p>
+        <button class="bleu" id="telecharger" type="button">Télécharger</button>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- Écran 3 : Ma DA (tiroir) -->
+<aside class="tiroir" id="tiroir" aria-hidden="true">
+  <div class="t-hd"><div><h2>Ma DA</h2><p class="gris">Tu changes ici, ton carrousel se met à jour.</p></div><button type="button" class="x" id="tiroir-x" aria-label="Fermer">×</button></div>
+  <iframe id="tiroir-iframe" title="SuperDA · Carrousels" hidden></iframe>
+  <div id="tiroir-repli">
+    <div class="lignes" id="lignes-da"></div>
+    <p class="aide" id="da-aide" hidden></p>
+    <div class="end">
+      <form class="ask" id="form-da"><span class="c">C</span><input id="da-txt" placeholder="Demande à Claude de modifier quelque chose…" autocomplete="off"><button class="go2" type="submit" aria-label="Envoyer">↑</button></form>
+      <button class="perf" id="da-grand" type="button">Ouvrir SuperDA en grand</button>
+      <button class="fabb" id="da-enreg" type="button">Enregistrer pour tous mes carrousels</button>
+    </div>
+  </div>
+</aside>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>

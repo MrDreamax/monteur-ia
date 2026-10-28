@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
-# Monteur IA Stratosphère : installe (ou met à jour) les skills supermonteur et publieur chez le client.
+# Monteur IA : installe (ou met à jour) les skills supermonteur, publieur et carrousel + les 3 applis
+# SuperDA, SuperMonteur et SuperCarrousel (dans ~/Documents/SuperApps).
 # Usage : bash install.sh      (depuis le dossier dézippé). Relançable sans risque : c'est aussi la mise à jour.
 #
 # Ce que le script ne touche JAMAIS une fois installé (le dossier du client) :
 #   supermonteur : config.json, da/<client>.json, retours-client.md, broll_exclus.txt, ref/
 #   publieur     : config.json, retours-client.md
+#   carrousel    : retours-client.md
+#   applis       : config.json, superda/da.json + img/ + historique/, reels/, projets/, metricool.json, journaux
 #   et tout ~/Documents/Montage
 # Avant une mise à jour, l'ancien moteur est sauvegardé dans ~/.claude/backups/<skill>-<date>/.
 set -euo pipefail
@@ -13,6 +16,10 @@ SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/supermonteur"
 PSRC="$(dirname "$SRC")/publieur"
 DEST="$HOME/.claude/skills/supermonteur"
 PDEST="$HOME/.claude/skills/publieur"
+CSRC="$(dirname "$SRC")/carrousel"
+CDEST="$HOME/.claude/skills/carrousel"
+ASRC="$(dirname "$SRC")/apps"
+ADEST="$HOME/Documents/SuperApps"
 MONT="$HOME/Documents/Montage"
 TS="$(date +%Y%m%d-%H%M%S)"
 
@@ -53,6 +60,39 @@ if [[ -d "$PSRC" ]]; then
   mkdir -p "$MONT/PUBLICATION"
 fi
 
+# Carrousel : le moteur des carrousels (style Apple), utilisé par SuperCarrousel
+if [[ -d "$CSRC" ]]; then
+  if [[ -d "$CDEST" ]]; then
+    mkdir -p "$HOME/.claude/backups"
+    cp -R "$CDEST" "$HOME/.claude/backups/carrousel-$TS"
+    echo "Ancien skill carrousel sauvegardé : ~/.claude/backups/carrousel-$TS"
+  fi
+  mkdir -p "$CDEST"
+  rsync -a --delete --exclude retours-client.md --exclude __pycache__ "$CSRC/" "$CDEST/"
+  [[ -f "$CDEST/retours-client.md" ]] || printf '# Mes retours sur les carrousels (lus AVANT chaque carrousel)\nFormat : JJ/MM/AAAA · carrousel · ce qui n%sallait pas → règle\n\n' "'" > "$CDEST/retours-client.md"
+fi
+
+# Les 3 applis : le code est remplacé, les données de la personne jamais touchées
+if [[ -d "$ASRC" ]]; then
+  mkdir -p "$ADEST"
+  rsync -a --delete \
+    --exclude config.json --exclude /superda/da.json --exclude /superda/img/ --exclude /superda/historique/ --exclude /superda/inspiration/ \
+    --exclude demandes.jsonl --exclude /supermonteur/reels/ --exclude /supercarrousel/projets/ --exclude metricool.json \
+    --exclude '*.log' --exclude a-corriger.json --exclude feedback-retours.md --exclude .rendu.lock --exclude _outils/ \
+    --exclude preuves/ --exclude __pycache__ \
+    "$ASRC/" "$ADEST/"
+  for a in "" supermonteur/ supercarrousel/; do
+    [[ -f "$ADEST/${a}config.json" ]] || cp "$ADEST/${a}config.exemple.json" "$ADEST/${a}config.json"
+  done
+  [[ -f "$ADEST/superda/da.json" ]] || cp "$ADEST/superda/da.defaut.json" "$ADEST/superda/da.json"
+  mkdir -p "$ADEST/superda/img" "$MONT/MONTAGES" "$MONT/PUBLICATION"
+  [[ -f "$ADEST/superda/img/frame.jpg" ]] || cp "$ASRC/superda/img/frame.jpg" "$ADEST/superda/img/frame.jpg"
+  chmod +x "$ADEST"/*/lancer.sh "$ADEST/ouvrir.command" "$ADEST/superda/connecter-claude.command"
+fi
+
 bash "$DEST/scripts/setup.sh"
+# modules en plus pour les carrousels (lecture d'un reel, détourage)
+python3 -c "import scipy, cv2" 2>/dev/null || python3 -m pip install --user -q scipy opencv-python-headless || echo "Attention : scipy / opencv pas installés (carrousels depuis un reel)."
 echo "Monteur IA installé (version $(cat "$DEST/VERSION")). Dans Claude, onglet Code : « Monte-moi ce rush » + glisse ta vidéo."
 if [[ -d "$PDEST" ]]; then echo "Publieur installé. Dans Claude : « Programme ma semaine »."; fi
+if [[ -d "$ADEST" ]]; then echo "Applis installées dans ~/Documents/SuperApps. Double-clic sur ouvrir.command (ou dans Claude : « Ouvre SuperMonteur »). Publication en mode essai : rien ne part tant que tu ne l'actives pas."; fi

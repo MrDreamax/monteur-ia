@@ -1,4 +1,4 @@
-# À PLUSIEURS : podcast, visio Zoom, split screen, débat (validé par l'utilisateur le 13/10, « nickel », ne plus y toucher)
+# STYLE INTERVIEW (style 4 des 5 styles seuls, 26/10) = À PLUSIEURS : podcast, visio Zoom, split screen, débat (validé par l'utilisateur le 13/10, « nickel », ne plus y toucher)
 
 Lu après `SKILL.md`.
 **Zones mortes (16/10)** : déjà conforme ; seul changement, les mots forts en plein écran (y 1 340) remontent à 1 337 px pour que les jambages (g, p, j) restent au-dessus de 1 480 px.

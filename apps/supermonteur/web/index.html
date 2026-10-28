@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SuperMonteur</title>
+<link rel="stylesheet" href="/web/app.css">
+</head>
+<body>
+<header class="top">
+  <h1>SuperMonteur</h1>
+  <span class="f" id="fichier"></span>
+  <span class="pill" id="pill-style" hidden></span>
+  <div class="r"><button class="btn" id="btn-da">Ma DA</button></div>
+</header>
+
+<!-- Accueil : choisir un rush -->
+<main id="v-accueil" class="vue" hidden>
+  <div class="wrap-acc">
+    <div class="hd"><h2>Quel rush on monte ?</h2><p>Glisse ta vidéo ici, ou colle son chemin sur le Mac.</p></div>
+    <label class="drop" id="drop"><input type="file" id="fichier-input" accept="video/*" hidden><b>Dépose ta vidéo ici</b><span>ou clique pour la choisir</span></label>
+    <form class="chemin" id="f-chemin"><input id="chemin" placeholder="/Users/…/CAM20043.MP4" autocomplete="off"><button class="go">Ouvrir</button></form>
+    <div class="liste" id="liste-reels"></div>
+  </div>
+</main>
+
+<!-- Écran 0 : Quel style pour ce reel ? -->
+<main id="v-style" class="vue" hidden>
+  <div class="wrap0">
+    <div class="hd"><h2>Quel style pour ce reel ?</h2><p id="conseil-txt">Je regarde ta vidéo…</p></div>
+    <div class="cards" id="cards"></div>
+    <div class="cases" id="cases"></div>
+  </div>
+</main>
+
+<!-- Écran 1 : Tes retours (+ montage en cours) -->
+<main id="v-retours" class="vue grid2" hidden>
+  <section class="main">
+    <div class="ph" id="ph">
+      <video id="vid" playsinline preload="auto"></video>
+      <div class="encours" id="encours" hidden><div class="spin"></div><b id="encours-titre">Je monte ton reel</b><span id="encours-etape"></span></div>
+    </div>
+    <div class="ctl" id="ctl">
+      <div class="bar" id="bar"><div class="p" id="bar-p"></div><div id="pins"></div><div class="k" id="bar-k"></div></div>
+      <div class="row">
+        <button class="play" id="play" aria-label="Lecture">▶</button>
+        <span class="tc" id="tc">0:00 / 0:00</span>
+        <button class="bt" id="img-moins">‹ 1 image</button><button class="bt" id="img-plus">1 image ›</button>
+        <span class="vit">Vitesse <span class="spd" id="spd"><i data-v="1" class="on">x1</i><i data-v="1.5">x1,5</i><i data-v="2">x2</i></span></span>
+      </div>
+      <form class="new" id="f-retour">
+        <span class="at" id="at">à 0:00</span>
+        <input id="retour" placeholder="Écris ou dicte ce qui ne va pas ici…" autocomplete="off">
+        <button type="button" class="mic" id="mic" title="Dicter">🎙</button>
+        <button class="send" aria-label="Ajouter">↑</button>
+      </form>
+    </div>
+  </section>
+  <aside class="side">
+    <h2>Tes retours <span id="compte"></span></h2>
+    <div class="notes" id="notes"></div>
+    <div class="end">
+      <p id="fin-txt"></p>
+      <button class="fab" id="suivant">Suivant : corrige mes retours</button>
+      <button class="perf" id="parfait">C'est parfait, on publie</button>
+    </div>
+  </aside>
+</main>
+
+<!-- Écran 3 : Publier -->
+<main id="v-publier" class="vue grid2 pub" hidden>
+  <section class="main center">
+    <div class="ready">
+      <div class="ph"><video id="vid2" playsinline preload="auto"></video></div>
+      <div class="pl"><button class="play" id="play2">▶</button><span class="tcp" id="tc2">0:00 / 0:00</span>
+        <span class="spd" id="spd2"><i data-v="1" class="on">x1</i><i data-v="1.5">x1,5</i><i data-v="2">x2</i></span></div>
+      <b>Ton reel est prêt ✓</b><span id="pret-info"></span>
+      <a class="lien" id="rouvrir">Revenir aux retours</a>
+    </div>
+  </section>
+  <aside class="side" id="pub-side"></aside>
+</main>
+
+<!-- Écran 2 : Ma DA (tiroir) -->
+<aside class="tiroir" id="tiroir" hidden>
+  <div class="h"><h2>Ma DA</h2><button class="x" id="tiroir-x" aria-label="Fermer">×</button></div>
+  <div id="tiroir-corps"></div>
+</aside>
+
+<div class="toast" id="toast" hidden></div>
+<script src="/web/app.js"></script>
+</body>
+</html>

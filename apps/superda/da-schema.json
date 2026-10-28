@@ -1,0 +1,208 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "superda/da-schema.json",
+  "title": "DA SuperDA (contrat partagé SuperDA / SuperMonteur / SuperCarrousel)",
+  "description": "Contrat FIGÉ le 28/10/2026. Fichier lu par SuperMonteur et SuperCarrousel : ~/Documents/SuperApps/superda/da.json (servi aussi par le serveur SuperDA : GET http://localhost:8765/api/da). Règle : on ne renomme ni ne supprime JAMAIS une clé ; ajouter une clé = OK. Coordonnées en px sur un reel 1080 x 1920 et un carrousel 1080 x 1440. Les clés qui commencent par « _ » sont des notes ou des valeurs calculées par le serveur (lecture seule).",
+  "type": "object",
+  "required": ["version", "commun", "montage", "carrousels"],
+  "properties": {
+    "version": { "type": "integer", "description": "Version du contrat. 1 = 28/10/2026." },
+    "maj": { "type": "string", "description": "Date ISO de la dernière écriture (posée par le serveur)." },
+    "nom": { "type": "string", "description": "À qui est cette DA (l'utilisateur ou un client)." },
+
+    "commun": {
+      "type": "object",
+      "description": "PARTAGÉ entre Montage et Carrousels (pastille « partagé » dans l'appli). Changer ici change les deux onglets.",
+      "required": ["duo", "couleurs"],
+      "properties": {
+        "duo": {
+          "type": "object",
+          "description": "Duo de polices : UNE police principale (titre ligne 1, sous-titres, texte des animations) + UNE secondaire (ligne 2 du titre, mot fort, mot géant). Le texte des animations prend TOUJOURS ce duo, jamais une police de l'univers.",
+          "required": ["id", "nom", "principale", "secondaire"],
+          "properties": {
+            "id": { "type": "string", "enum": ["elegant", "impact", "moderne", "affirme", "personnel", "tech", "perso"], "description": "perso = « Mon combo perso »." },
+            "nom": { "type": "string", "description": "Nom affiché au client : Élégant, Impact, Moderne, Affirmé, Personnel, Tech, Mon combo perso." },
+            "principale": {
+              "type": "object",
+              "properties": {
+                "famille": { "type": "string", "description": "Nom CSS de la police, ex. Montserrat." },
+                "fichier": { "type": "string", "description": "Fichier .ttf dans apps/superda/fonts/." },
+                "graisse": { "type": "integer", "description": "Graisse utilisée (400, 700…)." },
+                "majuscules": { "type": "boolean", "description": "Titre ligne 1 en majuscules." },
+                "interlettrage": { "type": "number", "description": "Espacement des lettres en px (sur 1080 de large)." }
+              }
+            },
+            "secondaire": {
+              "type": "object",
+              "properties": {
+                "famille": { "type": "string" },
+                "fichier": { "type": "string" },
+                "graisse": { "type": "integer" },
+                "italique": { "type": "boolean" },
+                "majuscules": { "type": "boolean" }
+              }
+            }
+          }
+        },
+        "couleurs": {
+          "type": "object",
+          "description": "Couleurs du texte. Hex #RRGGBB. Montage utilise titre / ligne2 / sous_titres / accent. Carrousels utilisent accent / touches / texte.",
+          "properties": {
+            "titre": { "type": "string", "description": "Ligne 1 du titre (reel)." },
+            "ligne2": { "type": "string", "description": "Ligne 2 du titre, police secondaire (reel)." },
+            "sous_titres": { "type": "string", "description": "Sous-titres (reel)." },
+            "accent": { "type": ["string", "null"], "description": "Mots forts, tableau (reel) ; mot-clé + bouton (carrousel). null = aucune couleur (carrousel seulement ; le montage retombe alors sur « titre »)." },
+            "touches": { "type": ["string", "null"], "description": "Petites touches de déco du carrousel (points, traits). null = aucune." },
+            "texte": { "type": "string", "description": "Texte des slides de carrousel." }
+          }
+        }
+      }
+    },
+
+    "montage": {
+      "type": "object",
+      "description": "Onglet Montage, lu par SuperMonteur (reel 9:16, 1080 x 1920). Texte TOUJOURS centré. Jamais d'animation du texte : il apparaît net, puis sort en fondu.",
+      "properties": {
+        "titre": {
+          "type": "object",
+          "description": "Titre du hook (2 lignes max).",
+          "properties": {
+            "taille": { "type": "integer", "description": "Taille en px de la ligne 2 du titre (police secondaire, la plus grande), pas de 2 px avec − / +. La ligne 1 (police principale) = taille x 0,5 (104 -> 52 px, comme les sous-titres)." },
+            "position": { "type": "string", "enum": ["haut", "milieu", "bas"], "description": "Préréglage." },
+            "decalage": { "type": "integer", "description": "Ajustement haut / bas en px, négatif = plus haut (pas de 10 px)." },
+            "_y": { "type": "integer", "description": "CALCULÉ : y du haut du bloc titre en px, zone interdite déjà respectée." }
+          }
+        },
+        "sous_titres": {
+          "type": "object",
+          "properties": {
+            "taille": { "type": "integer", "description": "Taille en px." },
+            "position": { "type": "string", "enum": ["col", "poitrine", "bas"], "description": "Au col / Poitrine / Bas." },
+            "decalage": { "type": "integer", "description": "Ajustement haut / bas en px." },
+            "_y": { "type": "integer", "description": "CALCULÉ : y du centre de la ligne de sous-titres en px." }
+          }
+        },
+        "alignement": { "type": "string", "enum": ["centre"], "description": "Toujours centre. Jamais à gauche." },
+        "mots_par_ligne": { "type": "integer", "minimum": 1, "maximum": 5, "description": "Nombre de mots affichés à la fois dans les sous-titres." },
+        "texte_entree": { "type": "string", "enum": ["net"], "description": "Toujours net : aucune animation d'entrée." },
+        "texte_sortie": { "type": "string", "enum": ["fondu"], "description": "Seule animation permise sur le texte." },
+        "cartons": {
+          "type": "object",
+          "description": "Cartons plein écran : dégradé vertical, JAMAIS de couleur unie.",
+          "properties": {
+            "depart": { "type": "string", "description": "Couleur du haut (hex)." },
+            "arrivee": { "type": "string", "description": "Couleur du bas (hex)." }
+          }
+        },
+        "univers": {
+          "type": "string",
+          "enum": ["elegant", "epure", "futuriste", "magazine", "fait_main", "impact"],
+          "description": "Univers du motion design = une AMBIANCE (Élégant, Épuré, Futuriste, Magazine, Fait main, Impact). Toutes les animations restent dispo : SuperMonteur choisit laquelle à chaque moment."
+        },
+        "motion": {
+          "type": "object",
+          "description": "Réglages du motion, à la main de l'utilisateur dans l'univers choisi.",
+          "properties": {
+            "mode": { "type": "string", "enum": ["sombre", "clair"] },
+            "palette": { "type": "string", "enum": ["glacier", "braise", "foret", "or", "perso"], "description": "Palette fond / traits / petites touches." },
+            "couleurs": {
+              "type": "object",
+              "description": "Valeurs de la palette pour le mode choisi (recalculées par le serveur quand mode ou palette change, sauf palette perso).",
+              "properties": {
+                "fond": { "type": "string" },
+                "fond2": { "type": "string", "description": "Bas du dégradé de fond." },
+                "trait": { "type": "string" },
+                "touche": { "type": "string", "description": "Couleur forte (bloc final, flèches)." },
+                "touche2": { "type": "string", "description": "Petite touche secondaire." },
+                "texte": { "type": "string", "description": "Texte posé sur le fond." }
+              }
+            },
+            "trait": { "type": "string", "enum": ["fin", "moyen", "epais"], "description": "Épaisseur : fin 2 px, moyen 4 px, épais 7 px (sur 1080)." },
+            "formes": { "type": "string", "enum": ["arrondies", "carrees"] },
+            "rythme": { "type": "string", "enum": ["pose", "normal", "nerveux"], "description": "Vitesse des animations : posé x0,7, normal x1, nerveux x1,4." }
+          }
+        },
+        "zone_interdite": {
+          "type": "object",
+          "description": "Zone cachée par Instagram sur 1080 x 1920 : RIEN (titre, sous-titres, tableau, schéma, carton) au-dessus de « haut », sous « bas », à moins de « cotes » des bords, ni à moins de « droite_bas.marge » du bord droit sous « droite_bas.sous_y ». Fixe, ne pas modifier.",
+          "properties": {
+            "largeur": { "type": "integer" },
+            "hauteur": { "type": "integer" },
+            "haut": { "type": "integer" },
+            "bas": { "type": "integer" },
+            "cotes": { "type": "integer" },
+            "droite_bas": { "type": "object", "properties": { "marge": { "type": "integer" }, "sous_y": { "type": "integer" } } }
+          }
+        }
+      }
+    },
+
+    "carrousels": {
+      "type": "object",
+      "description": "Onglet Carrousels, lu par SuperCarrousel (slides 1080 x 1440). Pas de nombre de slides ici (dépend du carrousel). Vraies photos + dessins SVG, jamais d'image IA, jamais de ponctuation seule en fin de ligne.",
+      "properties": {
+        "modele": {
+          "type": "string",
+          "enum": ["epure", "cinema", "collage", "carnet", "impact", "post_texte"],
+          "description": "Ambiance du carrousel : Épuré (blanc, photo bord à bord, dessins doux), Cinéma (photo plein cadre sombre, titre blanc), Collage (photo encadrée, formes, scotch), Carnet (papier, écrit à la main, surligneur), Impact (blocs pleins, couleurs franches), Post texte (comme un tweet : photo ronde, nom, texte)."
+        },
+        "couverture": {
+          "type": "object",
+          "description": "Slide 1, celle qui arrête le pouce. 7 mots max.",
+          "properties": {
+            "place_titre": { "type": "string", "enum": ["haut", "bas", "derriere_tete"] },
+            "taille_titre": { "type": "integer", "description": "px sur 1080 de large." },
+            "petite_ligne": { "type": "boolean", "description": "Petite ligne en majuscules au-dessus du titre." },
+            "fleche_glisse": { "type": "boolean", "description": "Flèche / bouton « Glisse pour voir »." }
+          }
+        },
+        "slides_photo": {
+          "type": "object",
+          "properties": {
+            "photos": { "type": "string", "enum": ["sombres", "naturelles", "noir_blanc"], "description": "Traitement de la photo de la slide (jamais d'image IA)." },
+            "texte": { "type": "string", "enum": ["phrase", "liste"], "description": "1 phrase ou liste 1-2-3." },
+            "taille_texte": { "type": "integer", "description": "px." }
+          }
+        },
+        "dessins": {
+          "type": "object",
+          "description": "Schémas des slides sans photo.",
+          "properties": {
+            "fond": { "type": "string", "enum": ["nuit", "jour"] },
+            "style": { "type": "string", "enum": ["comme_motion", "autre"], "description": "comme_motion = même univers que montage.univers (changer l'un change l'autre)." },
+            "univers": { "type": "string", "enum": ["elegant", "epure", "futuriste", "magazine", "fait_main", "impact"], "description": "Univers utilisé. Si style = comme_motion, toujours égal à montage.univers (le serveur le garde aligné)." }
+          }
+        },
+        "derniere_slide": {
+          "type": "object",
+          "description": "Ce qui fait commenter. Le mot-clé et la ressource changent à chaque carrousel : SuperCarrousel les remplit.",
+          "properties": {
+            "active": { "type": "boolean", "description": "false = pas de dernière slide." },
+            "forme": { "type": "string", "enum": ["bulles", "mot_geant", "bouton"], "description": "3 bulles / Mot en géant / Bouton." },
+            "photo": { "type": "boolean", "description": "Photo ronde de la personne sur la dernière slide." },
+            "contour": { "type": "integer", "minimum": 0, "maximum": 20, "default": 8, "description": "Épaisseur du contour blanc autour de la photo ronde, en px sur la slide 1080 (0 = pas de contour)." }
+          }
+        }
+      }
+    },
+
+    "photo_ref": { "type": "string", "description": "Image de la personne pour les aperçus (chemin relatif à apps/superda/)." },
+    "inspiration": {
+      "type": "object",
+      "description": "Dernière inspiration analysée (lien ou ressource) et ce qui a été gardé. Informative.",
+      "properties": {
+        "source": { "type": "string" },
+        "date": { "type": "string" },
+        "resume": { "type": "string" }
+      }
+    },
+    "_resume": {
+      "type": "object",
+      "description": "CALCULÉ par le serveur à chaque écriture : les 7 lignes « Ma DA » de chaque onglet, prêtes à afficher. Lecture seule.",
+      "properties": {
+        "montage": { "type": "array", "items": { "type": "object", "properties": { "cle": { "type": "string" }, "ligne": { "type": "string" }, "valeur": { "type": "string" } } } },
+        "carrousels": { "type": "array", "items": { "type": "object", "properties": { "cle": { "type": "string" }, "ligne": { "type": "string" }, "valeur": { "type": "string" } } } }
+      }
+    }
+  }
+}

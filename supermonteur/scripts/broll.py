@@ -71,8 +71,9 @@ def search(terms):
     import hashlib
     deja, tout = "--deja-vus" in terms, "--tout" in terms
     terms = [t for t in terms if t not in ("--deja-vus", "--tout")]
-    vus = {} if deja else recents()
+    vus = {} if deja else {**recents(), **en_cours()}
     tri, nb, graine, ecartes = rangs(), usages(), os.path.basename(os.getcwd()), 0
+    themes = themes_recents()   # 28/10 : {thème: nb de plans montés dans les 3 derniers reels + montages en cours}
     alea = lambda f_: hashlib.md5((graine + f_).encode()).hexdigest()   # même ordre pendant un montage, autre ordre au suivant
     p = CFG.get("brolls_index")
     if not p or not os.path.exists(p):
@@ -89,16 +90,23 @@ def search(terms):
         if rang == "ecarte" and not tout: ecartes += 1; continue   # tremble, flou, refusé par l'utilisateur (broll_tri.csv)
         if mini and r.get("date_tournage", "") < mini: continue   # tourné trop tôt (ancien visage) ou non daté
         if r.get("usage") == "souvenir" and not passe: continue   # photo de jeunesse : seulement quand il parle de son passé
+        if r.get("theme") == "SPORT" and not any(t.startswith(("sport", "muscu", "salle", "boxe", "entrain")) for t in terms): continue   # 28/10 : « nan pas de sport stp » (reel business) ; seulement si on cherche « sport »
         hay = " ".join([r.get("theme", ""), r.get("action", ""), r.get("lieu", ""), r.get("tenue", ""), r.get("usage", "")]).lower()
         score = sum(t in hay for t in terms)
         if score and (r.get("qualite", "ok") == "ok" or r.get("usage") == "souvenir"):   # vieille photo = qualité moyenne normale
             f_ = r.get("fichier")
-            rows.append(((-score, GROUPE.get(rang, 0), r.get("orientation") != "V", nb.get(f_, 0), RANG.get(rang, 1), alea(f_)),
+            # 28/10 (CAM20056-57 : « pourquoi tu reprends toujours les mêmes brolls alors qu'il y en a plein ») : ses vidéos parlent
+            # d'IA et de travail, le score de mots envoyait toujours dans TRAVAIL (« toi devant l'ordi » à chaque reel). Tout plan
+            # qui colle compte pareil (score plafonné à 1), puis le THÈME le moins vu récemment passe devant (luxe, ville, sport...).
+            rows.append(((-min(score, 1), themes.get(r.get("theme", ""), 0), r.get("date_tournage", "") < RECENT, GROUPE.get(rang, 0), r.get("orientation") != "V", nb.get(f_, 0), -score, RANG.get(rang, 1), alea(f_)),
                          score, rang, float(r.get("duree_s") or 0), r))
     rows.sort(key=lambda x: x[0])
-    gestes, pick = set(), []
+    gestes, pick, par_theme = set(), [], {}
     for row in rows:                                           # 1 plan par geste : pas 3 fois « joue aux échecs »
         if row[4].get("action") in gestes: continue
+        th = row[4].get("theme", "")
+        if par_theme.get(th, 0) >= 3: continue                 # 28/10 : 3 plans max par thème dans la liste, pour voir d'autres univers
+        par_theme[th] = par_theme.get(th, 0) + 1
         gestes.add(row[4].get("action")); pick.append(row)
         if len(pick) == 12: break
     for _, s, rang, d, r in pick:
@@ -119,6 +127,28 @@ def recents(n=3):
         if r["reel"] not in reels: reels.append(r["reel"])
     last = set(reels[-n:])
     return {r["fichier"]: r["reel"] for r in rows if r["reel"] in last}
+# 28/10 : « moi qui tiens un livre, j'étais un peu trop jeune et différent, prends plus récent » -> plans de moins d'un an d'abord
+import datetime as _dt
+RECENT = (_dt.date.today() - _dt.timedelta(days=365)).isoformat()
+def en_cours(heures=48):
+    """{fichier: reel} des B-rolls déjà posés dans les plan.json des AUTRES montages des 48 dernières heures.
+    28/10 : deux chats en parallèle (CAM20055 et CAM20056-57) ont pris le même plan MacBook, car le journal n'est écrit qu'au
+    montage (prep). Un plan posé dans un plan.json est réservé dès qu'il y est."""
+    import glob, time
+    ici, out = os.path.abspath(os.getcwd()), {}
+    for pj in glob.glob(os.path.join(os.path.dirname(ici), "*", "plan.json")):
+        if os.path.dirname(os.path.abspath(pj)) == ici or time.time() - os.path.getmtime(pj) > heures * 3600: continue
+        try: bs = json.load(open(pj, encoding="utf-8")).get("brolls", [])
+        except Exception: continue
+        for b in bs:
+            o = b.get("orig") or b.get("src") or ""
+            if os.path.isabs(o): out[os.path.basename(o)] = os.path.basename(os.path.dirname(pj))
+    return out
+def themes_recents():
+    """{thème: nb de plans} montés dans les 3 derniers reels et dans les montages en cours (thème = début du nom : TRAVAIL_...)."""
+    n = {}
+    for f_ in {**recents(), **en_cours()}: n[f_.split("_")[0]] = n.get(f_.split("_")[0], 0) + 1
+    return n
 def log_used(reel, fichier, frm, du):
     import datetime
     new = not os.path.exists(USED)
@@ -173,6 +203,11 @@ def prep(plan_p):
             if b.get("from") == "auto": b["from"], m, pk = steady(b["src"], du)
             else: d_ = shakes(b["src"], b.get("from", 0), du); m, pk = d_.mean(), d_.max()
             print(f"  tremblement {m:.2f} px/img, pic {pk:.1f}" + ("  <-- INSTABLE : prendre un autre passage (from auto) ou un autre plan" if m > SHAKE_MAX or pk > PEAK_MAX else "  (stable)"))
+            # 28/10 (CAM20055 v2 : image FIGÉE à 21 s) : plan de 4 s posé sur 4,17 s, rien ne le voyait. Bloquant.
+            long_ = float(subprocess.check_output(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", b["src"]]))
+            if long_ - float(b.get("from", 0)) < du - 0.02:
+                sys.exit(f"B-ROLL TROP COURT : {os.path.basename(b['src'])} a {long_ - float(b.get('from', 0)):.2f} s utiles pour {du:.2f} s à l'écran "
+                         f"({b['start']} -> {b['end']}). Raccourcir le plan ou prendre un autre B-roll.")
         src_cut, ss = b["src"], b.get("from", 0)
         # 20/10 (Titanic) : un B-roll iPhone HDR (HLG, BT.2020 10 bits) faisait passer tout le rendu HyperFrames en « HDR
         # layered composite » : mot géant et chiffres cachés derrière la tête, sortie HEVC 10 bits. Tout B-roll HDR est

@@ -1,0 +1,5 @@
+{
+  "mode_essai": true,
+  "claude_auto": true,
+  "_aide": "mode_essai true = le bouton Publier ne publie RIEN (défaut). Mets false toi-même pour publier pour de vrai (2e clic de confirmation). claude_auto false = Claude ne travaille que dans un chat ouvert (python3 sc.py attendre)."
+}

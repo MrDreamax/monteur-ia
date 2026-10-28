@@ -253,7 +253,7 @@ body.lab #steps,body.lab #auto,body.lab #exporter,body.lab #retour{display:none!
 .ob.court{box-shadow:0 0 0 2px var(--orange)}
 .tete{position:absolute;top:-8px;bottom:-8px;width:2px;margin-left:-1px;background:var(--red);pointer-events:none}
 .ovw .tete{top:-6px;bottom:-6px}
-/* 23/10 barre de lecture (maquette livrables/cockpit-montage/barre-r1/C, choix de Cyril : « barre en rouge sur la timeline et sur la
+/* 23/10 barre de lecture (maquette livrables/cockpit-montage/barre-r1/C, choix de l'utilisateur : « barre en rouge sur la timeline et sur la
    coupe en grand ») : la barre rouge s'attrape et se tire, dans le reel bout à bout ET dans la loupe ; l'image suit sous le doigt. */
 .tete.prise{pointer-events:auto;cursor:ew-resize;touch-action:none;z-index:4}
 .tete.prise::after{content:"";position:absolute;top:0;bottom:0;left:-9px;right:-9px}
@@ -340,7 +340,7 @@ const TT = {S: .85, M: 1, L: 1.15, XL: 1.3}, TPL = {haut: 280, bas: 420};
 const TPj = t => String(t || "").replace(/\s*[,.;:…]+/g, "").replace(/\s{2,}/g, " ").trim();   // comme build.mjs : pas de ponctuation dans le titre
 const mesures = new Map();
 let regle = null;   // un span caché : la mesure suit TOUT le CSS de la ligne (largeur étirée d'Archivo comprise, que le canvas ignore)
-function fitJS(text, s, base) {   // titre : chaque ligne reste sur UNE ligne, sa taille baisse jusqu'à tenir dans 940 px (Cyril : jamais 3 lignes)
+function fitJS(text, s, base) {   // titre : chaque ligne reste sur UNE ligne, sa taille baisse jusqu'à tenir dans 940 px (l'utilisateur : jamais 3 lignes)
   const t = s.caps ? text.toUpperCase() : text, f = `${s.italic ? "italic " : ""}${s.weight || 400} 100px ${famille(s.font)}`, cle = f + (s.stretch || 100) + (s.track || 0) + t;
   let L = mesures.get(cle);
   if (L == null) {
@@ -643,7 +643,7 @@ function finEcoute() {
 // Plus de texte. En haut à gauche le téléphone joue le RUSH en sautant ce qui est coupé (montage virtuel, instantané) ; à droite la
 // LOUPE : le bloc ouvert en grand (image + son) avec 1,6 s autour ; en bas le reel bout à bout, les coupes en PETIT (image + son en gris).
 // Dans la loupe on tire une sélection : dans le gris « Remettre ce bout », dans le bleu « Retirer » (un petit mot). Les bords des blocs
-// se tirent aussi. ← → = 10 ms. Le son = courbe « Bourse » EXACTE (Cyril : « très précis ») : la vraie valeur toutes les 10 ms, le pic
+// se tirent aussi. ← → = 10 ms. Le son = courbe « Bourse » EXACTE (l'utilisateur : « très précis ») : la vraie valeur toutes les 10 ms, le pic
 // de chaque pixel, aucun lissage. Choix = les plages GARDÉES (secondes du rush) -> /api/derush -> plages.json (derush.py --plages) à « Suivant ».
 let DR = null, ONDE = null, SPR = null, vue = null, ouvertT = null, sel = null, actif = null, marque = null, rejoue = null, drT = null, rejT = null;
 const CTX = 1.6;
@@ -1144,12 +1144,12 @@ function bulleMusique() {
 }
 // 23/10 étape 3 (maquettes etape3-r1 validées : r1-a « liste » + r2-a « 3 idées de B-roll ») : tous les moments forts en liste,
 // celui qu'on touche s'ouvre avec ses 6 effets et le réglage de l'effet choisi (retours n3, n4, n7). Jamais d'IA.
-// 23/10 (Cyril) : seuls les effets de /api/etat "effets" sont proposés (Zoom, Carton plein, Rien) ; Mot géant, Motion design et
+// 23/10 (l'utilisateur) : seuls les effets de /api/etat "effets" sont proposés (Zoom, Carton plein, Rien) ; Mot géant, Motion design et
 // Ton B-roll restent ci-dessous, cachés, pour pouvoir les remettre (cockpit.py CHOIX_MOMENT).
 const NOMS_EF = {zoom: "Zoom", mot: "Mot géant", carton: "Carton plein", motion: "Motion design", broll: "Ton B-roll", rien: "Rien"};
 const VAR = {zoom: {avant: "Zoom avant", arriere: "Zoom arrière"}, mot: {tete: "Derrière la tête", sous: "Dans le sous-titre"},
              motion: {chiffres: "Chiffres géants", trait: "Illustration"}};   // 23/10 maquettes motion-r2 F + L validées
-// fonds du carton plein = les mêmes dégradés que cockpit.py FONDS (jamais de couleur unie, Cyril 23/10)
+// fonds du carton plein = les mêmes dégradés que cockpit.py FONDS (jamais de couleur unie, l'utilisateur 23/10)
 const FONDS_C = {nuit: "radial-gradient(85% 60% at 100% 0%,#2f74ff 0%,transparent 70%),radial-gradient(90% 65% at 0% 100%,#132b66 0%,transparent 75%),linear-gradient(165deg,#0d1836 0%,#060a1c 60%,#03050d 100%)",
                  noir: "radial-gradient(80% 55% at 100% 0%,#3a3f4a 0%,transparent 70%),radial-gradient(70% 50% at 0% 100%,#1a1d24 0%,transparent 75%),linear-gradient(165deg,#15171c 0%,#050506 70%)",
                  bleu: "radial-gradient(85% 60% at 100% 0%,#7fb2ff 0%,transparent 70%),radial-gradient(90% 65% at 0% 100%,#0a2a6b 0%,transparent 75%),linear-gradient(165deg,#2b6fff 0%,#0b3b8c 60%,#061f4d 100%)",
@@ -1244,7 +1244,7 @@ function bullesExport() {
     h += claude(`Ton reel est prêt : Gardien ${E.final.gardien_ok ? "✓" : "à revoir"} · ${fmt(E.final.duree)}.<div class="ch"><a class="pill plein" style="text-decoration:none" href="/video/final" download="reel.mp4">Télécharger le reel</a></div>`);
   } else h += claude(C().extras === "oui" ? `Voilà tes ${n} contenus au centre. Décoche ceux que tu ne veux pas, touche une date pour la changer.`
                                           : "Voilà ton reel au centre. Fabrique-le ou programme-le.");
-  // 23/10 (Cyril) : carrousel, story et reels d'essai décochés par défaut, proposés seulement à la fin (pour ne pas perdre de temps)
+  // 23/10 (l'utilisateur) : carrousel, story et reels d'essai décochés par défaut, proposés seulement à la fin (pour ne pas perdre de temps)
   if (n > 1 && !C().extras && !fabEnCours())
     h += claude(`Je te fais aussi ${[E.contenus.some(c => c.type === "carrousel") && "un carrousel", E.contenus.some(c => c.type === "story") && "une story",
                    (ne => ne > 1 ? ne + " reels d'essai" : ne ? "un reel d'essai" : "")(E.contenus.filter(c => c.essai).length)].filter(Boolean).join(", ").replace(/, ([^,]*)$/, " et $1")} avec cette vidéo ?

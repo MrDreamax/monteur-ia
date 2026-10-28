@@ -42,7 +42,7 @@ for (let t = t0; t <= t1 + 1e-6; t += step) {
     const cv = (window.__zcv = window.__zcv || document.createElement("canvas").getContext("2d"));
     // décor autorisé à déborder : fonds, voiles, vidéos, images plein cadre (pages/articles qui défilent), feuille CTA (fond)
     // 21/10 (CAM20033) : htitle = le VOILE du titre-question (fond dégradé pleine largeur) ; ses textes .ht1 / .ht2 restent contrôlés en 1)
-    const DECOR = /^(mo|mo-led|moimg|moi-page|moi-cover|clip|fg|mo-fgw|vign|camwrap|punch|root|sheet|kbbg|ctam|veil|tveil|voile|bg|band|bande|crme|inp|kb|htitle)$/;
+    const DECOR = /^(mo|mo-led|moimg|moi-page|moi-cover|clip|fg|mo-fgw|vign|camwrap|punch|root|sheet|kbbg|ctam|veil|tveil|voile|bg|band|bande|crme|inp|kb|htitle|ctm-ring|ctm-rip|ctm-arrow|ctm-veil|ctm-tap)$/;
     const op = el => { let o = 1; for (let e = el; e && e.nodeType === 1; e = e.parentElement) { const s = getComputedStyle(e); if (s.display === "none" || s.visibility === "hidden") return 0; o *= +s.opacity; } return o; };
     const clipBox = el => { // intersection avec les parents overflow:hidden + l'écran
       let b = { l: 0, t: 0, r: 1080, b: 1920 };

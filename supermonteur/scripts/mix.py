@@ -161,7 +161,7 @@ def graph():
             douce_out = i + 1 < len(segs) and segs[i + 1].get("transition", "douce") == "douce"
             t0 = max(0.0, s["start"] - (XF / 2 if douce_in else 0))
             t1 = min(dur, s.get("end", dur) + (XF / 2 if douce_out else 0))
-            fi = XF if douce_in else (0.6 if i == 0 else 0.03)
+            fi = XF if douce_in else ((0.03 if INTRO else 0.6) if i == 0 else 0.03)
             fo = XF if douce_out else (0.03 if i + 1 < len(segs) else (0.15 if s.get("fin") == "naturelle" else 1.2))
             inp += ["-ss", str(s.get("from", 0)), "-i", s["src"]]
             # creux de -4 dB vers 1,2 kHz : la musique laisse la place à la voix au lieu de seulement baisser (Curtis Judd, 13/10)
@@ -171,13 +171,14 @@ def graph():
             # resserrée pour rester audible du début à la fin, au lieu de disparaître sous la voix dans ses creux
             f.append(f"[{n}:a]atrim=0:{t1 - t0:.3f},asetpts=PTS-STARTPTS,loudnorm=I={s['lufs']}:TP=-3:LRA={s.get('lra', 6)},"
                      f"equalizer=f=1200:width_type=q:width=0.45:g=-4,"
+                     f"bass=g=-6:f=120,"   # 28/10 (PHONE) : basses -6 dB, inaudibles sur téléphone et elles mangent la place de la voix
                      f"aformat=sample_rates=48000:channel_layouts=stereo,afade=t=in:d={fi}:curve=qsin,"
                      f"afade=t=out:st={max(0, t1 - t0 - fo):.3f}:d={fo}:curve=qsin,adelay={ms}|{ms}[m{i}]")
             parts.append(f"[m{i}]"); n += 1
         join = f"{''.join(parts)}amix=inputs={len(parts)}:normalize=0:duration=longest," if len(parts) > 1 else f"{parts[0]}"
         f += [f"{join}{'' if len(parts) > 1 else 'anull,'}apad,atrim=0:{dur:.3f}" + gate(sil) + duck(plan.get("sfx", [])) + "[mraw]",
               "[mraw][key]sidechaincompress=threshold=0.05:ratio=2.5:attack=30:release=450[mus]"]   # 30/450 ms : la musique remonte en douceur entre les phrases (Boykin, Judd)
-        mix.append("[mus]")
+        mix.append("[mus]" if not INTRO else "[musi]")
     else:
         f.append("[key]anullsink")
     n_music_inp = len(inp)
@@ -193,7 +194,11 @@ def graph():
         mix.append(f"[s{i}]"); n += 1
     # Plafond -2 dBTP (limiteur à -2,3 dB : l'encodage AAC remonte la crête de ~0,1-0,3 dB) (EBU Tech 3344 : Instagram ré-encode, à -1 une crête peut saturer après coup) ; suréchantillonné x4 pour
     # attraper les crêtes ENTRE les échantillons. level=0 : sinon alimiter REMONTE tout jusqu'à 0 dBFS (bug 13/10).
-    f.append(f"{''.join(mix)}amix=inputs={len(mix)}:normalize=0:duration=longest,"
+    boost = ""
+    if INTRO and segs:   # musique plus forte au début puis redescente (voir INTRO plus bas), appliquée APRÈS le recalage par morceau
+        g, h, r = 10 ** (INTRO.get("db", 4) / 20), INTRO.get("dur", 2.0), INTRO.get("ramp", 2.0)
+        boost = f"[mus]volume='if(lt(t,{h}),{g:.4f},if(lt(t,{h + r}),{g:.4f}+(1-{g:.4f})*(t-{h})/{r},1))':eval=frame[musi];"
+    f.append(boost + f"{''.join(mix)}amix=inputs={len(mix)}:normalize=0:duration=longest,"
              f"aresample=192000,alimiter=limit={10 ** (LIM_DB / 20):.4f}:attack=5:release=50:level=0,aresample=48000,apad,atrim=0:{dur:.3f}[a]")
     return inp, f, n_music_inp
 
@@ -210,15 +215,34 @@ def measure(inp, f, n_music_inp):
     res = []
     for s in segs:
         a, b = s.get("start", 0), min(dur, s.get("end", dur))
-        e = subprocess.run(["ffmpeg", "-nostdin", "-ss", f"{a:.3f}", "-t", f"{b - a:.3f}", "-i", tmp, "-af", "ebur128", "-f", "null", "-"],
+        e = subprocess.run(["ffmpeg", "-nostdin", "-ss", f"{a:.3f}", "-t", f"{b - a:.3f}", "-i", tmp, "-af", "highpass=f=200:poles=2,ebur128", "-f", "null", "-"],
                            capture_output=True, text=True, timeout=120).stderr
         hits = [l for l in e.splitlines() if " I:" in l]
         v = float(hits[-1].split()[1]) if hits else None
         res.append(v if v is not None and v > -69 else None)
-    os.remove(tmp)
+    os.remove(tmp)   # 28/10 PHONE : mesure au-dessus de 200 Hz = ce qu'un téléphone joue (un highpass dans le graphe de mesure bloque ffmpeg 6)
     return res
 
 PEAKS = {}
+# 28/10 PHONE (CAM20062 v5 : « on n'entend pas trop la musique, surtout au début ») : Sweet Dreams slowed = 84 % de son énergie
+# sous 150 Hz. Un haut-parleur de téléphone ne joue rien sous ~200 Hz : mesurée pleine bande, la musique était « OK à -29 »
+# et pourtant inaudible sur iPhone. La cible (target) se mesure maintenant au-dessus de 200 Hz (ce qu'on entend vraiment),
+# et les basses de la musique sont baissées de 6 dB (elles ne servent pas sur téléphone et brouillent la voix au casque).
+# 28/10 (CAM20062 v3 : « au début le son de la musique n'est pas assez fort… commencer par un petit impact, augmenter légèrement
+# le son de la musique au début puis la réduire après ») : la musique démarrait en fondu de 0,6 s et baissait déjà sous la voix
+# (1er mot à 0,1 s). music.intro = {"db": 4, "dur": 2.0, "ramp": 2.0} : départ sec, +db pendant dur secondes, puis retour à la
+# cible en ramp secondes. Le niveau mesuré (cible -29) reste celui de tout le morceau ; l'impact se met dans plan.sfx
+# (kind "impact-intro" : la musique ne s'efface pas dessous, contrairement à "impact").
+# 28/10 (l'utilisateur, « oui, partout ») : ce début est le DÉFAUT de tous les reels. "intro": false dans music pour l'enlever.
+# 28/10 suite : « l'impact n'est pas nécessaire, trouve le moment de la musique qui a de l'impact » -> pas de bruitage par défaut
+# ("impact": true pour le remettre) ; music.from se pose sur un temps fort du morceau (scripts/attaque.py le trouve).
+_i = segs[0].get("intro", True) if segs else False
+INTRO = None if _i is False else ({"db": 6, "dur": 2.5, "ramp": 2.0} | (_i if isinstance(_i, dict) else {}))
+_imp = CFG.get("sfx", {}).get("impact")
+if INTRO and INTRO.get("impact", False) and _imp and os.path.exists(_imp["src"]) \
+        and not any(x.get("at", 9) < 0.3 for x in plan.get("sfx", [])):
+    plan["sfx"] = [dict(_imp, at=0.0, kind="impact-intro", align="start", dur=1.6, volume=0.5)] + list(plan.get("sfx", []))
+    print("début : petit impact à 0 s + musique +%g dB pendant %g s (défaut 28/10)" % (INTRO["db"], INTRO["dur"]))
 LIM_DB = -2.3   # plafond du limiteur ; abaissé tout seul si l'AAC fait remonter la crête (voir boucle finale)
 inp, f, n_music_inp = graph()
 if segs:   # recalage automatique : chaque segment à sa cible ±1 LU (le ducking est piloté par la voix, donc la correction est linéaire)
@@ -256,3 +280,14 @@ for essai in range(3):
 print(f"{out} : voix{' + musique' if segs else ''} + {len(plan.get('sfx', []))} SFX, {dur:.1f}s")
 if p_ is not None:
     print(f"final : {i_} LUFS, crête vraie {p_} dBTP" + ("  <- crête trop haute (> -2)" if p_ > -2.0 else "  OK"))
+
+# 28/10 (l'utilisateur : « il faut bien varier les musiques en fonction de l'ambiance et pas toujours réutiliser les mêmes ») :
+# carnet des musiques montées, 1 ligne par reel (le dernier mix du dossier gagne). Lu par le Gardien (musique d'un des
+# 3 reels précédents = bloquant) et par musiques.py (liste du dossier music_reels, jamais utilisées d'abord).
+if segs and "/tmp/" not in os.path.abspath(out):
+    import csv, datetime
+    J_ = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "musiques_utilisees.csv")
+    rows = list(csv.reader(open(J_))) if os.path.exists(J_) else []
+    rows = [r for r in rows[1:] if r and r[1] != here]
+    rows += [[datetime.date.today().isoformat(), here, s["src"]] for s in segs]
+    w = csv.writer(open(J_, "w", newline="")); w.writerow(["date", "reel", "musique"]); w.writerows(rows)

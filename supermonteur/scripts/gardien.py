@@ -91,14 +91,14 @@ else:
     db = pcm(voix); thr = np.percentile(db, 95) - 30
     gaps = [g for g in runs(db < thr, 50) if g[0] > 0.3 and g[1] < len(db) / 100 - 0.3]  # blancs > 0,5 s, hors bords
     allowed = 1 if (plan.get("silences") or "--pause" in json.dumps(plan)) else 0
-    # 22/10 (IMG_6799 v2 : « enlève le carton plein écran de Mr Dreamax ») : le petit temps naturel AVANT la signature finale
-    # (« … avec le cœur. [temps] Mr Dreamax ») n'est pas une hésitation : couper = plan de 1,1 s (micro-coupure), cacher = carton
+    # 22/10 (IMG_6799 v2 : « enlève le carton plein écran de la signature ») : le petit temps naturel AVANT la signature finale
+    # (« … avec le cœur. [temps] la signature ») n'est pas une hésitation : couper = plan de 1,1 s (micro-coupure), cacher = carton
     # refusé. Avec "pause_signature": true dans plan.json, UN blanc de 0,8 s au plus dans les 2,5 dernières secondes de voix passe.
     # La musique continue dessous et la voix garde le bruit de la pièce (derush.py, 22/10) : pas de trou.
     if plan.get("pause_signature"):
         _vend = max((b for a, b in runs(db >= thr, 5)), default=len(db) / 100)
         gaps = [g for g in gaps if not (g[1] - g[0] <= 0.8 and g[1] >= _vend - 2.5)]
-    # 23/10 (règle de Cyril : « ne coupe jamais en plein milieu d'une phrase ») : un blanc gardé EXPRÈS en milieu de phrase
+    # 23/10 (règle de l'utilisateur : « ne coupe jamais en plein milieu d'une phrase ») : un blanc gardé EXPRÈS en milieu de phrase
     # (cut.voice.json "pauses_phrase", écrit par derush.py) n'est pas une hésitation à couper : signalé, pas bloquant.
     _pp = (J("cut.voice.json") or {}).get("pauses_phrase", [])
     _ph = [g for g in gaps if any(pa - 0.15 <= g[0] and g[1] <= pb + 0.15 for pa, pb in _pp)]
@@ -121,7 +121,7 @@ if voix:
 # 2 quater. Mot coupé (22/10, IMG_6799 v1 : « à un moment le mot est coupé, et à la fin aussi le mot est coupé ») : derush.py
 # écrit cut.voice.json = chaque endroit du RUSH où la voix s'arrête (fin de plage, blanc baissé, fin de voix) ou reprend.
 #  - fin : la voix s'arrête avant la fin réelle du mot (queue_mot.py, même définition que derush.py : voix douce qui traîne,
-#    queue sourde de 0,25 s au plus, explosion d'un « t » après sa fermeture) = « t » de « script », « x » de « Dreamax » ;
+#    queue sourde de 0,25 s au plus, explosion d'un « t » après sa fermeture) = « t » de « script », « x » de « Dreamax » (la signature) ;
 #  - début : la trame juste avant la reprise est déjà de la voix (voisée, > bruit + 15 dB) = l'attaque est mangée (« M » de « Mr »).
 # Testé le 22/10 : la v1 d'IMG_6799 est bloquée (script, Dreamax, Mr), la v2 passe.
 vj = J("cut.voice.json")
@@ -191,6 +191,19 @@ if voix and segs:
 sil = plan.get("silences") or []
 check(not sil, "Musique jamais coupée", f"le plan coupe la musique : silences {sil}" if sil else "aucune coupure de musique prévue", "17/10 Tesla v1")
 mus = plan.get("music") or []
+# 28/10 (l'utilisateur : « il faut bien varier les musiques en fonction de l'ambiance et pas toujours réutiliser les mêmes ») :
+# un morceau déjà monté dans un des 3 reels précédents (musiques_utilisees.csv, écrit par mix.py) = bloquant.
+_mj = os.path.join(S, "..", "musiques_utilisees.csv")
+if os.path.exists(_mj) and plan.get("music"):
+    import csv as _csv
+    _rows = [r for r in _csv.DictReader(open(_mj)) if os.path.abspath(r["reel"]) != os.path.abspath(D)]
+    _reels = []
+    for r in _rows:
+        if r["reel"] not in _reels: _reels.append(r["reel"])
+    _rec = {os.path.basename(r["musique"]): os.path.basename(r["reel"]) for r in _rows if r["reel"] in _reels[-3:]}
+    _mus = [m.get("src", "") for m in (plan["music"] if isinstance(plan["music"], list) else [plan["music"]])]
+    _dbl = [f"{os.path.basename(m)} ({_rec[os.path.basename(m)]})" for m in _mus if os.path.basename(m) in _rec]
+    check(not _dbl, "Musique variée", f"déjà dans un des 3 derniers reels : {_dbl}" if _dbl else "aucune des 3 derniers reels", "28/10 CAM20062")
 m0 = min((m.get("start", 0) for m in mus), default=None) if isinstance(mus, list) else None
 if m0 is not None:
     check(m0 <= 0.05, "Musique dès 0 s", f"la musique démarre à {m0} s" if m0 > 0.05 else "démarre à 0 s", "17/10 Tesla v1")

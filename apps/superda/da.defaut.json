@@ -1,0 +1,200 @@
+{
+  "version": 1,
+  "maj": "2026-10-28T10:53:06+01:00",
+  "nom": "",
+  "commun": {
+    "duo": {
+      "id": "moderne",
+      "nom": "Moderne",
+      "principale": {
+        "famille": "Outfit",
+        "fichier": "Outfit.ttf",
+        "graisse": 700,
+        "majuscules": false,
+        "interlettrage": 0
+      },
+      "secondaire": {
+        "famille": "Outfit",
+        "fichier": "Outfit.ttf",
+        "graisse": 300,
+        "italique": false,
+        "majuscules": false
+      }
+    },
+    "couleurs": {
+      "accent": "#2563EB",
+      "titre": "#FFFFFF",
+      "ligne2": "#FFFFFF",
+      "sous_titres": "#FFFFFF",
+      "texte": "#FFFFFF",
+      "touches": null
+    }
+  },
+  "montage": {
+    "titre": {
+      "taille": 104,
+      "position": "haut",
+      "decalage": 0,
+      "_y": 290
+    },
+    "sous_titres": {
+      "taille": 52,
+      "position": "col",
+      "decalage": 0,
+      "_y": 1200
+    },
+    "alignement": "centre",
+    "mots_par_ligne": 3,
+    "texte_entree": "net",
+    "texte_sortie": "fondu",
+    "cartons": {
+      "depart": "#0E1220",
+      "arrivee": "#1F3A66"
+    },
+    "univers": "futuriste",
+    "motion": {
+      "mode": "sombre",
+      "palette": "glacier",
+      "couleurs": {
+        "fond": "#05070D",
+        "fond2": "#0B1424",
+        "texte": "#FFFFFF",
+        "trait": "#7FD8FF",
+        "touche": "#7FD8FF",
+        "touche2": "#4F9BFF"
+      },
+      "trait": "fin",
+      "formes": "carrees",
+      "rythme": "normal"
+    },
+    "zone_interdite": {
+      "largeur": 1080,
+      "hauteur": 1920,
+      "haut": 270,
+      "bas": 1480,
+      "cotes": 65,
+      "droite_bas": {
+        "marge": 120,
+        "sous_y": 1100
+      }
+    }
+  },
+  "carrousels": {
+    "modele": "epure",
+    "couverture": {
+      "place_titre": "bas",
+      "taille_titre": 84,
+      "petite_ligne": true,
+      "fleche_glisse": false
+    },
+    "slides_photo": {
+      "photos": "sombres",
+      "texte": "phrase",
+      "taille_texte": 40
+    },
+    "dessins": {
+      "fond": "nuit",
+      "style": "comme_motion",
+      "univers": "futuriste"
+    },
+    "derniere_slide": {
+      "active": true,
+      "forme": "bulles",
+      "photo": true,
+      "contour": 8,
+      "cadrage": {
+        "zoom": 180,
+        "x": 50,
+        "y": 20
+      }
+    }
+  },
+  "photo_ref": "img/frame.jpg",
+  "_resume": {
+    "montage": [
+      {
+        "cle": "duo",
+        "ligne": "Duo de polices",
+        "valeur": "Moderne"
+      },
+      {
+        "cle": "tailles",
+        "ligne": "Tailles et position",
+        "valeur": "104 · 52 px"
+      },
+      {
+        "cle": "mots",
+        "ligne": "Mots par ligne",
+        "valeur": "3"
+      },
+      {
+        "cle": "couleurs",
+        "ligne": "Couleur de marque",
+        "valeur": "Perso"
+      },
+      {
+        "cle": "texte",
+        "ligne": "Couleurs du texte",
+        "valeur": "Blanc"
+      },
+      {
+        "cle": "cartons",
+        "ligne": "Cartons",
+        "valeur": "Nuit → bleu"
+      },
+      {
+        "cle": "univers",
+        "ligne": "Univers du motion",
+        "valeur": "Futuriste"
+      },
+      {
+        "cle": "motion",
+        "ligne": "Réglages du motion",
+        "valeur": "Glacier · Sombre"
+      }
+    ],
+    "carrousels": [
+      {
+        "cle": "duo",
+        "ligne": "Duo de polices",
+        "valeur": "Moderne"
+      },
+      {
+        "cle": "couleurs",
+        "ligne": "Couleur de marque",
+        "valeur": "Perso"
+      },
+      {
+        "cle": "texte",
+        "ligne": "Couleur du texte",
+        "valeur": "Blanc"
+      },
+      {
+        "cle": "modele",
+        "ligne": "Modèle",
+        "valeur": "Épuré"
+      },
+      {
+        "cle": "couverture",
+        "ligne": "Couverture",
+        "valeur": "Titre en bas"
+      },
+      {
+        "cle": "photos",
+        "ligne": "Slides photo",
+        "valeur": "Sombres"
+      },
+      {
+        "cle": "dessins",
+        "ligne": "Dessins",
+        "valeur": "Nuit"
+      },
+      {
+        "cle": "derniere",
+        "ligne": "Dernière slide",
+        "valeur": "3 bulles"
+      }
+    ]
+  },
+  "_source": "DA neutre par défaut (installée avec les applis). Change-la dans SuperDA."
+}

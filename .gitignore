@@ -8,3 +8,20 @@ __pycache__/
 .env.*.local
 *.pem
 .claude/settings.local.json
+
+# données de la personne et journaux (jamais publiés)
+*.log
+da.json
+metricool.json
+demandes.jsonl
+a-corriger.json
+feedback-retours.md
+.rendu.lock
+apps/config.json
+apps/*/config.json
+apps/superda/historique/
+apps/superda/inspiration/
+apps/supermonteur/reels/
+apps/supercarrousel/projets/
+apps/supercarrousel/_outils/
+preuves/

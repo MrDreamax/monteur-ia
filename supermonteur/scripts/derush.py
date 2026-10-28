@@ -40,7 +40,7 @@ def _env():
 BREATH_DB = 6
 PAUSE_DB = 10   # pause / inspiration DANS une plage : >= 0,3 s sous « 95e centile - 11 dB » (CAM20031 : souffle à -22/-26, voix à -10/-16)
 # 22/10 (IMG_6799 v1 : « à un moment le mot est coupé, et à la fin aussi le mot est coupé ») : la queue SOURDE d'un mot
-# (« t » de « script » : 70 ms de silence puis l'explosion à -28/-35 dB ; « x » de « Dreamax » à -36/-41 dB) est sous le seuil
+# (« t » de « script » : 70 ms de silence puis l'explosion à -28/-35 dB ; « x » de « Dreamax » (la signature) à -36/-41 dB) est sous le seuil
 # de parole, donc speech_end / tail_end la prenaient pour un blanc et la coupaient. Elle est pourtant 20 dB au-dessus du bruit
 # de la pièce (FLOOR = 3e centile, -59 dB sur ce rush). word_tail() prolonge la fin tant que le son reste > FLOOR + 15 dB,
 # en tolérant UN trou de 30-90 ms (la fermeture d'un « t », « p », « k ») ; la queue doit finir dans le calme avant 0,45 s,
@@ -81,7 +81,7 @@ def speech_start(t, lo):   # vraie attaque du mot annoncé à t : DERNIER passag
     return best
 SERRE = []   # coupes sans blanc (phrase retirée collée au mot d'avant), voir plus bas
 MINCUT, MINSEG, BREATH = 0.45, 0.6, 0.3   # 17/10 : pas de coupe pour un blanc < 0,45 s ; pas de bout de face cam < 0,6 s entre deux coupes
-# 23/10 (Cyril, règle pour TOUT 1er dérush : « ne coupe jamais en plein milieu d'une phrase, toujours sur un point ou une virgule »,
+# 23/10 (l'utilisateur, règle pour TOUT 1er dérush : « ne coupe jamais en plein milieu d'une phrase, toujours sur un point ou une virgule »,
 # déjà dit le 21/10 sur CAM20033). L'IMAGE n'est coupée qu'après un mot qui finit par . , ! ? … ; : (ou à une reprise sautée).
 # Un blanc ou une respiration en milieu de phrase reste à l'image ; seul son SON est baissé au bruit de la pièce (MUTE plus bas).
 # Les bords posés à la main (--bords, --plages : timeline du cockpit) ne sont pas concernés : c'est la personne qui décide.
@@ -169,7 +169,7 @@ def tail_end(p0, lim):
         run = run + 1 if db[k] < q else 0
         if run >= 6: return word_tail((k - 5) / 100, lim)   # 22/10 : fin réelle du mot (queue sourde gardée, souffle collé retiré)
     return None
-# 22/10 (IMG_6799 : le « M » de « Mr Dreamax » mangé) : la voix qui reprend après une pause commence souvent par une consonne
+# 22/10 (IMG_6799 : le « M » de « la signature » mangé) : la voix qui reprend après une pause commence souvent par une consonne
 # douce VOISÉE (m, n, l, j, v : -26/-36 dB) sous le seuil « voix forte » de inner_pauses ; p1 - EDGE_IN la coupait (ou la
 # baissait). soft_attack remonte depuis p1 tant que le son est au-dessus du bruit de la pièce (FLOOR + 12) et redevient voisé
 # (trous sourds de 80 ms max : le « st » de « Mister ») ; une inspiration (sourde) l'arrête : elle reste retirée.
@@ -252,6 +252,26 @@ TAIL = float(sys.argv[sys.argv.index("--tail") + 1]) if "--tail" in sys.argv els
 if segs:
     segs[0][0] = max(0.0, min(segs[0][0], keep[0]["start"] - LEAD))
     segs[-1][1] = max(segs[-1][1], keep[-1]["end"] + TAIL)
+# 28/10 (CAM20062 v1 : « à la toute fin, le rush est mal coupé, il y a une microseconde de trop ») : après le dernier mot il
+# s'immobilise (28,33 s), puis rebouge à 28,73 s (il sort du rôle) et TAIL gardait ce geste. La fin s'arrête maintenant sur la
+# dernière image immobile : mouvement mesuré image par image dans la traîne, coupe juste avant qu'il ne reparte.
+def _fin_immobile(t0, t1):
+    import numpy as np
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-ss", f"{t0:.3f}", "-i", src, "-t", f"{t1 - t0:.3f}",
+                          "-vf", "fps=30,scale=108:192,format=gray", "-f", "rawvideo", "-"], capture_output=True).stdout
+    f = np.frombuffer(raw, np.uint8)
+    if len(f) < 108 * 192 * 4: return None
+    f = f[: len(f) // (108 * 192) * 108 * 192].reshape(-1, 192, 108).astype(float)
+    d = [np.abs(f[i] - f[i - 1]).mean() for i in range(1, len(f))]
+    still = next((i for i, x in enumerate(d) if x < 0.8), None)
+    if still is None: return None
+    go = next((i for i in range(still, len(d)) if d[i] > 0.8 and (i + 1 >= len(d) or d[i + 1] > 0.8)), None)
+    return None if go is None else t0 + go / 30   # d[i] = image i+1 contre image i : on garde jusqu'à l'image i comprise
+if segs and "--fin-libre" not in sys.argv:
+    fe = _fin_immobile(keep[-1]["end"], segs[-1][1])
+    if fe and fe >= keep[-1]["end"] + 0.15 and fe < segs[-1][1] - 0.02:
+        print(f"fin : il rebouge après le dernier mot -> coupe sur la dernière image immobile ({segs[-1][1] - fe:.2f} s retirées)")
+        segs[-1][1] = fe
 # 21/10 (CAM20033 v2, Cut Notes : « enlève la respiration dès le départ », « respiration à cut » à 18,6 s, « bug ici » à 11 s) :
 # au début d'une plage (1er mot de la vidéo, reprise après une coupe), deux restes passaient :
 #  1) une inspiration FORTE (-16/-25 dB, presque la voix) que le seuil d'énergie prenait pour de la parole ;
@@ -289,7 +309,7 @@ for sg in segs:
     if cut_at:
         k = int(cut_at * 100)
         while k < len(db) and db[k] < q + PAUSE_DB: k += 1
-        # 22/10 (IMG_6799 : « Mr » de « Mr Dreamax » perdait son « M ») : la consonne douce du début (-26/-36 dB) est sous le seuil
+        # 22/10 (IMG_6799 : « Mr » de « la signature » perdait son « M ») : la consonne douce du début (-26/-36 dB) est sous le seuil
         # « voix forte » et passait pour la pause. L'attaque = juste après le DERNIER vrai calme (bruit de la pièce + 12 dB)
         # de la pause ; s'il n'y en a pas (souffle d'un bout à l'autre), on garde l'ancien point.
         j = k - 1

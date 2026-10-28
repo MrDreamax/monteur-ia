@@ -7,6 +7,8 @@
   "brolls_min_date": "",
   "_brolls_min_date": "Facultatif : date sous laquelle on ne prend plus de B-roll (ex. le client a changé de tête).",
   "music_epidemic": "~/Documents/Montage/MUSIQUE",
+  "music_reels": "~/Documents/Montage/MUSIQUE",
+  "_music_reels": "Musiques que SuperMonteur pioche pour les reels (jamais utilisées d'abord). Par défaut = le même dossier que music_epidemic.",
   "_music": "Musique et SFX : Epidemic Sound au nom du CLIENT (sa licence). Jamais la musique d'un autre.",
   "sfx": {
     "number": {

@@ -1,5 +1,7 @@
 # MONTAGE VIRAL : comparaison en T, mauvais / bien / excellent, tier list (TOUT VALIDÉ par l'utilisateur le 16/10)
 
+**26/10, style COMPARATIF (style 3 des 5 styles seuls) : sous-titres + FONDU SOMBRE au-dessus de la tête avec le TITRE + le TABLEAU + musique. Le titre RESTE affiché au-dessus du tableau toute la vidéo : `title_hide: false` par défaut (avant : titre effacé après l'annonce).**
+
 Lu après `SKILL.md`. Les 3 formats partagent le même moteur (`viral.py`), d'où un seul fichier.
 Le tableau vit AU-DESSUS DE LA TÊTE, la face cam et les sous-titres restent visibles dessous (version plein écran bleu écartée). Le format se décide au SCRIPT, pas au montage : la vidéo doit être écrite pour (comparaison « à ne pas faire / à faire », niveaux « mauvais / bien / excellent » en les montrant du doigt, classement « X, S tier »). Un seul tableau par vidéo (`t`, `mbe` ou `tier`).
 **Prérequis tournage** : de la place au-dessus de la tête (haut des cheveux vers 37 % de la hauteur, guide de tournage dans `<sorties>/tournage-montage-viral/`). Sinon le moteur en rajoute en fondu.

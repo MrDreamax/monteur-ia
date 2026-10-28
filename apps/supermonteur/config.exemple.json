@@ -1,0 +1,4 @@
+{
+  "mode_essai": true,
+  "_aide": "true = le bouton Publier ne publie RIEN (défaut). Mets false toi-même quand Metricool est branché et que tu veux publier pour de vrai (2e clic de confirmation à chaque fois)."
+}

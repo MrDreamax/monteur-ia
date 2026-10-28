@@ -251,7 +251,7 @@ def build_tier(spec, Z, SERIF, MONT):
     RC = spec.get("colors", {"S": "#E5534B", "A": "#F08C3A", "B": "#E8C547", "C": "#6DBE6A", "D": "#4F9BFF", "F": "#8E8E93"})
     H = Z - TOP
     items = spec["items"]
-    hide = spec.get("title_hide", True)   # 16/10 : le titre est dit à voix haute -> grand au début, puis place au tableau
+    hide = spec.get("title_hide", False)  # 26/10 : le titre reste au-dessus du tableau toute la vidéo (16/10 : effacé)
     if hide:
         # title.size = [sans, serif] en px : hook plus fort (17/10, tier list v3 : [96, 110])
         s, e = spec["title"].get("size") or ((34, 76) if H >= 400 else (28, 60))

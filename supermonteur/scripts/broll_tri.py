@@ -1,13 +1,13 @@
 """Tri de la bibliothèque B-roll (20/10 : « tu utilises souvent les mêmes b-rolls : varie, ou fais un tri »).
   python3 -E broll_tri.py            -> mesure les plans pas encore mesurés, puis classe toute la bibliothèque
   python3 -E broll_tri.py classe     -> reclasse seulement (après un changement de seuil), sans remesurer
-Sorties (à côté de ce dossier, rien n'est écrit sur le SSD) :
+Sorties (à côté de ce dossier, rien n'est écrit sur son disque externe) :
   broll_tri_mesures.csv : tremblement, netteté, luminosité par plan (long à calculer : gardé d'une fois sur l'autre)
   broll_tri.csv         : fichier, rang (beau / ok / photo / telephone / ecarte), raison  -> lu par broll.py search
 Rangs : beau = vidéo caméra stable et nette ; ok = vidéo caméra correcte ; photo ; telephone = dossier B-ROLL-TELEPHONE
 (« plans téléphone moches », 19/10) ; ecarte = tremble, « flou » dans le nom, trop court, trop sombre, illisible ou refusé
 par l'utilisateur (broll_refuses.txt).
-Rien n'est supprimé : un plan écarté reste sur le SSD et revient avec broll.py search --tout.
+Rien n'est supprimé : un plan écarté reste sur son disque externe et revient avec broll.py search --tout.
 Tremblement : même mesure que broll.shakes et outils/extraire-brolls (270x480, 15 i/s, seuils moyenne <= 1,2 et pic <= 6),
 calculée sur la meilleure fenêtre de 2,5 s du plan (on n'en monte jamais plus d'un morceau).
 Jamais -hwaccel (image verte, 19/10)."""
@@ -128,7 +128,7 @@ def classer(rows):
 
 
 if __name__ == "__main__":
-    if not os.path.exists(INDEX): sys.exit("Bibliothèque introuvable : disque externe branché ?")
+    if not os.path.exists(INDEX): sys.exit("Bibliothèque introuvable : son disque externe branché ?")
     rows = list(csv.DictReader(open(INDEX, encoding="utf-8")))
     if sys.argv[1:2] != ["classe"]: mesurer(rows)
     classer(rows)

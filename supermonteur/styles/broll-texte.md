@@ -42,3 +42,11 @@ python3 $S/brolltexte.py plan.json      # place au-dessus de la tête + texte + 
 ```
 4. Vérifier : planche à 1, 3 et 5 s (texte au-dessus de la tête à chaque instant, CTA hors des mains si possible, rien hors zone), `ebur128` ≈ -14 LUFS, début à 0 s, la fin enchaîne sur le début sans saut.
 Tests (16/10) : `<dossier>/style-lab/broll-texte/v4-E` (citation de Bezos, 8,4), `v4-A` (aide en commentaire, 8,6, voile auto sur le tableau), `v4-V` (valeur, 8,6, VALIDÉE, place rajoutée 140 px + voile) ; copy dans `copy-v4.md`.
+
+## Mode NUAGE (29/10/2026)
+Texte au centre + plein de mots qui apparaissent un par un autour (réf « I'm a business owner but I'm also a… »).
+`"text": {"lines": [...], "words": [8 à 30], "accent": "#FFD60A"}` + `"sombre": 0.38`. Rendu natif dans brolltexte.py (scripts/nuage.mjs) :
+centre en casse normale, gras, tout en jaune ; mots en gras 800, éparpillés, jamais sur le visage ni sur le centre, de plus en plus vite.
+Validé par l’utilisateur le 29/10 après « police plus épaisse, tout jaune, comme l'original ».
+29/10 suite (l’utilisateur, « pour toutes les vidéos ») : TOUT en MAJUSCULES ; mots éparpillés au hasard, jamais en colonne ni en paquet ; zone Insta vérifiée sur l'encre (0 pixel dehors) ; points de suspension gardés en fin de texte du centre. Options : `"at"` (tous les mots d'un coup sur un temps fort) et `music.tempo` (accélérer légèrement).
+29/10 : avec une référence, `"slots": "ref/reference.mp4"` = places + rythme des mots copiés (nuage_ref.py). Métiers pertinents pour un coach solo seulement.

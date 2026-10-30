@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SuperVeille</title>
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--fond:#F5F5F7;--blanc:#fff;--texte:#1D1D1F;--gris:#6E6E73;--gris2:#86868B;--trait:#E3E3E8;--bord:#D9D9DE;--bleu:#0071E3;
+  --jaune:#FFF4D6;--jaune-t:#8A5A00;--vert:#E3F6E8;--vert-t:#1E7A3A;--rouge:#C9342B}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:Inter,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;background:var(--fond);color:var(--texte);font-size:14px}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+a{color:var(--bleu);text-decoration:none}
+/* barre du haut */
+.top{position:sticky;top:0;z-index:5;height:64px;background:var(--blanc);border-bottom:1px solid var(--trait);display:flex;align-items:center;gap:22px;padding:0 24px}
+.top h1{font-size:19px;font-weight:700;letter-spacing:-.01em}
+.onglets{display:flex;gap:4px}
+.onglets button{padding:8px 14px;border-radius:999px;font-weight:600;color:var(--gris)}
+.onglets button.on{background:var(--texte);color:#fff}
+.onglets button:not(.on):hover{background:var(--fond)}
+/* ligne de lancement */
+.lancer{margin:0 0 18px;background:var(--blanc);border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:12px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+.reglage{display:flex;align-items:center;gap:6px}
+.reglage>span{font-size:12px;font-weight:600;color:var(--gris2)}
+.pills{display:flex;gap:4px}
+.pill{padding:6px 11px;border-radius:999px;border:1px solid var(--bord);background:var(--blanc);font-size:13px;font-weight:600}
+.pill.on{background:var(--bleu);border-color:var(--bleu);color:#fff}
+select.pill{appearance:none;padding-right:26px;background:var(--blanc) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2386868B' stroke-width='1.6' fill='none'/%3E%3C/svg%3E") no-repeat right 10px center}
+.sujet{flex:1;min-width:180px;padding:7px 12px;border:1px solid var(--bord);border-radius:999px;font-size:13px;background:var(--fond)}
+.sujet:focus{outline:2px solid var(--bleu);outline-offset:-1px;background:#fff}
+.go{padding:9px 20px;border-radius:999px;background:var(--bleu);color:#fff;font-weight:600;font-size:14px}
+.go:disabled{background:#B9B9BF;cursor:default}
+/* onglet Recherche (28/10 soir, maquette A · 1C cartes qui arrivent · 2A marché + likes · 3B pourquoi Jev l'a gardé) */
+.rech{max-width:860px;margin:26px auto 0;text-align:center}
+.rech h2{font-size:30px;font-weight:700;letter-spacing:-.02em}.rech>p{color:var(--gris);margin-top:6px}
+.rbar{margin:22px auto 0;display:flex;gap:8px;background:var(--blanc);border-radius:999px;padding:7px 7px 7px 22px;box-shadow:0 2px 14px rgba(0,0,0,.07);align-items:center}
+.rbar input{flex:1;min-width:0;border:0;font-size:16px;outline:0;background:none}
+.rbar .go{padding:11px 22px;white-space:nowrap}
+.rfil{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.rfil .pill{font-weight:500;padding:6px 14px}.rfil .pill.on{background:var(--texte);border-color:var(--texte)}.rfil .sep{width:14px}
+.rres{max-width:860px;margin:26px auto 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;text-align:left}
+.rc{background:var(--blanc);border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);animation:arrive .45s cubic-bezier(.2,.8,.2,1) both;display:flex;flex-direction:column}
+.rc .vig{display:block;aspect-ratio:auto;height:250px}
+.rc{position:relative}.rc .retirer{z-index:2}.rc:hover .retirer{opacity:1}
+.rc .vig .lm{position:absolute;top:8px;left:8px;background:#fff;color:var(--texte);border-radius:999px;padding:2px 8px;font-size:11px;font-weight:700}
+.rc .in{padding:12px;display:flex;flex-direction:column;flex:1}.rc .in>p{color:var(--gris);font-size:13px;margin:4px 0 8px;line-height:1.4}
+.rc .pq{background:var(--vert);color:var(--vert-t);border-radius:8px;padding:6px 8px;font-size:12px;margin-bottom:10px}
+.rc .bt{display:flex;gap:6px;margin-top:auto}.rc .bt button{flex:1;border-radius:999px;padding:8px;font-weight:600;font-size:13px;border:1px solid var(--texte)}
+.rc .bt .b{background:var(--bleu);color:#fff;border-color:var(--bleu)}
+.rc .bt .fait{border-color:var(--vert);background:var(--vert);color:var(--vert-t);cursor:default}
+.rsq{border-radius:16px;background:#ECECF0;min-height:410px;display:grid;place-items:center;color:var(--gris2);font-size:13px}
+.rst{text-align:center;color:var(--gris);font-size:13px;margin:18px 0 60px;display:flex;justify-content:center;align-items:center;gap:10px}
+.rech .alerte{margin:20px auto 0;max-width:860px;text-align:left}
+/* corps */
+.corps{display:flex;gap:0;align-items:flex-start}
+.gauche{flex:1;min-width:0;padding:18px 24px 40px}
+.tete{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.tete h2{font-size:19px;font-weight:700}
+.tete .sous{color:var(--gris);font-size:13px}
+.tete select{margin-left:auto;font-size:12px;border:1px solid var(--bord);border-radius:8px;padding:4px 8px;background:#fff;color:var(--gris)}
+.avance{display:flex;align-items:center;gap:10px;font-weight:600;margin-bottom:12px}
+.rond{width:14px;height:14px;border-radius:50%;border:2px solid #CFE3FA;border-top-color:var(--bleu);animation:t 0.9s linear infinite}
+@keyframes t{to{transform:rotate(360deg)}}
+.alerte{background:#FDECEA;color:var(--rouge);border-radius:12px;padding:12px 14px;margin-bottom:12px;font-weight:600}
+.alerte.manque{background:var(--jaune);color:var(--jaune-t);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.alerte.manque .go{margin-left:auto;font-size:13px;padding:8px 16px}
+.alerte small{display:block;font-weight:500;color:#8E2B24;margin-top:3px}
+.grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.carte{background:var(--blanc);border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);cursor:pointer;border:2px solid transparent;transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s;animation:arrive .45s cubic-bezier(.2,.8,.2,1) both}
+.carte:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.08)}
+.carte.choisie{border-color:var(--bleu)}
+@keyframes arrive{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+.vig{position:relative;aspect-ratio:9/12;background:#E8E8ED center/cover no-repeat}
+.vig .n{position:absolute;top:7px;left:7px;background:var(--bleu);color:#fff;font-size:12px;font-weight:700;border-radius:999px;padding:2px 8px}
+.vig .m{position:absolute;top:7px;right:7px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;font-weight:700;border-radius:5px;padding:2px 6px}
+.vig .st{position:absolute;top:30px;right:7px;font-size:11px;font-weight:700;border-radius:999px;padding:3px 8px}
+.st.a_tourner,.badge.a_tourner{background:var(--jaune);color:var(--jaune-t)}
+.st.tourne,.badge.tourne{background:var(--vert);color:var(--vert-t)}
+.vig .x{position:absolute;bottom:7px;left:7px;background:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:3px 8px;white-space:nowrap}
+.vig .x .vu{margin-right:7px}
+.vig .vide{position:absolute;inset:0;display:grid;place-items:center;color:var(--gris2);font-size:12px;text-align:center}
+.info{padding:8px 10px 10px}
+.info b{display:block;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.info p{font-size:12px;line-height:1.35;margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.info .attend{color:var(--gris2)}
+.info .err{color:var(--rouge)}
+.squelette{border-radius:12px;aspect-ratio:9/14.2;background:linear-gradient(90deg,#E8E8ED,#F2F2F5,#E8E8ED);background-size:200% 100%;animation:sk 1.4s ease infinite}
+@keyframes sk{to{background-position:-200% 0}}
+.vide-page{color:var(--gris2);text-align:center;padding:80px 20px;font-size:15px;line-height:1.5}
+/* panneau de droite */
+.panneau{width:520px;flex:none;position:sticky;top:64px;height:calc(100vh - 64px);background:var(--blanc);border-left:1px solid var(--trait);display:flex;flex-direction:column}
+.panneau[hidden]{display:none}
+.vol{position:fixed;z-index:50;background:#E8E8ED center/cover no-repeat;border-radius:10px;pointer-events:none;transform-origin:0 0;will-change:transform}
+.ph{display:flex;gap:16px;padding:20px 22px 14px}
+.ph .mini{width:96px;aspect-ratio:9/12;border-radius:10px;background:#E8E8ED center/cover;flex:none}
+.ph h3{font-size:18px;font-weight:700}
+.ph .meta{color:var(--gris);font-size:13px;margin-top:2px}
+.chiffres{display:flex;gap:8px;margin:10px 0}
+.chiffres div{background:var(--fond);border-radius:10px;padding:6px 12px}
+.chiffres b{display:block;font-size:16px}
+.chiffres span{font-size:11px;color:var(--gris)}
+.fermer{margin-left:auto;align-self:flex-start;width:28px;height:28px;border-radius:50%;background:var(--fond);color:var(--gris);font-size:16px;line-height:28px}
+.script{flex:1;overflow:auto;padding:0 22px}
+.lignes{display:grid;grid-template-columns:1fr 1fr}
+.lignes .o{padding-right:18px !important}
+.lignes.une{grid-template-columns:1fr}
+.lignes .t{font-size:11px;font-weight:700;color:var(--gris2);text-transform:uppercase;letter-spacing:.06em;padding:10px 0 8px;border-bottom:1px solid var(--trait);position:sticky;top:0;background:#fff}
+.lignes .o,.lignes .f{padding:11px 0;border-bottom:1px solid #EFEFF2;font-size:13.5px;line-height:1.45}
+.lignes .o{color:var(--gris)}
+/* scanner cerveau (28/10) : pastille sur la carte, recette + script en couleurs dans la fiche */
+.vig .cv{position:absolute;bottom:7px;right:7px;color:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:3px 8px}
+.cv.bon{background:var(--vert-t)}.cv.moyen{background:var(--jaune-t)}.cv.faible{background:var(--rouge)}.cv.encours{background:#86868B}
+.recette{border:1px solid var(--trait);border-radius:14px;padding:12px 14px;margin:2px 0 12px}
+.recette h4{font-size:11px;font-weight:700;color:var(--gris2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.notes3{display:flex;gap:8px;margin-bottom:4px}.notes3 div{flex:1;background:var(--fond);border-radius:10px;padding:8px 10px}
+.notes3 b{display:block;font-size:20px;font-weight:700}.notes3 span{font-size:11px;color:var(--gris)}
+.regle{display:flex;gap:10px;padding:9px 0;border-top:1px solid var(--trait)}.notes3+.regle{border-top:0}
+.regle .num{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#fff;font-size:12px;flex:none}
+.num.garde{background:var(--vert-t)}.num.coupe{background:var(--rouge)}.num.image{background:var(--jaune-t)}
+.regle b{display:block;font-size:13.5px}.regle p{color:var(--gris);font-size:12.5px;margin-top:2px;line-height:1.4}
+.scanner{width:100%;padding:12px;border-radius:12px;background:var(--fond);font-weight:600;text-align:left;display:flex;gap:10px;align-items:center}
+.scanner:hover{background:#ECECF0}.scanner small{margin-left:auto;color:var(--gris2);font-weight:500}
+.barre{height:6px;background:var(--fond);border-radius:9px;overflow:hidden;margin-top:8px}.barre div{height:100%;background:var(--bleu);transition:width .4s}
+.recette .err{color:var(--rouge);font-weight:600;margin-bottom:8px}
+.lignes .c-garde{background:var(--vert)}.lignes .c-decroche{background:#FDECEA}.lignes .c-image{background:var(--jaune)}
+.lignes .o.c-garde,.lignes .o.c-decroche,.lignes .o.c-image{padding-left:8px;border-radius:8px 0 0 8px}
+.lignes .f.c-garde,.lignes .f.c-decroche,.lignes .f.c-image{padding-right:8px;border-radius:0 8px 8px 0}
+.lignes .une-col.c-garde,.lignes .une-col.c-decroche,.lignes .une-col.c-image{padding:11px 8px;border-radius:8px}
+.tg{float:right;margin:0 0 4px 8px;font-size:10.5px;font-weight:700;border-radius:999px;padding:2px 7px;color:#fff}
+.tg.garde{background:var(--vert-t)}.tg.decroche{background:var(--rouge)}.tg.image{background:var(--jaune-t)}
+.tete .tri{margin-left:auto}
+.attente-script{color:var(--gris2);padding:30px 0;text-align:center;display:flex;gap:10px;align-items:center;justify-content:center}
+.pb{display:flex;gap:10px;padding:14px 22px 18px;border-top:1px solid var(--trait)}
+.pb button{flex:1;padding:12px;border-radius:999px;font-weight:600}
+.noir{background:var(--texte);color:#fff}
+.vert{background:var(--vert);color:var(--vert-t)}
+.contour{border:1px solid var(--texte)}
+.lien-petit{font-size:12px;color:var(--gris);text-decoration:underline;flex:none !important;padding:12px 6px !important}
+/* Tournage du jour (29/10, l’utilisateur) : les 25 formats, des idées de reels sous chacun */
+.jour{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;align-items:start}
+.fmt{background:var(--blanc);border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:12px;animation:arrive .45s cubic-bezier(.2,.8,.2,1) both}
+.fh{display:flex;align-items:center;gap:12px}
+.fh img{width:46px;height:46px;border-radius:8px;flex:none}
+.fh small{display:block;font-size:11px;font-weight:700;color:var(--bleu)}.fh b{font-size:14.5px}
+.fh .nb{margin-left:auto;background:var(--vert);color:var(--vert-t);font-size:12px;font-weight:700;border-radius:999px;padding:3px 9px}
+.idees{list-style:none;display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.idee{position:relative;display:flex;align-items:center;gap:10px;background:var(--fond);border-radius:10px;padding:7px 34px 7px 9px;font-size:13px;line-height:1.35}
+.idee.reel{cursor:pointer}.idee.reel:hover{background:#ECECF0}.idee.choisie{outline:2px solid var(--bleu)}
+.idee .mini{width:28px;aspect-ratio:9/13;border-radius:5px;background:#E3E3E8 center/cover;flex:none}
+.idee p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.idee .moins{position:absolute;right:6px;top:50%;margin-top:-11px;width:22px;height:22px;border-radius:50%;color:var(--gris);font-size:15px;line-height:22px;opacity:0;transition:opacity .15s}
+.idee:hover .moins,.moins:focus-visible{opacity:1}.idee .moins:hover{background:#fff;color:var(--rouge)}
+@media (hover:none){.idee .moins{opacity:1}}
+.plus{width:100%;margin-top:10px;padding:8px;border-radius:999px;border:1px dashed var(--bord);color:var(--gris);font-weight:600;font-size:13px}
+.plus:hover{border-color:var(--bleu);color:var(--bleu)}
+.ajout{display:flex;gap:6px;margin-top:10px}
+.ajout input{flex:1;min-width:0;padding:8px 12px;border:1px solid var(--bord);border-radius:999px;font-size:13px;background:var(--fond)}
+.ajout input:focus{outline:2px solid var(--bleu);outline-offset:-1px;background:#fff}.ajout .go{padding:8px 14px;font-size:13px}
+.pioche{margin-top:10px}.pioche>small{display:block;font-size:11px;font-weight:700;color:var(--gris2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.pioche .liste-p{max-height:230px;overflow:auto;display:flex;flex-direction:column;gap:4px}
+.pioche button{display:flex;align-items:center;gap:9px;text-align:left;padding:5px 7px;border-radius:9px;font-size:12.5px;line-height:1.3}
+.pioche button:hover{background:var(--fond)}.pioche button:disabled{opacity:.4;cursor:default}
+.pioche .mini{width:24px;aspect-ratio:9/13;border-radius:4px;background:#E3E3E8 center/cover;flex:none}
+.pioche button span:last-child{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.fermerJ{display:block;margin:8px auto 0;color:var(--gris);font-size:12.5px}
+select.ajoutJ{flex:1;padding:12px;border-radius:999px;font-weight:600;border:1px solid var(--texte);background:#fff;text-align:center;appearance:none;cursor:pointer}
+/* listes À tourner / Tourné */
+.liste{display:flex;flex-direction:column;gap:8px;max-width:860px}
+.ligne{display:flex;align-items:center;gap:14px;background:var(--blanc);border-radius:12px;padding:10px 14px;box-shadow:0 1px 3px rgba(0,0,0,.05);cursor:pointer;border:2px solid transparent}
+.ligne.choisie{border-color:var(--bleu)}
+.ligne .mini{width:44px;aspect-ratio:9/13;border-radius:6px;background:#E8E8ED center/cover;flex:none}
+.ligne b{display:block}
+.ligne p{color:var(--gris);font-size:13px;margin-top:2px}
+.ligne .badge{margin-left:auto;font-size:12px;font-weight:700;border-radius:999px;padding:5px 11px;white-space:nowrap}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--texte);color:#fff;padding:10px 18px;border-radius:999px;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none}
+.toast.on{opacity:1}
+/* grille des enregistrés */
+.coche{position:absolute;top:7px;left:7px;width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.25);display:grid;place-items:center;color:#fff;font-size:14px;font-weight:700}
+.carte.on{border-color:var(--bleu)} .carte.on .coche{background:var(--bleu);border-color:var(--bleu)}
+.vig .d{position:absolute;bottom:7px;right:7px;background:rgba(0,0,0,.6);color:#fff;font-size:11px;font-weight:700;border-radius:5px;padding:2px 6px}
+.vig .etat{position:absolute;top:7px;left:7px;font-size:11px;font-weight:700;border-radius:999px;padding:3px 8px}
+.etat.traduit{background:var(--vert);color:var(--vert-t)} .etat.en_cours{background:var(--jaune);color:var(--jaune-t)}
+.etat.ecarte{background:#EDEDF0;color:var(--gris)} .etat.erreur{background:#FDECEA;color:var(--rouge)}
+.retirer{position:absolute;top:7px;right:7px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:15px;line-height:24px;opacity:0;transition:opacity .15s}
+.carte:hover .retirer,.retirer:focus-visible{opacity:1}
+@media (hover:none){.retirer{opacity:1}}
+.barre-choix{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:6;background:var(--texte);color:#fff;border-radius:999px;padding:8px 8px 8px 22px;display:flex;align-items:center;gap:16px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.barre-choix[hidden]{display:none}
+.grille.enreg .carte{animation:none;content-visibility:auto;contain-intrinsic-size:auto 330px}  /* 1 000 cartes : on ne dessine que celles à l'écran */
+.barre-choix,.barre-choix button,.transpo .go{white-space:nowrap}
+.barre-choix .clair{background:rgba(255,255,255,.14)}
+.barre-choix .annuler{color:#B9B9BF;font-weight:500;font-size:13px}
+.act{margin-left:auto;display:flex;gap:10px;align-items:center}.act small{color:var(--gris2)}
+.btn2{padding:7px 14px;border-radius:999px;border:1px solid var(--bord);background:#fff;font-weight:600;font-size:13px}
+.btn2:disabled{color:var(--gris2);cursor:default}
+.remettre{display:block;margin:22px auto 70px;color:var(--gris);font-size:13px;text-decoration:underline}
+/* transposer (28/10) : lien collé dans la barre, le format repris dans sa niche */
+.transpo{margin-left:auto;flex:1;max-width:640px;display:flex;gap:8px;align-items:center}
+.transpo input{flex:1;min-width:0;padding:8px 14px;border:1px solid var(--bord);border-radius:999px;font-size:13px;background:var(--fond)}
+.transpo input:focus{outline:2px solid var(--bleu);outline-offset:-1px;background:#fff}
+.transpo #sujetT{flex:.8;animation:arrive .3s cubic-bezier(.2,.8,.2,1) both}
+.transpo .go{padding:8px 18px;font-size:13px}
+.vig .tp{position:absolute;top:7px;left:7px;background:var(--bleu);color:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:3px 8px}
+/* 28/10 (l’utilisateur) : ▶ au milieu de chaque enregistré = voir le reel dans Chrome */
+.vig .voir{position:absolute;top:50%;left:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(0,0,0,.55);color:#fff;font-size:17px;padding-left:3px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:transform .15s,background .15s}
+.vig .voir:hover{background:rgba(0,0,0,.8);transform:scale(1.08)}
+.vig .hautg{position:absolute;top:7px;left:7px;display:flex;gap:5px;align-items:center}  /* coche ou état + « Transposé ✓ » côte à côte */
+.vig .hautg>*{position:static}
+.bloc{margin:0 0 14px}.bloc h4{font-size:11px;font-weight:700;color:var(--gris2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.plan{counter-reset:e;list-style:none;display:flex;flex-direction:column;gap:6px}
+.plan li{counter-increment:e;display:flex;gap:10px;align-items:baseline;font-size:13.5px}
+.plan li::before{content:counter(e);width:20px;height:20px;border-radius:50%;background:var(--fond);display:grid;place-items:center;font-size:11px;font-weight:700;flex:none}
+.editeur{width:100%;min-height:260px;resize:vertical;border:1px solid var(--bord);border-radius:12px;padding:14px 16px;background:var(--blanc);
+  color:var(--texte);font:inherit;font-size:15px;line-height:1.6;overflow:hidden}
+.editeur:focus{outline:none;border-color:var(--bleu);box-shadow:0 0 0 3px rgba(0,113,227,.15)}
+.original{margin-top:6px}.original summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--bleu);padding:6px 0}
+.original[open] summary{margin-bottom:8px}
+.sauve{font-size:12px;color:var(--gris2);margin-top:6px;min-height:16px;display:flex;justify-content:space-between;gap:10px}
+.bloc .dire{font-size:14.5px;line-height:1.6;white-space:pre-wrap}.bloc .hook{font-size:16px;font-weight:700;line-height:1.4}
+@media (max-width:900px){.top{height:auto;flex-wrap:wrap;padding:10px 16px;gap:10px}.transpo{max-width:none;flex-basis:100%}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>SuperVeille</h1>
+  <nav class="onglets" id="onglets">
+    <button data-o="recherche" class="on">Recherche</button>
+    <button data-o="enregistres">Mes enregistrés</button>
+    <button data-o="a_tourner">À tourner</button>
+    <button data-o="jour">Tournage du jour</button>
+    <button data-o="tourne">Tourné</button>
+  </nav>
+  <form class="transpo" id="transpo" autocomplete="off">
+    <input id="lienT" placeholder="Colle le lien d'un reel à transposer ou à traduire" aria-label="Lien du reel à transposer ou à traduire">
+    <input id="sujetT" placeholder="Sujet ? (facultatif)" aria-label="Sujet du script (facultatif)" hidden>
+    <button class="go" id="goT" hidden>Transposer</button>
+    <button class="go" type="button" id="goTr" hidden>Traduire</button>
+  </form>
+</header>
+
+<div class="corps">
+  <main class="gauche" id="gauche"><div id="contenu"></div></main>
+  <aside class="panneau" id="panneau" hidden></aside>
+</div>
+<div class="barre-choix" id="barre" hidden></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const court = n => n >= 1e6 ? (n/1e6).toFixed(1).replace(".", ",").replace(",0","") + " M" : n >= 1e3 ? Math.round(n/1e3) + " k" : String(n || 0);
+const plein = n => (n || 0).toLocaleString("fr-FR");
+// 29/10 : les vues à côté des likes sur chaque carte (▶ = vues, comme sur Instagram)
+const chif = x => (x.vues ? `<span class="vu">▶ ${court(x.vues)}</span>` : "") + `♥ ${court(x.likes)}`;
+const cite = t => /^\s*«/.test(t || "") ? t : "« " + (t || "") + " »";  // pas de « « quand le texte commence par une citation
+const duree = s => s ? Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0") : "";
+const LANGUES = {en: "anglais", es: "espagnol", fr: "français", pt: "portugais", it: "italien", de: "allemand", hi: "hindi"};
+let E = {items: [], retires: 0, lu: 0, lecture: false, erreur: ""}, TR = {reels: [], en_cours: null, etape: ""}, T = {a_tourner: [], tourne: []}, J = {formats: []};
+let ouvertJ = null;  // Tournage du jour : le format dont la case « ajouter » est ouverte
+let R = {}, RM = null, RL = 10000;  // Recherche : dernière recherche, marchés et likes choisis
+let onglet = "recherche", choisi = null, coches = new Set(), minuterie = null;
+
+async function api(url, corps) {
+  const r = await fetch(url, corps ? {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(corps)} : {});
+  const j = await r.json();
+  if (!r.ok) throw new Error(j.erreur || "erreur");
+  return j;
+}
+function toast(t) { const e = $("#toast"); e.textContent = t; e.classList.add("on"); clearTimeout(e._t); e._t = setTimeout(() => e.classList.remove("on"), 2200); }
+
+// ---------- onglets
+$("#onglets").onclick = e => { const o = e.target.dataset.o; if (o) montrerOnglet(o); };
+function montrerOnglet(o) {
+  onglet = o; choisi = null; DEJA.clear();  // un autre onglet : ses cartes arrivent en cascade
+  try { localStorage.setItem("sv-onglet", o); } catch (_) {}
+  document.querySelectorAll("#onglets button").forEach(b => b.classList.toggle("on", b.dataset.o === o));
+  dessiner();
+}
+function comptes() {
+  const n = {enregistres: E.items.length, a_tourner: TR.reels.length, jour: nbIdees(), tourne: T.tourne.length};
+  const noms = {recherche: "Recherche", enregistres: "Mes enregistrés", a_tourner: "À tourner", jour: "Tournage du jour", tourne: "Tourné"};
+  document.querySelectorAll("#onglets button").forEach(b => b.textContent = noms[b.dataset.o] + (b.dataset.o in n ? ` · ${n[b.dataset.o]}` : ""));
+}
+
+// ---------- mes enregistrés : cocher, traduire, retirer
+const ETATS = {traduit: "Traduit ✓", en_cours: "Traduction…", ecarte: "Pas de voix", erreur: "Erreur"};
+function carteEnreg(x) {
+  const on = coches.has(x.code);
+  const etat = x.etat ? `<span class="etat ${x.etat}">${x.etat === "ecarte" && !(x.raison || "").startsWith("Pas de voix") ? "Écarté" : ETATS[x.etat]}</span>` : `<span class="coche">${on ? "✓" : ""}</span>`;
+  const leg = (x.legende || "").replace(/\s+/g, " ").slice(0, 120) || "(pas de légende)";
+  const tp = x.transpose ? `<span class="tp">Transposé ✓</span>` : "";  // déjà repris : ne pas le refaire
+  const titre = x.raison || (x.transpose ? "Déjà transposé : ton script est dans « À tourner »" : "");
+  return `<article class="carte ${on ? "on" : ""} ${choisi && choisi.code === x.code ? "choisie" : ""}" data-e="${x.code}" title="${esc(titre)}">
+    <div class="vig" style="background-image:url('${esc(x.miniature || "")}')"><div class="hautg">${etat}${tp}</div>
+      <button class="retirer" data-r="${x.code}" aria-label="Retirer de la grille" title="Retirer (reste enregistrée sur Insta)">×</button>
+      <a class="voir" href="${esc(x.lien)}" target="_blank" rel="noopener" data-ig aria-label="Voir le reel" title="Voir le reel sur Instagram">▶</a>
+      <span class="x">${chif(x)}</span><span class="d">${duree(x.duree)}</span></div>
+    <div class="info"><b>@${esc(x.createur)}</b><p>${esc(leg)}</p></div></article>`;
+}
+function dessinerEnreg() {
+  const g = $("#contenu");
+  const lu = E.lu ? new Date(E.lu * 1000).toLocaleTimeString("fr-FR", {hour: "2-digit", minute: "2-digit"}) : "";
+  const etat = E.lecture ? `<span class="rond"></span><small>Je lis tes enregistrés…</small>` : lu ? `<small>Lu à ${lu}</small>` : "";
+  let haut = `<div class="tete"><h2>Mes enregistrés</h2><span class="sous">${E.items.length} reels · tes 2 comptes mélangés, les 100 derniers</span>
+    <div class="act">${etat}<select id="triE" aria-label="Trier"><option value="recent" ${triE === "recent" ? "selected" : ""}>Derniers enregistrés</option>
+      <option value="likes" ${triE === "likes" ? "selected" : ""}>Plus de likes</option>
+      <option value="vues" ${triE === "vues" ? "selected" : ""}>Plus de vues</option></select>
+      <button class="btn2" id="actualiser" ${E.lecture ? "disabled" : ""}>↻ Actualiser</button></div></div>`;
+  const L = triE in {likes: 1, vues: 1} ? [...E.items].sort((a, b) => (b[triE] || 0) - (a[triE] || 0)) : E.items;
+  if (E.erreur) haut += `<div class="alerte">${esc(E.erreur)}</div>`;
+  if (!E.items.length) {
+    g.innerHTML = haut + (E.lecture ? `<div class="grille">${Array(12).fill('<div class="squelette"></div>').join("")}</div>`
+      : `<div class="vide-page">Aucun reel enregistré trouvé.<br>Enregistre des reels sur Instagram, puis <b>Actualiser</b>.</div>`);
+  } else {
+    g.innerHTML = haut + `<div class="grille enreg">${L.map(carteEnreg).join("")}</div>` +
+      (E.retires ? `<button class="remettre" id="remettre">${E.retires} retirée${E.retires > 1 ? "s" : ""} · tout remettre</button>` : "");
+  }
+  $("#actualiser").onclick = async () => { try { E = await api("/api/enregistres/actualiser", {force: true}); dessiner(); suivre(); } catch (e) { toast(e.message); } };
+  const rm = $("#remettre"); if (rm) rm.onclick = async () => { E = await api("/api/enregistres/retirer", {retire: null}); dessiner(); };
+}
+function dessinerBarre() {
+  const b = $("#barre");
+  if (onglet !== "enregistres" || !coches.size) { b.hidden = true; return; }
+  b.hidden = false;
+  b.innerHTML = `${coches.size} vidéo${coches.size > 1 ? "s" : ""} choisie${coches.size > 1 ? "s" : ""}
+    <button class="annuler" id="decocher">Annuler</button><button class="go clair" id="transposer" title="Reprendre le format, écrire ton script dans ta niche">Transposer</button><button class="go" id="traduire">Traduire en français →</button>`;
+  $("#decocher").onclick = () => { coches.clear(); dessiner(); };
+  $("#transposer").onclick = async () => {
+    try {
+      for (const code of coches) TR = await api("/api/transposer", {lien: `https://www.instagram.com/reel/${code}/`, sujet: ""});
+      const n = coches.size; coches.clear();
+      montrerOnglet("a_tourner"); toast(`C'est parti : ${n > 1 ? "tes " + n + " scripts arrivent" : "ton script arrive"} dans « À tourner » (~2 min chacun)`); suivre();
+    } catch (e) { toast(e.message); }
+  };
+  $("#traduire").onclick = async () => {
+    try {
+      TR = await api("/api/traduire", {codes: [...coches]});
+      coches.clear(); E = await api("/api/enregistres");
+      montrerOnglet("a_tourner"); toast("C'est parti : les scripts arrivent un par un dans « À tourner »"); suivre();
+    } catch (e) { toast(e.message); }
+  };
+}
+
+// ---------- recherche : une phrase + marché + likes, 3 reels (Apify + Jev), les cartes arrivent une par une
+const NOMS_M = {en: "Anglophone", es: "Espagnol", fr: "Français"}, LIK = [[10000, "10 000 likes +"], [50000, "50 000 +"], [100000, "100 000 +"]];
+function carteR(t) {
+  const bt = t.envoye ? `<button class="fait" disabled>Dans « À tourner » ✓</button>`
+    : `<button class="b" data-rt="${t.code}">Transposer</button><button data-rx="${t.code}">Traduire</button>`;
+  return `<article class="rc"><button class="retirer" data-rr="${t.code}" aria-label="Retirer de la recherche" title="Retirer (ne reviendra plus)">×</button><a class="vig" href="${esc(t.lien)}" target="_blank" rel="noopener" data-ig style="background-image:url('${esc(t.miniature)}')">
+    <span class="lm">${esc((t.marche || "").toUpperCase())}</span><span class="x">${chif(t)}</span></a>
+    <div class="in"><b>@${esc(t.createur)}</b><p>${esc(cite(t.hook))}</p>${t.raison ? `<div class="pq">${esc(t.raison)}</div>` : ""}
+    <div class="bt">${bt}</div></div></article>`;
+}
+function dessinerRecherche() {
+  const g = $("#contenu");
+  if (!RM) RM = R.marches && R.marches.length ? [...R.marches] : ["en", "es"];
+  if (R.likes_min && !dessinerRecherche.fait) { RL = R.likes_min; dessinerRecherche.fait = true; }
+  if (!$("#rech")) {  // la barre n'est dessinée qu'une fois : taper pendant qu'une recherche tourne ne s'efface pas
+    g.innerHTML = `<div class="rech" id="rech"><h2>Qu'est-ce que tu cherches ?</h2><p>Je trouve 3 reels très viraux, toutes niches. Tu reprends leur format dans la tienne.</p>
+      <form class="rbar" id="formR" autocomplete="off"><input id="phraseR" placeholder="Ton sujet : pourquoi tes clients n'achètent pas" aria-label="Ton sujet" value="${esc(R.phrase || "")}">
+      <button class="go" id="goR">Chercher →</button></form><div class="rfil" id="filR"></div><div id="alerteR"></div></div>
+      <div class="rres" id="resR"></div><div class="rst" id="stR"></div>`;
+    $("#formR").onsubmit = async e => {
+      e.preventDefault();
+      try { R = await api("/api/recherche", {phrase: $("#phraseR").value, marches: RM, likes_min: RL}); dessinerRecherche(); suivre(); }
+      catch (err) { toast(err.message); }
+    };
+  }
+  $("#filR").innerHTML = Object.entries(NOMS_M).map(([m, nom]) => `<button class="pill ${RM.includes(m) ? "on" : ""}" data-pm="${m}">${nom}</button>`).join("")
+    + `<span class="sep"></span>` + LIK.map(([n, t]) => `<button class="pill ${RL === n ? "on" : ""}" data-pl="${n}">${t}</button>`).join("");
+  const cherche = R.statut === "cherche";
+  $("#goR").disabled = cherche; $("#goR").textContent = cherche ? "Je cherche…" : "Chercher →";
+  const T3 = R.trouves || [];
+  $("#alerteR").innerHTML = R.erreur ? `<div class="alerte">${esc(R.erreur)}</div>`
+    : R.statut === "fini" && !T3.length ? `<div class="alerte manque">Aucun reel ne passe la barre cette fois.${R.manque ? `<small style="color:inherit">${esc(R.manque)}</small>` : ""}</div>` : "";
+  $("#resR").innerHTML = T3.map(carteR).join("") + (cherche ? Array(Math.max(0, 3 - T3.length)).fill(`<div class="rsq">Je cherche…</div>`).join("") : "");
+  const temps = s => s >= 60 ? `${Math.floor(s / 60)} min ${String(s % 60).padStart(2, "0")}` : `${s} s`;
+  $("#stR").innerHTML = cherche ? `<span class="rond"></span>${esc(R.etape || "Je cherche…")}${R.lus ? ` · ${R.lus} reels lus` : ""}`
+    : R.statut === "fini" ? `Trouvé en ${temps(R.secondes)}${R.lus ? ` · ${R.lus} reels lus` : ""} · ${T3.length} gardé${T3.length > 1 ? "s" : ""}${R.manque && T3.length ? ` · ${esc(R.manque)}` : ""}` : "";
+}
+$("#contenu").addEventListener("click", async e => {
+  const pm = e.target.closest("[data-pm]"), pl = e.target.closest("[data-pl]");
+  if (pm) { const m = pm.dataset.pm; RM = RM.includes(m) ? RM.filter(x => x !== m) : [...RM, m]; return dessinerRecherche(); }
+  if (pl) { RL = +pl.dataset.pl; return dessinerRecherche(); }
+  const rr = e.target.closest("[data-rr]");
+  if (rr) {
+    e.stopPropagation();
+    try { R = await api("/api/recherche/retirer", {code: rr.dataset.rr}); dessinerRecherche(); toast("Retirée de la recherche"); } catch (err) { toast(err.message); }
+    return;
+  }
+  const b = e.target.closest("[data-rt],[data-rx]"); if (!b) return;
+  const code = b.dataset.rt || b.dataset.rx, lien = `https://www.instagram.com/reel/${code}/`;
+  try {
+    TR = b.dataset.rt ? await api("/api/transposer", {lien, sujet: R.phrase || ""}) : await api("/api/traduire-lien", {lien});  // transposé sur TON sujet
+    R = await api("/api/recherche"); dessinerRecherche(); comptes(); suivre();
+    toast(b.dataset.rt ? "C'est parti : ton script arrive dans « À tourner » (~2 min)" : "C'est parti : la traduction arrive dans « À tourner » (~2 min)");
+  } catch (err) { toast(err.message); }
+});
+
+// ---------- scanner cerveau : seuils de couleur de la note (calés le 28/10 sur les 1ers scans)
+const EN_COURS = ["attente", "prepare", "scan", "calcul"];
+const couleurNote = n => n >= 55 ? "bon" : n >= 48 ? "moyen" : "faible";
+function pastille(cv) {
+  if (!cv) return "";
+  if (cv.statut === "fini") return `<span class="cv ${couleurNote(cv.note)}">🧠 ${cv.note}</span>`;
+  if (EN_COURS.includes(cv.statut)) return `<span class="cv encours">🧠 ${cv.statut === "scan" && cv.total ? (cv.faits || 0) + "/" + cv.total : "…"}</span>`;
+  return "";
+}
+let tri = "recent", triE = "recent";  // triE : Mes enregistrés, gardé d'une ouverture à l'autre
+try { triE = localStorage.getItem("sv-triE") || "recent"; } catch (_) {}
+
+// ---------- traduits, à tourner, tourné
+function carte(r) {
+  const vig = r.miniature ? `style="background-image:url('${r.miniature}')"` : "";
+  const st = "";
+  let bas;
+  if (r.statut === "erreur") bas = `<p class="err">${esc(r.erreur || "Problème sur ce reel")}</p>`;
+  else if (r.hook) bas = `<p>${esc(cite(r.hook))}</p>`;
+  else if (r.transpose) bas = `<p class="attend">${r.statut === "transcrit" ? "Écriture de ton script…" : "Transcription…"}</p>`;
+  else bas = `<p class="attend">${r.statut === "transcrit" ? "Je traduis le script…" : "Je transcris le script…"}</p>`;
+  return `<article class="carte ${choisi && choisi.code === r.code ? "choisie" : ""}" data-code="${r.code}">
+    <div class="vig" ${vig}>${r.miniature ? "" : '<div class="vide">aperçu<br>indisponible</div>'}
+      ${r.transpose ? '<span class="tp">Transposé</span>' : ""}
+      ${r.marche && !r.transpose ? `<span class="m">${esc(r.marche.toUpperCase())}</span>` : ""}${st}
+      <span class="x">${chif(r)}</span>${pastille(r.cerveau)}
+      <button class="retirer" data-s="${r.code}" aria-label="Supprimer de « À tourner »" title="Supprimer (aucun fichier effacé)">×</button></div>
+    <div class="info"><b>@${esc(r.createur)}</b>${bas}</div></article>`;
+}
+function dessinerTraduits() {
+  const g = $("#contenu");
+  const scannes = TR.reels.some(r => r.cerveau && r.cerveau.statut === "fini");
+  let haut = `<div class="tete"><h2>À tourner</h2><span class="sous">${TR.reels.length} scripts · traduits mot pour mot ou transposés dans ta niche</span>
+    ${scannes ? `<select class="tri" id="tri"><option value="recent" ${tri === "recent" ? "selected" : ""}>Plus récents</option>
+      <option value="cerveau" ${tri === "cerveau" ? "selected" : ""}>Note cerveau</option></select>` : ""}</div>`;
+  if (TR.en_cours) haut += `<div class="avance"><span class="rond"></span>${esc(TR.etape || "Je travaille…")}</div>`;
+  if (!TR.reels.length) { g.innerHTML = haut + `<div class="vide-page">Rien à tourner.<br>Coche des vidéos dans <b>Mes enregistrés</b>, puis <b>Traduire</b>.</div>`; return; }
+  const note = r => r.cerveau && r.cerveau.statut === "fini" ? r.cerveau.note : -1;
+  const L = tri === "cerveau" ? [...TR.reels].sort((a, b) => note(b) - note(a)) : TR.reels;
+  g.innerHTML = haut + `<div class="grille">${L.map(carte).join("")}</div>`;
+}
+$("#contenu").addEventListener("change", e => {
+  if (e.target.id === "tri") { tri = e.target.value; dessinerTraduits(); }
+  if (e.target.id === "triE") { triE = e.target.value; try { localStorage.setItem("sv-triE", triE); } catch (_) {} dessinerEnreg(); }
+});
+// ---------- Tournage du jour (29/10, l’utilisateur) : les 25 formats ; sous chacun, des idées = un script de « À tourner » ou une phrase
+const nbIdees = () => J.formats.reduce((t, f) => t + f.idees.length, 0);
+const deux = n => String(n).padStart(2, "0");
+function idee(f, x) {
+  const moins = `<button class="moins" data-jr="${f.n}:${x.id}" aria-label="Retirer cette idée" title="Retirer">×</button>`;
+  if (!x.code) return `<li class="idee"><p>${esc(x.texte)}</p>${moins}</li>`;
+  return `<li class="idee reel ${choisi && choisi.code === x.code ? "choisie" : ""}" data-jo="${f.n}:${x.id}" title="Ouvrir le script">
+    <span class="mini" style="background-image:url('${esc(x.miniature || "")}')"></span><p>${esc(x.hook ? cite(x.hook) : "@" + x.createur)}</p>${moins}</li>`;
+}
+function ajoutJ(f) {
+  const pris = new Set(f.idees.map(x => x.code));
+  const scripts = TR.reels.filter(r => r.hook);
+  return `<form class="ajout" data-jf="${f.n}"><input id="ideeJ" placeholder="Ton idée de reel…" aria-label="Ton idée de reel"><button class="go">Ajouter</button></form>
+    ${scripts.length ? `<div class="pioche"><small>Ou un script de « À tourner »</small><div class="liste-p">${scripts.map(r =>
+      `<button data-jp="${r.code}" ${pris.has(r.code) ? "disabled" : ""}><span class="mini" style="background-image:url('${esc(r.miniature || "")}')"></span><span>${esc(cite(r.hook))}</span></button>`).join("")}</div></div>` : ""}
+    <button class="fermerJ" data-jx>Fermer</button>`;
+}
+function dessinerJour() {
+  if (document.activeElement?.id === "ideeJ") return;  // il tape une idée : on ne redessine pas sous ses doigts
+  const n = nbIdees(), prets = J.formats.filter(f => f.idees.length).length;
+  $("#contenu").innerHTML = `<div class="tete"><h2>Tournage du jour</h2><span class="sous">${n ? `${n} idée${n > 1 ? "s" : ""} dans ${prets} format${prets > 1 ? "s" : ""}` : "25 formats · ajoute des idées de reels sous chacun"}</span></div>
+    <div class="jour">${J.formats.map(f => `<section class="fmt" data-f="${f.n}">
+      <div class="fh"><div><small>${deux(f.n)}</small><b>${esc(f.nom)}</b></div>${f.idees.length ? `<span class="nb">${f.idees.length}</span>` : ""}</div>
+      ${f.idees.length ? `<ul class="idees">${f.idees.map(x => idee(f, x)).join("")}</ul>` : ""}
+      ${ouvertJ === f.n ? ajoutJ(f) : `<button class="plus" data-ja="${f.n}">+ Ajouter une idée</button>`}</section>`).join("")}</div>`;
+}
+async function changerJour(corps, msg) {
+  try { J = await api("/api/jour", corps); if (msg) toast(msg); document.activeElement?.blur(); dessiner(); } catch (err) { toast(err.message); }
+}
+$("#contenu").addEventListener("submit", e => {
+  const f = e.target.closest("[data-jf]"); if (!f) return;
+  e.preventDefault();
+  const texte = f.querySelector("input").value.trim(); if (!texte) return;
+  f.querySelector("input").blur();
+  changerJour({format: +f.dataset.jf, texte}, "Idée ajoutée");
+});
+function dessinerListe(cle) {
+  const L = T[cle];
+  const g = $("#contenu");
+  if (!L.length) { g.innerHTML = `<div class="vide-page">${cle === "a_tourner" ? "Rien à tourner.<br>Ouvre un script traduit et clique <b>Je le tourne</b>." : "Rien de tourné pour l'instant."}</div>`; return; }
+  g.innerHTML = `<div class="liste">${L.map(r => `<div class="ligne ${choisi && choisi.code === r.code ? "choisie" : ""}" data-code="${r.code}">
+    <div class="mini" style="background-image:url('${r.miniature || ""}')"></div>
+    <div><b>@${esc(r.createur)}</b><p>${esc(cite(r.hook))}</p></div>
+    <span class="badge ${cle}">${cle === "tourne" ? "Tourné ✓" + (r.tourne_le ? " le " + r.tourne_le.slice(8, 10) + "/" + r.tourne_le.slice(5, 7) : "") : "À tourner"}</span></div>`).join("")}</div>`;
+}
+function dessiner() {
+  const avant = places();
+  comptes();
+  if (onglet === "recherche") dessinerRecherche(); else if (onglet === "enregistres") dessinerEnreg(); else if (onglet === "a_tourner") dessinerTraduits(); else if (onglet === "jour") dessinerJour(); else dessinerListe("tourne");
+  dessinerBarre();
+  calmer();
+  dessinerPanneau();
+  glisser(avant);
+}
+// 29/10 : la fiche qui s'ouvre (ou se ferme) rétrécit la grille, 7 colonnes deviennent 5 : les cartes sautaient de ligne d'un coup.
+// On note où chaque carte était, puis on la fait glisser de là jusqu'à sa nouvelle place.
+function places() {
+  const m = new Map();
+  document.querySelectorAll("#contenu .carte").forEach(c => m.set(c.dataset.code || c.dataset.e, c.getBoundingClientRect()));
+  return {onglet, m};
+}
+function glisser(avant) {
+  if (!BOUGE || avant.onglet !== onglet || !avant.m.size) return;
+  const h = innerHeight, vue = r => r.bottom > 0 && r.top < h;
+  document.querySelectorAll("#contenu .carte").forEach(c => {
+    const a = avant.m.get(c.dataset.code || c.dataset.e); if (!a) return;
+    const b = c.getBoundingClientRect(), dx = a.left - b.left, dy = a.top - b.top;
+    if ((Math.abs(dx) < 1 && Math.abs(dy) < 1) || (!vue(a) && !vue(b))) return;
+    c.animate([{transform: `translate(${dx}px,${dy}px)`}, {transform: "none"}], {duration: 480, easing: RESSORT});
+  });
+}
+// 29/10 : une carte joue son entrée une seule fois. Avant, chaque clic (et chaque mise à jour pendant une traduction)
+// redessinait la grille et toutes les cartes refaisaient leur fondu : la grille clignotait à l'ouverture de la fiche.
+const DEJA = new Set();
+function calmer() {
+  document.querySelectorAll("#contenu .carte, #contenu .fmt").forEach(el => {
+    const k = el.dataset.e || el.dataset.code || (el.dataset.f && "f" + el.dataset.f) || el.getAttribute("href");
+    if (DEJA.has(k)) el.getAnimations().forEach(a => a.finish()); else DEJA.add(k);
+  });
+}
+function reelTraduit(code) { return TR.reels.find(r => r.code === code) || T.tourne.find(r => r.code === code); }
+$("#contenu").onclick = async e => {
+  const ja = e.target.closest("[data-ja]"), jx = e.target.closest("[data-jx]"), jr = e.target.closest("[data-jr]"), jp = e.target.closest("[data-jp]"), jo = e.target.closest("[data-jo]");
+  if (ja) { ouvertJ = +ja.dataset.ja; dessinerJour(); return $("#ideeJ").focus({preventScroll: true}); }
+  if (jx) { ouvertJ = null; document.activeElement.blur(); return dessinerJour(); }
+  if (jr) { e.stopPropagation(); const [f, id] = jr.dataset.jr.split(":"); return changerJour({format: +f, action: "retirer", id}, "Idée retirée"); }
+  if (jp) { const r = TR.reels.find(x => x.code === jp.dataset.jp); return r && changerJour({format: ouvertJ, code: r.code, veille: r.veille}, "Script ajouté"); }
+  if (jo) {
+    const [f, id] = jo.dataset.jo.split(":");
+    choisi = J.formats[f - 1].idees.find(x => x.id === id); vol = depart(jo); return dessiner();
+  }
+  const rm = e.target.closest("[data-r]");
+  if (rm) {
+    e.stopPropagation(); coches.delete(rm.dataset.r);
+    try { E = await api("/api/enregistres/retirer", {code: rm.dataset.r, retire: true}); toast("Retirée (toujours enregistrée sur Insta)"); dessiner(); } catch (err) { toast(err.message); }
+    return;
+  }
+  const sp = e.target.closest("[data-s]");
+  if (sp) {
+    e.stopPropagation();
+    const r = TR.reels.find(x => x.code === sp.dataset.s); if (!r) return;
+    try {
+      T = await api("/api/tournage", {code: r.code, veille: r.veille, statut: "supprime"});
+      TR = await api("/api/traduits");
+      if (choisi && choisi.code === r.code) choisi = null;
+      toast("Supprimé"); dessiner();
+    } catch (err) { toast(err.message); }
+    return;
+  }
+  if (e.target.closest("a[data-ig]")) return;  // ▶ Voir : il s'ouvre dans Chrome, la carte ne se coche pas
+  const en = e.target.closest("[data-e]");
+  if (en) {
+    const x = E.items.find(i => i.code === en.dataset.e);
+    if (x.etat === "traduit" || x.etat === "en_cours") { choisi = reelTraduit(x.code) || null; vol = depart(en); return dessiner(); }
+    coches.has(x.code) ? coches.delete(x.code) : coches.add(x.code);
+    en.outerHTML = carteEnreg(x);  // juste cette carte : pas de redessin des 179
+    calmer();
+    return dessinerBarre();
+  }
+  const el = e.target.closest("[data-code]"); if (!el) return;
+  const src = onglet === "a_tourner" ? TR.reels : T.tourne;
+  choisi = src.find(r => r.code === el.dataset.code); vol = depart(el); dessiner();
+};
+
+// ---------- 29/10 : la fiche s'ouvre en douceur. Elle glisse depuis la droite, la miniature cliquée vole jusqu'à elle,
+// son contenu arrive en cascade ; un autre reel = fondu ; fermer = elle repart à droite. Rien si « réduire les animations ».
+const BOUGE = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+const RESSORT = "cubic-bezier(.32,.72,0,1)";  // la courbe des tiroirs Apple : départ vif, arrivée très douce
+let vol = null;  // la miniature cliquée (position + image), le temps d'ouvrir la fiche
+function depart(el) {
+  const v = el && el.querySelector(".vig, .mini");
+  return v ? {rect: v.getBoundingClientRect(), img: getComputedStyle(v).backgroundImage} : null;
+}
+function voler(mini) {
+  const d = vol; vol = null;
+  if (!BOUGE || !d || !mini || !d.img || d.img === "none") return;
+  const a = mini.getBoundingClientRect(), r = d.rect;
+  const c = document.createElement("div"); c.className = "vol";
+  Object.assign(c.style, {left: a.left + "px", top: a.top + "px", width: a.width + "px", height: a.height + "px", backgroundImage: d.img});
+  document.body.appendChild(c); mini.style.opacity = 0;
+  c.animate([{transform: `translate(${r.left - a.left}px,${r.top - a.top}px) scale(${r.width / a.width},${r.height / a.height})`, boxShadow: "0 0 0 rgba(0,0,0,0)"},
+    {transform: "none", boxShadow: "0 12px 30px rgba(0,0,0,.18)", offset: .7}, {transform: "none", boxShadow: "0 0 0 rgba(0,0,0,0)"}],
+    {duration: 560, easing: RESSORT}).onfinish = () => { mini.style.opacity = ""; c.remove(); };
+}
+function entrer(p, attente) {  // en-tête, script, boutons : l'un après l'autre
+  [".ph > div:nth-child(2)", ".script", ".pb"].forEach((q, i) => {
+    const el = p.querySelector(q);
+    if (el) el.animate([{opacity: 0, transform: "translateY(10px)"}, {opacity: 1, transform: "none"}],
+      {duration: 420, delay: attente + i * 55, easing: RESSORT, fill: "backwards"});
+  });
+}
+function fermerPanneau(p) {
+  vol = null;
+  if (p.hidden || p.classList.contains("ferme")) return;
+  if (!BOUGE) { p.hidden = true; return; }
+  p.classList.add("ferme");
+  p.animate([{opacity: 1, transform: "none"}, {opacity: 0, transform: "translateX(36px)"}], {duration: 220, easing: "cubic-bezier(.4,0,1,1)"})
+    .onfinish = () => { p.classList.remove("ferme"); if (!choisi) { const avant = places(); p.hidden = true; glisser(avant); } };
+}
+
+// ---------- panneau : le script original | français
+function recette(r) {
+  const cv = r.cerveau || {};
+  if (cv.statut === "fini") {
+    return `<div class="recette"><h4>Ta recette pour le reprendre</h4>
+      <div class="notes3"><div><b>${cv.accroche}</b><span>accroche</span></div><div><b>${cv.note}</b><span>note cerveau</span></div>
+        <div><b>${esc(cv.decroche_a || "-")}</b><span>ça décroche</span></div></div>
+      ${(cv.regles || []).map((x, i) => `<div class="regle"><span class="num ${x.type}">${i + 1}</span><div><b>${esc(x.titre)}</b><p>${esc(x.detail)}</p></div></div>`).join("")}</div>`;
+  }
+  if (EN_COURS.includes(cv.statut)) {
+    const pct = cv.total ? Math.round(100 * (cv.faits || 0) / cv.total) : 4;
+    const txt = cv.statut === "attente" ? "En file : un autre scan ou une traduction passe avant…" : cv.statut === "prepare" ? "Je récupère la vidéo…"
+      : cv.statut === "calcul" ? "J'écris ta recette…" : `Le cerveau regarde le reel… ${cv.faits || 0} morceau${(cv.faits || 0) > 1 ? "x" : ""} sur ${cv.total}`;
+    return `<div class="recette"><h4>Scanner cerveau</h4><div class="avance" style="margin:0"><span class="rond"></span>${txt}</div><div class="barre"><div style="width:${pct}%"></div></div></div>`;
+  }
+  const err = cv.statut === "erreur" ? `<p class="err">${esc(cv.erreur || "Le scan n'est pas passé.")}</p>` : "";
+  return `<div class="recette">${err}<button class="scanner" data-a="scanner">🧠 ${err ? "Réessayer le scan" : "Scanner ce reel"}<small>~3 min par tranche de 15 s · gratuit</small></button></div>`;
+}
+function dessinerPanneau() {
+  const p = $("#panneau");
+  if (!choisi) return fermerPanneau(p);
+  const r = reelTraduit(choisi.code) || choisi;  // version fraîche (le script arrive pendant qu'on regarde)
+  const ouvre = p.hidden || p.classList.contains("ferme"), change = !ouvre && p.dataset.code !== r.code;
+  if (ouvre) p.classList.remove("ferme");
+  choisi = r; p.hidden = false;
+  const date = r.date ? r.date.slice(8, 10) + "/" + r.date.slice(5, 7) : "";
+  const langue = LANGUES[r.langue] || (r.langue || "original");
+  const fr = r.langue === "fr";
+  if (document.activeElement?.id === "editeur" && p.dataset.code === r.code) return;  // il tape : on ne redessine pas sous ses doigts
+  const editeur = h => `<div class="bloc"><h4>${h}</h4><textarea class="editeur" id="editeur" spellcheck="true">${esc(texteScript(r))}</textarea>
+      <div class="sauve"><span id="duree">${dureeDire(texteScript(r))}</span><span id="sauve"></span></div></div>`;
+  let script;
+  if (r.transpose && r.script) {  // transposé : le plan du format repris, puis son script dans sa niche
+    script = editeur("Ton script · hook compris, modifiable");
+  } else if (r.transpose && r.statut !== "erreur") {
+    script = `<div class="attente-script"><span class="rond"></span>${r.statut === "transcrit" ? "J'écris ton script au même format…" : "Je regarde la vidéo de référence…"}</div>`;
+  } else if (r.phrases && r.phrases.length) {
+    const cv = r.cerveau && r.cerveau.statut === "fini" ? r.cerveau : null;
+    const NOM = {accroche: "accroche", garde: "pic", decroche: "décroche", image: "rien à voir"};
+    const ligne = (ph, i) => {
+      const tg = cv && cv.tags && cv.tags[i] ? cv.tags[i].tag : null;
+      const k = tg === "accroche" ? (cv.accroche >= 50 ? "garde" : "decroche") : tg;
+      const cl = k ? ` c-${k}` : "";
+      const badge = tg ? `<span class="tg ${k}">${tg === "accroche" ? "accroche " + cv.accroche : NOM[tg]}</span>` : "";
+      return fr ? `<div class="f une-col${cl}">${badge}${esc(ph.o)}</div>` : `<div class="o${cl}">${esc(ph.o)}</div><div class="f${cl}">${badge}${esc(ph.f)}</div>`;
+    };
+    script = editeur("Ton script en français · modifiable") + recette(r)
+      + `<details class="original"><summary>${fr ? "Le script d'origine, phrase par phrase" : "L'original et sa traduction, phrase par phrase"}</summary>
+      <div class="lignes ${fr ? "une" : ""}"><div class="t">Original · ${esc(langue)}</div>${fr ? "" : '<div class="t">Français</div>'}
+      ${r.phrases.map(ligne).join("")}</div></details>`;
+  } else if (r.statut === "erreur") script = `<div class="attente-script" style="color:var(--rouge)">${esc(r.erreur || "")}</div>`;
+  else script = `<div class="attente-script"><span class="rond"></span>${r.statut === "transcrit" ? "Je traduis le script…" : "Je transcris le script…"}</div>`;
+  const sup = `<button class="lien-petit" data-a="supprime">Supprimer</button>`;
+  const boutons = r.tournage === "tourne"
+    ? `<button class="contour" data-a="a_tourner">Remettre à tourner</button><button class="contour" data-a="copier">Copier le script</button>${sup}`
+    : `<select class="ajoutJ" id="ajoutJ" aria-label="Ajouter au Tournage du jour"><option value="">+ Tournage du jour</option>${J.formats.map(f =>
+        `<option value="${f.n}">${deux(f.n)} · ${esc(f.nom)}${f.idees.some(x => x.code === r.code) ? " ✓" : ""}</option>`).join("")}</select>
+      <button class="vert" data-a="tourne">Tourné ✓</button><button class="contour" data-a="copier">Copier</button>${sup}`;
+  p.innerHTML = `<div class="ph"><div class="mini" style="background-image:url('${r.miniature || ""}')"></div>
+    <div><h3>@${esc(r.createur)}</h3><div class="meta">${esc(r.langue ? LANGUES[r.langue] || r.langue : "")}${date ? " · " + date : ""}${r.format ? " · " + esc(r.format) : ""}</div>
+      <div class="chiffres"><div><b>${plein(r.likes)}</b><span>likes</span></div><div><b>${plein(r.vues)}</b><span>vues</span></div></div>
+      <a href="${esc(r.lien)}" target="_blank" rel="noopener" data-ig>Voir la vidéo sur Instagram ↗</a></div>
+    <button class="fermer" data-a="fermer" aria-label="Fermer">×</button></div>
+    <div class="script">${script}</div><div class="pb">${boutons}</div>`;
+  p.dataset.code = r.code;
+  const ed = $("#editeur"); if (ed) hauteur(ed);
+  // 29/10 : la miniature vise sa place AVANT que la fiche commence à glisser (sinon elle atterrit 44 px trop à droite puis saute)
+  if (ouvre || change) voler(p.querySelector(".ph .mini")); else vol = null;
+  if (BOUGE && ouvre) { p.animate([{opacity: 0, transform: "translateX(44px)"}, {opacity: 1, transform: "none"}], {duration: 480, easing: RESSORT}); entrer(p, 80); }
+  else if (BOUGE && change) entrer(p, 0);
+}
+// le script transposé d'une traite (hook + suite), ou sa version retouchée par l’utilisateur
+const BROUILLON = {};
+function texteScript(r) {
+  if (BROUILLON[r.code] != null) return BROUILLON[r.code];
+  if (r.texte != null) return r.texte;
+  return r.transpose ? [r.hook, r.script].filter(Boolean).join("\n\n") : (r.phrases || []).map(ph => r.langue === "fr" ? ph.o : ph.f).join("\n");
+}
+// ~160 mots par minute face caméra (rythme reel) : pour savoir s'il tient sous 60 s
+function dureeDire(t) {
+  const m = (t.match(/\S+/g) || []).length, s = Math.round(m * 60 / 160);
+  return `${m} mots · ~${s >= 60 ? Math.floor(s / 60) + " min " + String(s % 60).padStart(2, "0") : s + " s"} à dire${s > 90 ? " · long pour un reel" : ""}`;
+}
+function hauteur(ed) { ed.style.height = "auto"; ed.style.height = ed.scrollHeight + 2 + "px"; }
+let minuterieScript = null;
+$("#panneau").addEventListener("input", e => {
+  if (e.target.id !== "editeur") return;
+  const r = choisi, ed = e.target;
+  BROUILLON[r.code] = ed.value; hauteur(ed); $("#duree").textContent = dureeDire(ed.value); $("#sauve").textContent = "…";
+  clearTimeout(minuterieScript);
+  minuterieScript = setTimeout(async () => {
+    try { await api("/api/script", {code: r.code, veille: r.veille, texte: ed.value}); r.texte = ed.value; $("#sauve").textContent = "Enregistré ✓"; }
+    catch (err) { $("#sauve").textContent = "Pas enregistré : " + err.message; }
+  }, 700);
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape" && choisi) { choisi = null; dessiner(); } });
+// un reel Instagram s'ouvre dans un nouvel onglet Google Chrome (là où Insta est connecté), pas dans l'aperçu
+document.addEventListener("click", async e => {
+  const l = e.target.closest("a[data-ig]"); if (!l) return;
+  e.preventDefault();
+  try { await api("/api/ouvrir", {lien: l.href}); toast("Ouvert dans Chrome"); } catch (_) { window.open(l.href, "_blank", "noopener"); }
+});
+$("#panneau").addEventListener("change", e => {
+  if (e.target.id !== "ajoutJ" || !e.target.value) return;
+  const f = J.formats[e.target.value - 1], r = choisi;
+  changerJour({format: f.n, code: r.code, veille: r.veille}, `Ajouté à « ${f.nom} »`);
+});
+$("#panneau").onclick = async e => {
+  const a = e.target.dataset.a; if (!a) return;
+  const r = choisi;
+  if (a === "fermer") { choisi = null; return dessiner(); }
+  if (a === "scanner") {
+    try { TR = await api("/api/cerveau", {veille: r.veille, code: r.code}); toast("Scan lancé"); dessiner(); suivre(); } catch (err) { toast(err.message); }
+    return;
+  }
+  if (a === "copier" && r.transpose) {
+    try { await navigator.clipboard.writeText(r.lien + "\n\n" + texteScript(r)); toast("Script copié"); } catch (_) { toast("Copie impossible"); }
+    return;
+  }
+  if (a === "copier") {
+    try { await navigator.clipboard.writeText(r.lien + "\n\n" + texteScript(r)); toast("Script copié"); } catch (_) { toast("Copie impossible"); }
+    return;
+  }
+  try {
+    T = await api("/api/tournage", {code: r.code, veille: r.veille, statut: a});
+    TR = await api("/api/traduits");
+    if (a !== "a_tourner") choisi = null;  // tourné ou supprimé : il quitte l'onglet, la fiche se ferme
+    toast(a === "a_tourner" ? "Remis dans « À tourner »" : a === "tourne" ? "Bravo, c'est tourné ✓" : "Supprimé");
+    dessiner();
+  } catch (err) { toast(err.message); }
+};
+
+// ---------- transposer : la case sujet et le bouton n'apparaissent qu'une fois un lien de reel collé
+const LIEN_REEL = /instagram\.com\/([\w.]+\/)?(reels?|p|tv)\/[\w-]+/;
+$("#lienT").addEventListener("input", () => {
+  const ok = LIEN_REEL.test($("#lienT").value);
+  $("#sujetT").hidden = $("#goT").hidden = $("#goTr").hidden = !ok;
+});
+$("#goTr").onclick = async () => {
+  try {
+    TR = await api("/api/traduire-lien", {lien: $("#lienT").value.trim()});
+    $("#lienT").value = $("#sujetT").value = ""; $("#sujetT").hidden = $("#goT").hidden = $("#goTr").hidden = true;
+    E = await api("/api/enregistres");
+    montrerOnglet("a_tourner"); toast("C'est parti : la traduction arrive dans « À tourner » (~2 min)"); suivre();
+  } catch (err) { toast(err.message); }
+};
+$("#transpo").onsubmit = async e => {
+  e.preventDefault();
+  if (!LIEN_REEL.test($("#lienT").value)) return toast("Colle le lien d'un reel Instagram");
+  try {
+    TR = await api("/api/transposer", {lien: $("#lienT").value.trim(), sujet: $("#sujetT").value.trim()});
+    $("#lienT").value = $("#sujetT").value = ""; $("#sujetT").hidden = $("#goT").hidden = $("#goTr").hidden = true;
+    montrerOnglet("a_tourner"); toast("C'est parti : ton script arrive dans « À tourner » (~2 min)"); suivre();
+  } catch (err) { toast(err.message); }
+};
+
+// ---------- chargement : tant qu'Instagram est lu ou qu'une traduction tourne, on rafraîchit
+async function suivre() {
+  clearTimeout(minuterie);
+  if (!E.lecture && !TR.en_cours && !TR.scan && R.statut !== "cherche") return;
+  minuterie = setTimeout(async () => {
+    try {
+      const avant = JSON.stringify([E, TR, T, R]);
+      [E, TR, R] = await Promise.all([api("/api/enregistres"), api("/api/traduits"), api("/api/recherche")]);
+      if (!TR.en_cours) T = await api("/api/tournage");
+      if (JSON.stringify([E, TR, T, R]) !== avant) dessiner();  // rien de neuf : on ne redessine pas (la grille clignotait pendant un scan)
+    } catch (_) {}
+    suivre();
+  }, 2500);
+}
+(async () => {
+  [E, TR, T, R, J] = await Promise.all([api("/api/enregistres"), api("/api/traduits"), api("/api/tournage"), api("/api/recherche"), api("/api/jour")]);
+  let o = "recherche"; try { o = localStorage.getItem("sv-onglet") || o; } catch (_) {}  // 28/10 : il rouvre là où il était
+  montrerOnglet(["recherche", "enregistres", "a_tourner", "jour", "tourne"].includes(o) ? o : "recherche");
+  try { E = await api("/api/enregistres/actualiser", {force: false}); dessiner(); } catch (_) {}
+  suivre();
+})();
+</script>
+</body>
+</html>

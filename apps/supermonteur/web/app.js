@@ -16,7 +16,7 @@ const STYLES = {
   Minimaliste: {l: "Un titre qui reste + sous-titres", html: `<div class="sty"><div class="tt">Ta question<em>en titre</em></div><div class="sb">sous-titres</div></div>`},
   Comparatif: {l: "Tableau au-dessus de ta tête", html: `<div class="sty cmp"><div class="cam"></div><div class="ct">Tier list</div><div class="tier"><div><b style="background:#FF7F7F">S</b><span></span></div><div><b style="background:#FFBF7F">A</b><span></span></div><div><b style="background:#FFFF7F">B</b><span></span></div></div></div>`},
   Interview: {l: "2 personnes, plein écran sur qui parle", html: `<div class="sty itv"><div class="p1"></div><div class="p2"></div></div>`},
-  Autre: {l: "Voix off, green screen, style d'un créateur", html: `<div class="sty aut"><div class="ic">✦</div></div>`},
+  Inspiration: {l: "Copie le montage d'un reel que tu aimes", html: `<div class="sty aut"><div class="m">Le reel<br>que tu aimes</div><div class="fl">↓</div><div class="m on">Ton reel</div></div>`},
 };
 
 // ------------------------------------------------------------------------------------------------ chargement + vues
@@ -36,7 +36,8 @@ async function rafraichir() {
   if (JSON.stringify(n) !== avant) rendre();
 }
 function montrer(v) {
-  for (const id of ["accueil", "style", "retours", "publier"]) $(`#v-${id}`).hidden = id !== v;
+  for (const id of ["accueil", "style", "images", "derush", "retours", "publier"]) $(`#v-${id}`).hidden = id !== v;
+  if (v !== "images") $("#im-ref")?.pause();
   vueCourante = v;
 }
 function entete() {
@@ -49,22 +50,162 @@ function entete() {
 function rendre() {
   entete();
   if (["regarde", "choix"].includes(R.statut) || (R.statut === "erreur" && !R.version)) return ecranStyle();
+  if (R.statut === "images" && R.images) return ecranImages();
+  if (R.statut === "derush" && !R.derush_ok) return ecranDerush();
   if (R.statut === "valide") return ecranPublier();
   return ecranRetours();
 }
 
+// ------------------------------------------- écran « Tes images pour ce reel » (29/10, reprise fidèle : reprise-r1 A + r2 B)
+// Un plan de la référence = une ligne : sa vignette, puis 3 de ses b-rolls à égalité + « ta vidéo » ; 1 clic = choisi.
+// Plan qu'il n'a pas : le plus proche est mis + « Pour coller pile : filme-toi… ». À droite, le brouillon qui se joue.
+let IM = {rid: null, pris: {}, cle: ""};
+const md = f => `/media/${rid}/${f}`;
+function ecranImages() {
+  montrer("images");
+  const I = R.images;
+  if (IM.rid !== rid) IM = {rid, pris: {}, cle: ""};
+  for (const p of I.plans) if (!(IM.pris[p.n] >= 0 && IM.pris[p.n] < p.choix.length)) IM.pris[p.n] = p.pris;
+  const aIll = I.plans.filter(p => p.type === "image" && p.choix.length), manque = aIll.filter(p => !p.exact).length;
+  $("#im-sous").textContent = `J'ai copié le montage de la référence : ${I.plans.length} plan${I.plans.length > 1 ? "s" : ""}. ` +
+    `Pour chaque plan à illustrer, 3 de tes b-rolls : un clic et c'est choisi.`;
+  $("#im-liste").innerHTML = I.plans.map(p => {
+    const tete = `<div class="im-h"><span class="im-n">${p.n}</span><div><b>${tc(p.de)} → ${tc(p.a)}</b><span>Réf. : ${esc(p.desc || "un plan")}</span></div></div>`;
+    const ref = `<div class="im-th im-refimg" style="background-image:url(${md(p.ref_img)})"></div>`;
+    if (p.type !== "image" || !p.choix.length)
+      return `<div class="im-plan im-fixe">${tete}<div class="im-r">${ref}<span class="gris">${p.type === "cam" ? "Toi face caméra : ton rush, rien à choisir"
+        : "Carton de la référence : je le refais à l'identique avec ta police"}</span></div></div>`;
+    const ch = p.choix.map((c, k) => {
+      const tag = c.perso ? `<span class="im-tag">Ta vidéo</span>` : k ? "" : p.exact ? `<span class="im-tag">Conseillé</span>` : `<span class="im-tag or">Le plus proche</span>`;
+      return `<button class="im-th im-c${IM.pris[p.n] === k ? " sel" : ""}" data-n="${p.n}" data-k="${k}" title="${esc(c.nom)}" style="background-image:url(${md(c.img)})">${tag}</button>`;
+    }).join("");
+    const plus = `<label class="im-th im-plus" title="Glisse ou choisis ta vidéo">+<br>ta vidéo<input type="file" accept="video/*" hidden data-n="${p.n}"></label>`;
+    const cons = !p.exact && p.consigne ? `<div class="im-cons"><b>Pour coller pile :</b> ${esc(p.consigne)}<label class="im-film">Je le filme<input type="file" accept="video/*" hidden data-n="${p.n}"></label></div>` : "";
+    return `<div class="im-plan" data-n="${p.n}">${tete}<div class="im-r">${ref}<i class="im-sep"></i>${ch}${plus}</div><div class="im-nom">${esc(p.choix[IM.pris[p.n]]?.nom || "")}</div>${cons}</div>`;
+  }).join("");
+  document.querySelectorAll(".im-c").forEach(b => b.onclick = () => { IM.pris[+b.dataset.n] = +b.dataset.k; ecranImages(); });
+  document.querySelectorAll("#im-liste input[type=file]").forEach(i => i.onchange = () => i.files[0] && imageFichier(+i.dataset.n, i.files[0]));
+  document.querySelectorAll(".im-plan[data-n]").forEach(z => {
+    z.ondragover = ev => { ev.preventDefault(); z.style.borderColor = "var(--bleu)"; };
+    z.ondragleave = () => z.style.borderColor = "";
+    z.ondrop = ev => { ev.preventDefault(); z.style.borderColor = ""; const f = ev.dataTransfer.files[0]; if (f) imageFichier(+z.dataset.n, f); };
+  });
+  $("#im-compte").textContent = `${aIll.length} plan${aIll.length > 1 ? "s" : ""} à illustrer` + (manque ? ` · ${manque} sans plan exact (j'ai mis le plus proche)` : "");
+  $("#im-monter").disabled = false;
+  $("#im-monter").onclick = async () => {
+    $("#im-monter").disabled = true;
+    try { R = await api(`/api/images/${rid}`, {pris: IM.pris}); IM.rid = null; rendre(); }
+    catch (x) { toast(`Pas envoyé : ${x.message}`); $("#im-monter").disabled = false; }
+  };
+  brouillon();
+}
+async function imageFichier(n, f) {
+  toast(`J'importe ta vidéo pour le plan ${n}…`, 60000);
+  try {
+    const r = await fetch(`/api/image-fichier/${rid}/${n}`, {method: "POST", headers: {"X-Nom": encodeURIComponent(f.name)}, body: f});
+    const j = await r.json(); if (!r.ok) throw new Error(j.erreur || r.status);
+    const p = j.images?.plans.find(x => x.n === n); if (p) IM.pris[n] = p.pris;
+    R = j; toast("Ta vidéo est choisie pour ce plan ✓"); ecranImages();
+  } catch (x) { toast(`Import raté : ${x.message}`); }
+}
+function brouillon() {
+  // les couches (une par plan) ne sont refaites que si un choix change : le brouillon ne se coupe pas à chaque rafraîchissement
+  const I = R.images, cle = rid + JSON.stringify(IM.pris) + I.plans.map(p => p.choix.length).join();
+  const rv = $("#im-ref");
+  if (IM.cle === cle) return;
+  IM.cle = cle;
+  if (!rv.src.endsWith(md(I.ref))) rv.src = md(I.ref);
+  $("#im-ov").hidden = !I.titre; $("#im-ov").textContent = I.titre || "";
+  $("#im-vids").innerHTML = I.plans.map(p => {
+    const c = p.type === "image" ? p.choix[IM.pris[p.n]] : null;
+    if (c) return `<video class="im-lay" data-n="${p.n}" data-from="0" src="${md(c.clip)}" muted loop playsinline preload="auto"></video>`;
+    if (p.type === "cam") return `<video class="im-lay" data-n="${p.n}" data-from="${p.de}" src="${md("clip.mp4")}" muted playsinline preload="auto"></video>`;
+    return `<div class="im-lay im-img" data-n="${p.n}" style="background-image:url(${md(p.ref_img)})"></div>`;
+  }).join("");
+  let cour = 0;
+  const caler = () => {
+    const t = rv.currentTime, p = I.plans.find(x => t >= x.de && t < x.a) || I.plans[I.plans.length - 1];
+    $("#im-bar-p").style.width = `${Math.min(100, t / (rv.duration || 1) * 100)}%`;
+    $("#im-tc").textContent = tc(t);
+    if (p.n === cour) return;
+    cour = p.n;
+    document.querySelectorAll(".im-lay").forEach(l => {
+      const on = +l.dataset.n === p.n;
+      l.classList.toggle("on", on);
+      if (l.tagName !== "VIDEO") return;
+      if (on) { l.currentTime = +l.dataset.from; if (!rv.paused) l.play().catch(() => {}); } else l.pause();
+    });
+  };
+  rv.ontimeupdate = caler;
+  rv.onplay = () => { $("#im-play").textContent = "❚❚"; document.querySelector("video.im-lay.on")?.play().catch(() => {}); };
+  rv.onpause = () => { $("#im-play").textContent = "▶"; document.querySelectorAll("video.im-lay").forEach(v => v.pause()); };
+  rv.onended = () => { rv.currentTime = 0; cour = 0; caler(); };
+  $("#im-play").onclick = () => rv.paused ? rv.play() : rv.pause();
+  caler();
+}
+
+// ------------------------------------------- écran « Vérifie ton dérush » (29/10) : le Derush Lab du skill, dans un cadre
+// Le 1er dérush de Claude est déjà posé. l’utilisateur retouche, « ✓ Valider le dérush » (dans le Lab), puis « Monter le reel ».
+function ecranDerush() {
+  montrer("derush");
+  const L = R.lab || {}, f = $("#dr-lab");
+  if (L.erreur) { $("#dr-txt").textContent = `Le Derush Lab ne s'ouvre pas : ${L.erreur}`; return; }
+  const src = `http://${location.hostname}:${L.port}/`;   // même nom que la page (localhost) : le navigateur de Claude bloque 127.0.0.1
+  if (L.port && f.dataset.src !== src) { f.dataset.src = src; f.src = src; }   // jamais rechargé à chaque rafraîchissement
+  const B = $("#dr-monter"), rouge = L.valide === "rouge";
+  if (!B.dataset.arme) B.textContent = rouge ? "Monter quand même ›" : "Monter le reel ›";
+  B.disabled = !L.valide;
+  B.classList.toggle("rouge", rouge);
+  $("#dr-txt").className = L.valide === "ok" ? "ok" : rouge ? "ko" : "";
+  $("#dr-txt").textContent = L.valide === "ok" ? "✅ Dérush validé par le Gardien. Tu peux monter."
+    : rouge ? `Le Gardien voit 1 point : ${L.rouge}. Écoute-le dans le Lab, retouche, ou monte quand même.`
+    : "Retouche les coupes si besoin, clique « ✓ Valider le dérush » en bas, puis monte.";
+}
+$("#dr-monter").onclick = async () => {
+  const B = $("#dr-monter"), rouge = R.lab?.valide === "rouge";
+  if (rouge && !B.dataset.arme) {   // Gardien rouge : 1er clic arme, 2e clic dans les 4 s = monter quand même
+    B.dataset.arme = "1"; B.textContent = "Sûr ? Clique encore";
+    clearTimeout(B.k); B.k = setTimeout(() => { delete B.dataset.arme; ecranDerush(); }, 4000);
+    return;
+  }
+  delete B.dataset.arme; B.disabled = true;
+  try { R = await api(`/api/derush_ok/${rid}`, {forcer: rouge}); $("#dr-lab").dataset.src = ""; $("#dr-lab").src = "about:blank"; rendre(); }
+  catch (x) { toast(x.message); B.disabled = false; }
+};
+
 // ------------------------------------------------------------------------------------------------------ accueil
+// 29/10 : ElevenLabs refuse (crédit vide, clé) = bandeau rouge sur tous les écrans, vérifié à chaque page et chaque minute
+async function alerte() {
+  const a = await api("/api/alerte").catch(() => ({}));
+  const el = $("#alerte");
+  el.hidden = !a.raison;
+  if (a.raison) el.innerHTML = `ElevenLabs : ${esc(a.raison)} depuis le ${esc(a.depuis)}. Tes montages passent sur le Mac (plus lent, plus de fautes). <a href="https://elevenlabs.io/app/subscription" target="_blank">Recharger</a>`;
+}
+alerte(); setInterval(alerte, 60000);
+
 async function accueil() {
   montrer("accueil");
   $("#fichier").textContent = ""; $("#pill-style").hidden = true;
   const L = await api("/api/reels").catch(() => []);
-  const lib = {regarde: "je regarde", choix: "style à choisir", montage: "en montage", retours: "retours", correction: "Claude corrige", valide: "validé ✓", erreur: "bloqué"};
+  const lib = {regarde: "je regarde", choix: "style à choisir", derush: "dérush à vérifier", montage: "en montage", retours: "retours", correction: "Claude corrige", images: "images à choisir", valide: "validé ✓", erreur: "bloqué"};
   $("#liste-reels").innerHTML = L.length ? `<p class="lbl" style="font-size:12px;color:#86868B;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Tes reels</p>` +
     `<div class="grille">` + L.map(r => {
       const jour = (r.cree || r.id).slice(0, 10).split("-").reverse().slice(0, 2).join("/");  // 2026-10-28 -> 28/10
-      return `<a href="/?reel=${r.id}">${r.vignette ? `<img src="${r.vignette}" alt="" loading="lazy">` : `<i class="vide"></i>`}
-        <b>${esc(r.titre || r.nom)}</b><span>${esc(r.nom)} · ${jour}</span><span>${r.version ? "Version " + r.version + " · " : ""}${lib[r.statut] || r.statut}</span></a>`;
+      return `<div class="rc"><a href="/?reel=${r.id}">${r.vignette ? `<img src="${r.vignette}" alt="" loading="lazy">` : `<i class="vide"></i>`}
+        <b>${esc(r.titre || r.nom)}</b><span>${esc(r.nom)} · ${jour}</span><span>${r.version ? "Version " + r.version + " · " : ""}${lib[r.statut] || r.statut}</span></a>
+        <button class="suppr" data-id="${r.id}" title="Supprimer ce projet" aria-label="Supprimer ce projet">×</button></div>`;
     }).join("") + `</div>` : "";
+  // 29/10 : 1er clic sur × = « Supprimer ? » en rouge, 2e clic dans les 4 s = le projet est caché (fichiers et rush gardés)
+  $("#liste-reels").querySelectorAll(".suppr").forEach(b => b.onclick = async () => {
+    if (!b.classList.contains("arme")) {
+      b.classList.add("arme"); b.textContent = "Supprimer ?";
+      clearTimeout(b.k); b.k = setTimeout(() => { b.classList.remove("arme"); b.textContent = "×"; }, 4000);
+      return;
+    }
+    clearTimeout(b.k); b.disabled = true;
+    try { await api(`/api/cacher/${b.dataset.id}`, {}); b.closest(".rc").remove(); toast("Projet supprimé de la liste. Ta vidéo d'origine n'est pas touchée."); }
+    catch (x) { b.disabled = false; toast(`Pas supprimé : ${x.message}`); }
+  });
 }
 async function ouvrirRush(chemin) {
   try { const r = await api("/api/nouveau", {rush: chemin}); location.href = `/?reel=${r.id}`; }
@@ -98,17 +239,56 @@ function ecranStyle() {
   document.querySelectorAll(".cd").forEach(b => b.onclick = () => { choix.style = b.dataset.s; choix.cases = {}; ecranStyle(); });
   const C = R.cases_du_style[choix.style] || [];
   for (const [k] of C) if (!(k in choix.cases)) choix.cases[k] = k !== "brolls";   // tout coché, B-rolls décoché
-  const pret = R.statut !== "regarde" && choix.style;
-  $("#cases").innerHTML = `<span class="l">Dans ce style :</span>` +
-    (C.length ? C.map(([k, l]) => `<button class="ck${choix.cases[k] ? "" : " off"}" data-k="${k}"><i>✓</i>${l}</button>`).join("")
-      : `<span class="rien">${choix.style === "Autre" ? "pas de cases : dis à Claude quel style dans le chat" : "choisis un style"}</span>`) +
-    `<button class="go" id="monter"${pret ? "" : " disabled"}>${R.statut === "regarde" ? "Je regarde ta vidéo…" : "Monter le reel"}</button>`;
+  const insp = choix.style === "Inspiration";
+  $("#ref").hidden = !insp;
+  $("#cases").innerHTML = (insp ? `<span class="rien">Colle le lien ou glisse la vidéo juste au-dessus : je monte ton reel comme elle, avec ta police.</span>`
+    : `<span class="l">Dans ce style :</span>` + (C.length ? C.map(([k, l]) => `<button class="ck${choix.cases[k] ? "" : " off"}" data-k="${k}"><i>✓</i>${l}</button>`).join("")
+      : `<span class="rien">choisis un style</span>`)) +
+    `<button class="go" id="monter">${R.statut === "regarde" ? "Je regarde ta vidéo…" : "Monter le reel"}</button>`;
+  majMonter();
   document.querySelectorAll(".ck").forEach(b => b.onclick = () => { choix.cases[b.dataset.k] = !choix.cases[b.dataset.k]; ecranStyle(); });
   $("#monter").onclick = async () => {
     $("#monter").disabled = true;
-    try { R = await api(`/api/monter/${rid}`, {style: choix.style, cases: choix.cases}); rendre(); } catch (e) { toast(e.message); $("#monter").disabled = false; }
+    const ref = insp ? {lien: choix.fichier ? "" : $("#ref-lien").value.trim(), fichier: choix.fichier || ""} : {};
+    try { R = await api(`/api/monter/${rid}`, {style: choix.style, cases: choix.cases, ...ref}); rendre(); }
+    catch (e) { toast(e.message); majMonter(); }
   };
 }
+// « Monter le reel » : prêt quand la vidéo est regardée et un style choisi ; Inspiration attend en plus son lien ou sa vidéo
+const LIEN_OK = /^https?:\/\/([\w-]+\.)?(instagram\.com|tiktok\.com|youtube\.com|youtu\.be)\/\S+$/;
+function majMonter() {
+  const b = $("#monter");
+  if (!b) return;
+  const ref = choix.style !== "Inspiration" || choix.fichier || LIEN_OK.test($("#ref-lien").value.trim());
+  b.disabled = !(R.statut !== "regarde" && choix.style && ref);
+}
+// 29/10 : un montage à reprendre pour CE reel : lien Instagram (TikTok, YouTube) ou une vidéo glissée. Claude le reprend en v2.
+function refPris(nom) {
+  $("#ref-z").hidden = !!nom; $("#ref-pris").hidden = !nom; $("#ref-nom").textContent = nom || "";
+  majMonter();
+}
+async function refFichier(f) {
+  if (!f || !rid) return;
+  toast(`J'importe ${f.name}…`, 60000);
+  try {
+    const r = await fetch(`/api/ref-fichier/${rid}`, {method: "POST", headers: {"X-Nom": encodeURIComponent(f.name)}, body: f}).then(r => r.json());
+    if (!r.fichier) throw new Error(r.erreur || "import raté");
+    choix.fichier = r.fichier; $("#ref-lien").value = ""; refPris(`Vidéo à reprendre : ${f.name}`); toast("Vidéo à reprendre ajoutée ✓");
+  } catch (e) { toast(e.message); }
+}
+const refDrop = $("#ref-drop");
+$("#ref-input").onchange = e => refFichier(e.target.files[0]);
+refDrop.ondragover = e => { e.preventDefault(); refDrop.classList.add("sur"); };
+refDrop.ondragleave = () => refDrop.classList.remove("sur");
+refDrop.ondrop = e => { e.preventDefault(); refDrop.classList.remove("sur"); refFichier(e.dataTransfer.files[0]); };
+$("#ref-lien").oninput = majMonter;
+$("#ref-lien").onchange = () => {
+  const l = $("#ref-lien").value.trim();
+  if (!l) return;
+  if (!LIEN_OK.test(l)) return toast("Colle un lien Instagram, TikTok ou YouTube");
+  refPris(`Reel à reprendre : ${l.replace(/^https?:\/\/(www\.)?/, "")}`);
+};
+$("#ref-x").onclick = () => { choix.fichier = null; $("#ref-lien").value = ""; refPris(null); };
 
 // ------------------------------------------------------------------------------------------ écran 1 : les retours
 const vid = $("#vid");
@@ -125,7 +305,8 @@ function ecranRetours() {
   $("#compte").textContent = N.length ? `${af.length} à faire · ${ok.length} corrigé${ok.length > 1 ? "s" : ""}` : "";
   $("#notes").innerHTML = N.length ? N.map((n, i) => `
     <div class="note${n.statut === "corrige" ? " ok" : ""}"><span class="num">${i + 1}</span><div>
-      <small data-t="${n.t}">${tc(n.t)}${n.statut === "a_faire" && n.version && n.version !== R.version ? ` · version ${n.version}` : ""}</small>${esc(n.texte)}
+      <small data-t="${n.t}">${tc(n.t)}${n.statut === "a_faire" && n.version && n.version !== R.version ? ` · version ${n.version}` : ""}</small>${n.auto === "reference"
+        ? "Copier le montage de la référence avec tes images, seule ta police change" : esc(n.texte)}
       ${n.statut === "corrige" ? `<div class="rep"><b>Corrigé ✓</b> ${esc(n.reponse)}</div><button class="rv" data-t="${n.t}">▶ Revoir</button>` : ""}
     </div>${n.statut === "a_faire" && R.statut !== "correction" ? `<button class="eff" data-id="${n.id}" title="Retirer">×</button>` : ""}</div>`).join("")
     : `<p class="vide">Regarde ton reel. Dès que quelque chose ne va pas, mets pause et écris-le (ou dicte-le) : il s'accroche à l'image.</p>`;
@@ -147,6 +328,9 @@ function ecranRetours() {
   $("#fin-txt").textContent = envoye ? "" : `Fini ? Je corrige tout et je te renvoie la version ${(R.version || 0) + 1}.`;
   $(".end .envoye")?.remove();
   if (envoye) $(".end").insertAdjacentHTML("afterbegin", `<div class="envoye"><b>Retours envoyés ✓</b><br>Claude corrige tes ${af.length} retour${af.length > 1 ? "s" : ""} et remonte la version ${(R.version || 0) + 1}. Dans le chat Claude, dis juste : « corrige mes retours ».</div>`);
+  const RF = R.reference?.erreur;
+  $("#ref-info").hidden = !RF;
+  $("#ref-info").innerHTML = RF ? `<b>Montage à reprendre :</b> ${esc(RF)}` : "";
   $("#suivant").disabled = !af.length || enCours || !der;
   $("#parfait").disabled = enCours || !der || R.statut === "erreur";
   $("#retour").disabled = !der;
@@ -199,11 +383,13 @@ $("#parfait").onclick = async () => { vid.pause(); R = await api(`/api/valider/$
 
 // ------------------------------------------------------------------------------------------- écran 3 : publier
 const vid2 = $("#vid2");
+const PUB = {off: new Set(), quand: null};   // ses choix tiennent quand l'écran se redessine
 async function ecranPublier() {
   montrer("publier");
   vid.pause();
   const der = R.versions.slice(-1)[0];
   if (vid2.dataset.f !== der.fichier) { vid2.dataset.f = der.fichier; vid2.src = `/media/${rid}/${der.fichier}`; }
+  $("#pret-titre").textContent = "Ton reel est prêt ✓";
   $("#pret-info").textContent = `${tc(der.duree)} · 1080 × 1920`;
   const M = await api("/api/metricool").catch(() => ({branche: false}));
   const S = $("#pub-side");
@@ -234,22 +420,23 @@ async function ecranPublier() {
   S.innerHTML = `<h2>Publier</h2>
     <div class="mc">✓ <span><b>Metricool branché</b>${M.compte ? " · compte " + esc(M.compte) : ""}</span></div>
     ${res}${deja}
-    <div class="nets">${R5.map(n => `<div class="net">${n}<button class="tg" data-n="${n}" aria-label="${n}"></button></div>`).join("")}</div>
-    <div class="dt"><span>Programmer le</span><input type="datetime-local" id="quand" value="${iso}"></div>
+    <div class="nets">${R5.map(n => `<div class="net">${n}<button class="tg${PUB.off.has(n) ? " off" : ""}" data-n="${n}" aria-label="${n}"></button></div>`).join("")}</div>
+    <div class="dt"><span>Programmer le</span><input type="datetime-local" id="quand" value="${PUB.quand || iso}"></div>
     <div class="end"><button class="now" id="p-now">Publier maintenant</button><button class="prog" id="p-prog"></button>
       <a class="dl" href="/api/telecharger/${rid}" download>Juste télécharger</a>
-      <p class="essai">${M.essai ? "Mode essai : rien ne part (supermonteur/config.json)." : "Ça part pour de vrai : 2e clic pour confirmer."}</p></div>`;
-  const lib = () => { const d = new Date($("#quand").value); $("#p-prog").textContent = `Programmer ${d.toLocaleDateString("fr-FR", {weekday: "short", day: "2-digit", month: "2-digit"})} · ${d.toLocaleTimeString("fr-FR", {hour: "2-digit", minute: "2-digit"})}`; };
-  lib(); $("#quand").onchange = lib;
-  S.querySelectorAll(".tg").forEach(t => t.onclick = () => t.classList.toggle("off"));
-  const reseaux = () => [...S.querySelectorAll(".tg:not(.off)")].map(t => t.dataset.n);
+      <p class="confirme">Ça part pour de vrai : 2e clic pour confirmer.</p></div>`;
+  const reseaux = () => [...S.querySelectorAll(".nets .tg:not(.off)")].map(t => t.dataset.n);
+  const lib = () => { const d = new Date($("#quand").value); $("#p-now").textContent = "Publier maintenant";
+    $("#p-prog").textContent = `Programmer ${d.toLocaleDateString("fr-FR", {weekday: "short", day: "2-digit", month: "2-digit"})} · ${d.toLocaleTimeString("fr-FR", {hour: "2-digit", minute: "2-digit"})}`; };
+  lib(); $("#quand").onchange = () => { PUB.quand = $("#quand").value; lib(); };
+  S.querySelectorAll(".nets .tg").forEach(t => t.onclick = () => { t.classList.toggle("off"); PUB.off[t.classList.contains("off") ? "add" : "delete"](t.dataset.n); lib(); });
   // 1er clic = arme le bouton (« Confirmer… »), 2e clic dans les 6 s = envoi réel. Déjà publié = 3e étape « Republier quand même ».
   const envoyer = async (bouton, quand, forcer = false) => {
     if (!reseaux().length) return toast("Choisis au moins un réseau.");
     if (!bouton.classList.contains("arme")) {
-      const avant = bouton.textContent;
+      const avant = bouton.textContent, n = reseaux().length;
       bouton.classList.add("arme");
-      bouton.textContent = `Confirmer : ça part sur ${reseaux().length} réseau${reseaux().length > 1 ? "x" : ""}`;
+      bouton.textContent = `Confirmer : ça part sur ${n} réseau${n > 1 ? "x" : ""}`;
       clearTimeout(bouton.k); bouton.k = setTimeout(() => { bouton.classList.remove("arme"); bouton.textContent = avant; }, 6000);
       return;
     }

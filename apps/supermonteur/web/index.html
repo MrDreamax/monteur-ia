@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SuperMonteur</title>
+<link rel="icon" type="image/svg+xml" href="/web/favicon.svg">
 <link rel="stylesheet" href="/web/app.css">
 </head>
 <body>
@@ -13,6 +14,7 @@
   <span class="pill" id="pill-style" hidden></span>
   <div class="r"><button class="btn" id="btn-da">Ma DA</button></div>
 </header>
+<div class="alerte" id="alerte" hidden></div>
 
 <!-- Accueil : choisir un rush -->
 <main id="v-accueil" class="vue" hidden>
@@ -29,8 +31,43 @@
   <div class="wrap0">
     <div class="hd"><h2>Quel style pour ce reel ?</h2><p id="conseil-txt">Je regarde ta vidéo…</p></div>
     <div class="cards" id="cards"></div>
+    <!-- 29/10 : un montage à reprendre pour CE reel (lien ou vidéo glissée) ; la police reste celle de la DA -->
+    <div class="ref" id="ref" hidden>
+      <div class="t"><b>Un montage à reprendre ?</b><span>Pour cette vidéo seulement · ta police reste la tienne</span></div>
+      <div class="z" id="ref-z">
+        <input id="ref-lien" placeholder="Colle le lien Instagram du reel à reprendre" autocomplete="off">
+        <span class="ou">ou</span>
+        <label class="mini" id="ref-drop"><input type="file" id="ref-input" accept="video/*" hidden>Glisse une vidéo</label>
+      </div>
+      <div class="pris" id="ref-pris" hidden><i>✓</i><span id="ref-nom"></span><button type="button" id="ref-x" aria-label="Retirer">×</button></div>
+    </div>
     <div class="cases" id="cases"></div>
   </div>
+</main>
+
+<!-- Écran « Tes images pour ce reel » (29/10, reprise fidèle : maquettes reprise-r1 A + reprise-r2 B) -->
+<main id="v-images" class="vue grid2" hidden>
+  <section class="main im-main">
+    <div class="hd im-hd"><h2>Tes images pour ce reel</h2><p id="im-sous"></p></div>
+    <div class="im-liste" id="im-liste"></div>
+  </section>
+  <aside class="side im-side">
+    <div class="im-lbl">Brouillon · ta police</div>
+    <div class="im-ph" id="im-ph"><div id="im-vids"></div><div class="im-ov" id="im-ov" hidden></div>
+      <div class="im-ref"><video id="im-ref" playsinline preload="auto"></video></div></div>
+    <div class="pl im-pl"><button class="play" id="im-play" aria-label="Lecture">▶</button><div class="im-bar"><div id="im-bar-p"></div></div><span class="tcp" id="im-tc">0:00</span></div>
+    <p class="gris im-note">Tes images au rythme de la référence (en petit dans le coin). Seule la police change.</p>
+    <div class="im-fin"><p class="gris" id="im-compte"></p><button class="fab" id="im-monter">Monter avec ces images</button></div>
+  </aside>
+</main>
+
+<!-- Écran « Ton dérush » (29/10) : le Derush Lab du skill, entre le 1er dérush de Claude et le montage -->
+<main id="v-derush" class="vue dr" hidden>
+  <div class="dr-bar">
+    <div class="t"><b>Vérifie ton dérush</b><span id="dr-txt">Retouche les coupes si besoin, clique « ✓ Valider le dérush » en bas, puis monte.</span></div>
+    <button class="go" id="dr-monter" disabled>Monter le reel ›</button>
+  </div>
+  <iframe id="dr-lab" title="Derush Lab"></iframe>
 </main>
 
 <!-- Écran 1 : Tes retours (+ montage en cours) -->
@@ -45,8 +82,8 @@
       <div class="row">
         <button class="play" id="play" aria-label="Lecture">▶</button>
         <span class="tc" id="tc">0:00 / 0:00</span>
-        <button class="bt" id="img-moins">‹ 1 image</button><button class="bt" id="img-plus">1 image ›</button>
-        <span class="vit">Vitesse <span class="spd" id="spd"><i data-v="1" class="on">x1</i><i data-v="1.5">x1,5</i><i data-v="2">x2</i></span></span>
+        <span class="nav"><button class="bt" id="img-moins" title="1 image avant (flèche ←)" aria-label="1 image avant">‹<span class="lg"> 1 image</span></button><button class="bt" id="img-plus" title="1 image après (flèche →)" aria-label="1 image après"><span class="lg">1 image </span>›</button></span>
+        <span class="vit"><span class="lg">Vitesse</span> <span class="spd" id="spd" title="Vitesse de lecture"><i data-v="1" class="on">x1</i><i data-v="1.5">x1,5</i><i data-v="2">x2</i></span></span>
       </div>
       <form class="new" id="f-retour">
         <span class="at" id="at">à 0:00</span>
@@ -58,6 +95,7 @@
   </section>
   <aside class="side">
     <h2>Tes retours <span id="compte"></span></h2>
+    <p class="ref-info" id="ref-info" hidden></p>
     <div class="notes" id="notes"></div>
     <div class="end">
       <p id="fin-txt"></p>
@@ -70,13 +108,15 @@
 <!-- Écran 3 : Publier -->
 <main id="v-publier" class="vue grid2 pub" hidden>
   <section class="main center">
-    <div class="ready">
-      <div class="ph"><video id="vid2" playsinline preload="auto"></video></div>
-      <div class="pl"><button class="play" id="play2">▶</button><span class="tcp" id="tc2">0:00 / 0:00</span>
-        <span class="spd" id="spd2"><i data-v="1" class="on">x1</i><i data-v="1.5">x1,5</i><i data-v="2">x2</i></span></div>
-      <b>Ton reel est prêt ✓</b><span id="pret-info"></span>
-      <a class="lien" id="rouvrir">Revenir aux retours</a>
+    <div class="duo" id="duo">
+      <div class="ready">
+        <div class="ph"><video id="vid2" playsinline preload="auto"></video></div>
+        <div class="pl"><button class="play" id="play2">▶</button><span class="tcp" id="tc2">0:00 / 0:00</span>
+          <span class="spd" id="spd2"><i data-v="1" class="on">x1</i><i data-v="1.5">x1,5</i><i data-v="2">x2</i></span></div>
+        <b id="pret-titre">Ton reel est prêt ✓</b><span id="pret-info"></span>
+      </div>
     </div>
+    <a class="lien" id="rouvrir">Revenir aux retours</a>
   </section>
   <aside class="side" id="pub-side"></aside>
 </main>

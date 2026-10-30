@@ -8,7 +8,7 @@
   "properties": {
     "version": { "type": "integer", "description": "Version du contrat. 1 = 28/10/2026." },
     "maj": { "type": "string", "description": "Date ISO de la dernière écriture (posée par le serveur)." },
-    "nom": { "type": "string", "description": "À qui est cette DA (l'utilisateur ou un client)." },
+    "nom": { "type": "string", "description": "À qui est cette DA (l’utilisateur ou un client)." },
 
     "commun": {
       "type": "object",
@@ -79,6 +79,7 @@
             "taille": { "type": "integer", "description": "Taille en px." },
             "position": { "type": "string", "enum": ["col", "poitrine", "bas"], "description": "Au col / Poitrine / Bas." },
             "decalage": { "type": "integer", "description": "Ajustement haut / bas en px." },
+            "majuscules": { "type": "boolean", "description": "Sous-titres en majuscules. Défaut true." },
             "_y": { "type": "integer", "description": "CALCULÉ : y du centre de la ligne de sous-titres en px." }
           }
         },

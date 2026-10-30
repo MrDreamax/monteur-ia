@@ -27,4 +27,4 @@ Pour les machines qui n'ont pas la fiche experts dans leur Brain. Résumé de `B
 ```
 
 ## Trial reels
-Un outil de TEST, pas de portée gratuite (Mosseri, youtube.com/watch?v=LRTPSyTB8o4 [01:44]). Seulement pour reposter un reel gagnant de plus d'1 mois, avec au moins 2 éléments changés (hook écrit, plan, légende, musique), 5 par jour max (Modern Millie, youtube.com/watch?v=ijGh9LtBJ7U [02:32], [16:26]).
+Un outil de TEST, pas de portée gratuite (Mosseri, youtube.com/watch?v=LRTPSyTB8o4 [01:44]). 28/10 : 1 essai par reel, avec le hook REFILMÉ et le même corps, 3 essais par jour max. Légende = même règle que le reel (1-2 phrases). L'ancienne règle (reposter un gagnant de plus d'1 mois, 2 éléments changés) ne vaut plus : un reel déjà posté remis en essai n'a « probablement aucune vue » (Brock Johnson, avril 2026).

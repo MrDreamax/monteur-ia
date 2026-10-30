@@ -7,9 +7,9 @@ Réfs validées (22/10, avant le nom « minimaliste ») : IMG_6798 « Comment mi
 2. **plan.json** : champs communs + `title` qui couvre toute la vidéo :
    `"title": {"l1": "Comment mieux parler", "l2": "en face caméra ?", "start": 0, "end": 999}` (le moteur coupe à la durée du clip). FAQ = la question posée, mot pour mot. Clip = le sujet en 2 lignes. Jamais de virgule, point ni deux-points.
    Pas de `keywords`, `bigwords`, `numbers`, `lists`, `brolls`.
-3. **Musique obligatoire** (tous les styles en ont une, 26/10) : règles de SKILL.md (28/10 : dossier `music_reels` des réglages seulement, sinon bibliothèque SUNO du SSD, continue d'un seul passage, montée calée sur la phrase forte).
+3. **Musique obligatoire** (tous les styles en ont une, 26/10) : règles de SKILL.md (28/10 : dossier `music_reels` des réglages seulement, sinon bibliothèque SUNO de son disque externe, continue d'un seul passage, montée calée sur la phrase forte).
 4. Taille et police du titre et des sous-titres = la DA du setup (`titleSize`, `subSize`, `fonts`), jamais réglées au montage.
-5. Le moteur normal :
+5. **Par défaut (29/10) : `python3 $S/express.py .`** (~1 min : titre + sous-titres dessinés puis posés par ffmpeg, même mix, même Gardien). Seulement s'il sort en code 2 (mot fort, B-roll…), le moteur normal :
 ```bash
 node $S/build.mjs --plan plan.json --out index.html && node $S/zones.mjs .
 npx --yes hyperframes@0.8.149 render . -q high

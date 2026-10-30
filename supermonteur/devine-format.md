@@ -1,6 +1,6 @@
 # DEVINER LE FORMAT : « monte cette vidéo » = je devine, il confirme (26/10)
 
-Règle maison (26/10) : « Je dis toujours "monte cette vidéo" et c'est à toi d'en déduire le type de montage : "tu veux un montage tier list ?" ou "tu veux juste titre + sous-titre ?" ou "tu veux un split screen ?" ou "tu veux un montage animé ?" ou "c'est un montage FAQ simple ?" ».
+Règle de l’utilisateur (26/10) : « Je dis toujours "monte cette vidéo" et c'est à toi d'en déduire le type de montage : "tu veux un montage tier list ?" ou "tu veux juste titre + sous-titre ?" ou "tu veux un split screen ?" ou "tu veux un montage animé ?" ou "c'est un montage FAQ simple ?" ».
 Il ne nomme jamais le format. Ne jamais lui demander « quel style ? » à froid : je regarde, je devine, je propose.
 
 ## 1. Regarder (1 commande, ~1 min)

@@ -16,9 +16,13 @@ model = sys.argv[sys.argv.index("--model") + 1] if "--model" in sys.argv else "s
 
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from mots import transcrire                                        # ElevenLabs (Opus) d'abord, Whisper small en secours
+from mots import transcrire, SansElevenLabs                         # ElevenLabs seul (29/10), Whisper si --mac
 
-words, moteur = transcrire(src, modele=model, mac="--mac" in sys.argv)
+try:
+    words, moteur = transcrire(src, modele=model, mac="--mac" in sys.argv)
+except SansElevenLabs as e:   # 29/10 : une seule ligne claire, c'est elle que SuperMonteur affiche
+    print(e, file=sys.stderr)
+    sys.exit(3)
 print(f"transcription : {moteur}")
 
 

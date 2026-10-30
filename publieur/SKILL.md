@@ -8,7 +8,7 @@ Avant de coder, monter, générer en volume ou exécuter quoi que ce soit : mont
 
 # Le Publieur : reels montés → programmés sur 4 réseaux, un seul OK
 
-Chaîne vidéo : veille-reels → scripteur → tournage (l'utilisateur) → supermonteur → **publieur**. Le bouchon, c'est publier régulièrement. Ce skill fait tout, sauf le OK.
+Chaîne vidéo : superveille → scripteur → tournage (l'utilisateur) → supermonteur → **publieur**. Le bouchon, c'est publier régulièrement. Ce skill fait tout, sauf le OK.
 
 **Règle d'or : rien ne part sans le OK explicite de l'utilisateur sur la page du lot.** Un OK vaut pour ce lot-là, pas pour le suivant.
 
@@ -58,7 +58,7 @@ Comment l'écrire (modèle validé : `livrables/publication/2026-10-16-echantill
 - **Texte alternatif** : ce qu'on voit vraiment dans la vidéo.
 - **YouTube Shorts** : titre de 100 caractères max (mot-clé + bénéfice), description = la même règle que la légende (1 ou 2 phrases, CTA en phrase 2 seulement s'il est dans la vidéo, aucun hashtag).
 - **TikTok** : même règle : 1 ou 2 phrases, CTA en phrase 2 seulement s'il est dans la vidéo, aucun hashtag.
-- **Trial reel** : jamais par défaut. Seulement pour reposter un reel GAGNANT de plus d'1 mois, avec 2 éléments changés, 5 par jour max (`02-Formations/experts-volume-frequence.md`).
+- **Trial reel : SUPPRIMÉ le 29/10** (l’utilisateur : « tout ce qui est en lien avec les reels d'essai, tu peux tout supprimer »). Jamais de `TRIAL_REEL`, jamais de reel d'essai.
 - Dernière passe : les règles du skill `anti-ia` (pas de tiret cadratin, pas de « ce n'est pas X, c'est Y », pas de triade forcée), voix posée, tutoiement, zéro argot.
 
 ## 3. La cover : LA MEILLEURE IMAGE DU REEL (28/10/2026, remplace « aucune cover » du 22/10)
@@ -109,7 +109,7 @@ Historique de toutes les vidéos terminées : `<config.json → archive_dir>/AAA
 - Une promesse, un chiffre ou un résultat client qui n'est pas dans la vidéo.
 - Une cover qui n'est pas une image du reel (28/10 : toujours la meilleure image du reel). Et jamais une cover générée de zéro par IA.
 - Répondre aux commentaires ou aux DM (la relation reste humaine).
-- Un trial reel par défaut.
+- Un trial reel (`TRIAL_REEL`) : supprimé le 29/10.
 - Inventer une info absente du Brain ou de la vidéo : dis « je ne l'ai pas ».
 
 En cas d'échec (Metricool muet, vidéo introuvable, programmation refusée) : une ligne dans ~/Documents/Brain/04-Audits/erreurs-taches.md (date, tâche, erreur) et dis-le en une ligne.

@@ -59,7 +59,7 @@ Le style est VERROUILLÉ par l'utilisateur au Style Lab (13/10) : Montserrat 700
 - Voix à -16 LUFS (Curtis Judd, Boykin, EBU) contre -14 (actuel).
 - Visage plus clair au hook (35 % de luma, MrBeast) contre la réf monteur sombre (27 %).
 - Coupe sèche de musique avec une petite queue de 0,3-0,6 s contre coupe nette.
-- 3 variantes de hook par vidéo pour les Trial Reels (pratique de Victor Heras [S]).
+- ~~3 variantes de hook par vidéo pour les Trial Reels (pratique de Victor Heras [S])~~ Tranché 29/10 par l'utilisateur : reels d'essai SUPPRIMÉS (« je n'utilise pas »).
 - (greffe GitHub 14/10, NON appliqué car ça contredit un choix validé de l'utilisateur) Sous-titres sur 3 tailles (support 52-80 px, ancre 76-112 px, mot héros 150-240 px) contre 52 px partout (Style Lab). audrey-560 `hyperframes-cinematic-caption` [P]
 - (idem) Zéro mouvement « d'attente » (dérive lente des blocs motion, flottement des inserts) contre la règle « jamais figé ». HeyGen `motion-doctrine` [P]
 - (idem) Sortie = 75 % de l'entrée (inserts 0,34 s au lieu de 0,25 s, listes 0,14 s au lieu de 0,3 s) contre les sorties validées le 13/10. HeyGen `motion-doctrine` [P]

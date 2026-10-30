@@ -2,9 +2,11 @@
 
 **26/10 (remplace le 19/10) : le style DYNAMIQUE (la face caméra) = un MIX À ÉQUILIBRER de 4 plans : (1) split screen = face cam + animation, (2) face cam seule, (3) carton plein écran avec un DÉGRADÉ PROPRE (jamais de couleur unie, 23/10), (4) animation plein écran (motion design HyperFrames niveau Jun Yuh, jamais d'image IA). Toujours ses sous-titres + une musique.** Équilibre = aucun des 4 ne domine, jamais 2 pleins écrans du même type à la suite, la face cam revient entre deux. Les mots géants, chiffres, listes ci-dessous restent des outils pour les plans 1, 3 et 4. B-rolls seulement s'il les demande (23/10). Les anciens degrés « sous-titres », « high prod » restent supprimés (« minimaliste » = autre style depuis le 26/10, `styles/raw.md`). Anciens fichiers : `styles/_archive/`.
 
+**29/10/2026 22h35 : MOTION DESIGN PAR DÉFAUT = « Écrans iPhone » façon Apple** (l’utilisateur, reel complet CAM20065 : « garde en mémoire ce type de motion design, j'adore, c'est vraiment ce qu'il faut »). Pour le split screen (animation en haut 1080x960, lui en bas) et les animations : vrais écrans iOS refaits en HTML (profil Instagram, notif, appel avec chrono, Messages, cartes Santé, listes, paiement reçu, reel), UN SEUL iPhone qui se transforme d'un écran à l'autre (pas de coupure), caméra qui zoome pour lire, dérive douce + inclinaison 3D, typo SF géante (une idée par écran), mots barrés en rouge, entrées en flou + échelle sans rebond, sons d'iPhone calés sur l'image (notif, pop, raccroché, bulle, caisse). Fond gris clair Apple, sous-titres #1D1D1F à 885 px sans ombre, fondu clair 800-960 px. Modèle : `styles/split-apple/modele-ecrans-iphone.html` (helper K des états), sons : `styles/split-apple/ajoute_sons.py` + `sons.json`. Échantillon de 20 s d'abord.
+
 Lu après `SKILL.md`. Tout l'arsenal : chiffres géants, mots géants, listes, preuves, B-rolls, images, CTA. On peut couvrir la tête : B-rolls et/ou motion design plein écran pendant qu'il parle. La tête n'a pas besoin d'être à l'écran tout le temps.
 Pas de question de degré ni de « Sobre / Dynamique » : le dosage se décide à l'œil selon la vidéo, puis se valide en maquettes (2 rounds).
-Étalon : la version de son monteur humain quand elle existe (son disque externe), sinon `ref/FINAL.mp4`. Le but : faire mieux que lui.
+Étalon : la version de son monteur humain quand elle existe (`/Volumes/son disque externe/1 - Contenu/2 - Vidéos finies/Reels business/<titre>.mp4`), sinon `ref/FINAL.mp4`. Le but : faire mieux que lui.
 
 ## 1 bis. Fiche univers (après l'étape 1 de SKILL.md ; Bruce Block, Deakins : l'univers du reel = celui du rush)
 ```bash
@@ -79,4 +81,4 @@ Planches 1 i/s côte à côte + `analyse_ref.py` sur les deux (coupes, débit, S
 - **Concept nommé (effet Médicis…)** : motion design plein écran qui l'explique (ex. 2 cercles qui se croisent), choc calé sur le mot et la frappe de la musique, titre lisible ~2 s.
 - (OBSOLÈTE 19/10, IA interdite) **Images générées** (Higgsfield) : dans l'univers de la vidéo (nuit, bleu nuit, rouge de l'événement), jamais un plein jour gris ; voile sombre en haut si les sous-titres tombent sur un ciel clair.
 - **Visage très proche** (selfie voiture) : `subY` ~380 (au-dessus de la tête) ; les sous-titres s'effacent seuls sous chiffres, mots géants et captures.
-- **Durée demandée > 1 min** : garder la signature (« la signature »), `fin_musique: false`, fin de musique recalée à la main.
+- **Durée demandée > 1 min** : garder la signature (« Mr Dreamax »), `fin_musique: false`, fin de musique recalée à la main.

@@ -17,7 +17,7 @@ input,textarea{font:inherit;color:var(--encre);border:0;outline:0;background:tra
 .btn{font-size:13px;font-weight:600;padding:9px 16px;border-radius:999px;border:1.5px solid var(--encre);background:#fff;transition:background .2s}
 .btn:hover{background:#F0F0F3}
 
-.ecran{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 40px;gap:14px;min-height:0;overflow:auto}
+.ecran{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:safe center;padding:20px 40px;gap:14px;min-height:0;overflow:auto}
 .ecran h2{font-size:30px;font-weight:700;letter-spacing:-.02em;text-align:center}
 .sub{font-size:15px;color:var(--gris);text-align:center;margin-top:-6px}
 
@@ -160,7 +160,7 @@ input,textarea{font:inherit;color:var(--encre);border:0;outline:0;background:tra
 .toast.on{transform:translate(-50%,0);opacity:1}
 
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
-@media (max-width:1100px){.cards{grid-template-columns:1fr}.vis{height:110px}.zone{grid-template-columns:1fr}.wrap{grid-template-columns:1fr}.grille{grid-template-columns:repeat(2,150px)}.tiroir{width:100%}body{overflow:auto}}
+@media (max-width:1100px){.cards{grid-template-columns:repeat(3,minmax(0,1fr));width:100%;max-width:1030px}.vis{height:110px}.ecran{padding:20px 24px}.wrap{grid-template-columns:1fr}.grille{grid-template-columns:repeat(2,150px)}.tiroir{width:100%}body{overflow:auto}}
 
 /* accueil : les carrousels déjà faits */
 .mes{width:min(1030px,100%);margin-top:10px}
@@ -181,3 +181,4 @@ input,textarea{font:inherit;color:var(--encre);border:0;outline:0;background:tra
 .pub-res.ok{background:#EAF7EF;color:#1F7A45}.pub-res.ko{background:#FDECEC;color:#9B2C30}
 .pub-res a{display:block;color:var(--bleu);font-weight:600;margin-top:4px;text-decoration:none}
 .pub-deja{font-size:12.5px;color:#9A6200;background:#FFF6E5;border-radius:10px;padding:8px 12px;margin:0}
+@media (max-width:760px){.cards{grid-template-columns:1fr}.zone{grid-template-columns:1fr}.or{text-align:center}}

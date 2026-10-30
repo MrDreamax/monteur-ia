@@ -1,18 +1,19 @@
 # Le Cockpit v3 « Claude te guide » (23/10/2026) : la page où la personne retouche le reel que Claude a monté
 
 Remplace **Style Lab ET Cut Notes** (décision de l'utilisateur, 23/10). Maquette validée en 2 rounds (Brain `01-Projets/cockpit-montage.md`,
-images `(maquettes internes)`, `complet-r2/1c.png` et `2b.png`). Ancienne page v2 (panneau de cartes)
+images `Stratosphere/livrables/cockpit-montage/complet-r1/C.png`, `complet-r2/1c.png` et `2b.png`). Ancienne page v2 (panneau de cartes)
 et ancien serveur : `supermonteur/_backup/2026-10-23-cockpit-v2/`. Look Apple clair. Utilisable par un client SANS bibliothèque de B-rolls
 ni de photos, ni de musique.
 
 **Règle 23/10 : jamais d'étalonnage ni de traitement du son du rush.** Un look = polices + couleur du texte + rythme. Rien d'autre.
 
 ## v5 (23/10 soir) : ÉTAPE 1 = TIMELINE façon Premiere Pro = « DERUSH LAB »
-**Décision 23/10 ~20h15 (l'utilisateur) : cette timeline s'appelle Derush Lab, outil INTERNE (jamais pour les clients ni le kit), qui sert
+**29/10 : le Derush Lab est une ÉTAPE OBLIGATOIRE de SuperMonteur, pour TOUS les reels, clients compris (l’utilisateur : « pour tous ») : la règle « interne » ci-dessous est périmée. Voir `apps/supermonteur/CLAUDE.md` 1 bis.**
+**Décision 23/10 ~20h15 (l’utilisateur) : cette timeline s'appelle Derush Lab, outil INTERNE (jamais pour les clients ni le kit), qui sert
 EXCLUSIVEMENT à dérusher une vidéo.** Séparation « dérush seul » à faire (Brain 01-Projets/cockpit-montage.md, Reprise 23/10 ~20h15).
  (prime sur la v4 ci-dessous pour l'étape 1)
 - **DERUSH LAB = `cockpit.py <dossier> --port <p> --lab` (codé le 23/10 ~23h31, maquette `livrables/cockpit-montage/derushlab-r1/A.png`
-  choisie par l'utilisateur)** : la timeline SEULE. En haut « Derush Lab · titre · 1:00 → 0:34 », plus d'étapes, ni Tout auto, ni Exporter
+  choisie par l’utilisateur)** : la timeline SEULE. En haut « Derush Lab · titre · 1:00 → 0:34 », plus d'étapes, ni Tout auto, ni Exporter
   (`body.lab`). Pas besoin de `plan.json` (dossier = words_rush.json + 1er dérush derush.py + cut.words.json → words.json + cockpit.json
   + cadre.json). Bouton « ✓ Valider le dérush » → `/api/valider` : derush.py `--plages` si la timeline a changé (clip.mp4), puis
   **`gardien.py <dossier> --derush`** (~5 s : mot coupé, respiration, plans ≥ 2 s, micro-coupure, silence, flash ; rapport
@@ -20,7 +21,7 @@ EXCLUSIVEMENT à dérusher une vidéo.** Séparation « dérush seul » à faire
   « ✅ Dérush validé » + bouton vert « ▶ Revoir le dérush » ; un rouge = « ❌ 1 point à régler : … » ; une retouche après = à revalider.
   Testé sur une copie d'IMG_6850 : 20 s, 6/6 vert, clip.mp4 h264 1080x1920 33,8 s, 0 erreur dans la page. Sauvegarde avant :
   `supermonteur/_backup/2026-10-23-derushlab-avant/`.
-Demande de l'utilisateur : « une timeline pour contrôler précisément ce qu'on coupe / garde, 1er dérush déjà fait par l'IA, plus de texte ».
+Demande de l’utilisateur : « une timeline pour contrôler précisément ce qu'on coupe / garde, 1er dérush déjà fait par l'IA, plus de texte ».
 Maquettes : `livrables/cockpit-montage/timeline-r1/` (A, B, C) puis `timeline-r2/1.png` VALIDÉE + son `timeline-r2/courbe-1-bourse.png`
 (« courbe depuis le bas » finition Bourse, MAIS « exacte, très précise »). Sauvegarde avant v5 : `supermonteur/_backup/2026-10-23-cockpit-v4/`.
 - **Écran** : la conversation se range (classe `.main.e1`) ; en haut à gauche le téléphone joue le RUSH en sautant les coupes ;
@@ -54,7 +55,7 @@ Maquettes : `livrables/cockpit-montage/timeline-r1/` (A, B, C) puis `timeline-r2
 - **Gardien (23/10, IMG_6850)** : fin de mot = voix douce 6 dB au-dessus du bruit de la pièce (`queue_mot.py`) ; une coupe dans un plan qui
   bouge n'est pas un « flash » (`mouvement()` dans gardien.py) ; build.mjs : mot fort calé sur toute la ligne + marge de 12 % avec un style perso.
 
-## v4 (23/10 soir, retours de l'utilisateur après test) : CE QUI A CHANGÉ (prime sur le reste de cette notice)
+## v4 (23/10 soir, retours de l’utilisateur après test) : CE QUI A CHANGÉ (prime sur le reste de cette notice)
 - **Plus de Chrome** : la page s'ouvre dans la fenêtre navigateur intégrée à l'appli Claude. Serveur lancé en Bash `run_in_background`
   (macOS refuse ~/Documents aux serveurs de preview), puis `preview_start {url: "http://127.0.0.1:<port>"}` (pas de `name`).
 - **2 étapes seulement : 1 Dérushage › 2 Style**, puis Exporter. L'étape 3 (moments forts : zoom, carton, mot géant, motion, B-roll)
@@ -75,7 +76,7 @@ Maquettes : `livrables/cockpit-montage/timeline-r1/` (A, B, C) puis `timeline-r2
   sous-titres, musique, puis « Terminer → Exporter ». La bande ne montre plus les coupes (elles se règlent à l'étape 1).
 - **Export** : seul le reel est coché par défaut. Carrousel, story et reels d'essai = proposés à la fin (« Oui, fais-les » /
   « Non merci », `cockpit-etat.json` `extras`).
-- À venir : avant le rendu, choix entre 3 styles de montage (l'utilisateur envoie 3 reels exemples).
+- À venir : avant le rendu, choix entre 3 styles de montage (l’utilisateur envoie 3 reels exemples).
 - Sauvegarde avant v4 : `supermonteur/_backup/2026-10-23-cockpit-v3/`.
 
 ## L'écran
@@ -110,7 +111,7 @@ Maquettes : `livrables/cockpit-montage/timeline-r1/` (A, B, C) puis `timeline-r2
   en LISTE, celui qu'on touche s'ouvre. Assez pour toute la vidéo (un toutes les 3-4 s). Claude les écrit dans `cockpit.json`
   `"moments": [{id, t0, t1, texte, mot, reco, reglage?, carton?, brolls?}]` (temps du REEL = `words.json`) ; sans eux `moments_auto`
   (mots forts puis mots longs, 3,5 s d'écart). Effets → `moments_choix`, réglages → `moments_reglages` {id: {...}}.
-  **23/10 (l'utilisateur, après test dans Chrome) : POUR TOUT LE MONDE, l'étape 3 ne propose plus que Zoom, Carton plein et Rien.**
+  **23/10 (l’utilisateur, après test dans Chrome) : POUR TOUT LE MONDE, l'étape 3 ne propose plus que Zoom, Carton plein et Rien.**
   Mot géant, Motion design et Ton B-roll sont CACHÉS, pas supprimés (`build.mjs`, `matte.py`, `headtop.py`, `/api/biblio`, `/illus/`
   intacts). La liste vient de `cockpit.py` `CHOIX_MOMENT` (la page la lit dans `/api/etat` `effets`) ; pour les remettre : `CHOIX_MOMENT =
   TOUS_EFFETS`. Un choix ou une reco cachée devient le plus proche (`effet_permis`) : mot → carton si les 2 lignes tiennent (22 signes),
@@ -118,7 +119,7 @@ Maquettes : `livrables/cockpit-montage/timeline-r1/` (A, B, C) puis `timeline-r2
   Les 6 effets (3 cachés depuis le 23/10) :
   - Zoom `zoom: avant | arriere` → `plan.zooms` [{start, end, dir?}] (arrière : s'avance 1 s avant, recule sur le moment).
   - Mot géant `mot: tete | sous` → `plan.bigwords` (matte.py, derrière la tête) ou `plan.subwords` (en géant dans le sous-titre, même avec un titre).
-  - Carton plein `carton: {l1, l2, fond: nuit | noir | bleu | flou}` → `plan.mini` card. Fond TOUJOURS en dégradé (jamais uni, l'utilisateur 23/10).
+  - Carton plein `carton: {l1, l2, fond: nuit | noir | bleu | flou}` → `plan.mini` card. Fond TOUJOURS en dégradé (jamais uni, l’utilisateur 23/10).
   - Motion design `motion: chiffres | trait` (+ `illus` pour trait) → `plan.motions` (build.mjs). Validé le 23/10 après 5 rounds
     (`livrables/cockpit-montage/motion-r2/` motion3-F + motion5-L ; étude Jun Yuh : Brain 02-Formations/jun-yuh-motion-design.md) :
     `chiffres` = 1-2-3 géants derrière la tête (matte.py `fgm_k`), numérotés dans l'ordre de la vidéo, 4 max, mot au-dessus ;

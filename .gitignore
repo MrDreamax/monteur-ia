@@ -25,3 +25,9 @@ apps/supermonteur/reels/
 apps/supercarrousel/projets/
 apps/supercarrousel/_outils/
 preuves/
+apps/superveille/enregistres/
+apps/superveille/enregistres.json
+apps/superveille/veilles/
+apps/superveille/mes-notes/
+apps/superveille/ma-marque.md
+*.lock

@@ -100,6 +100,11 @@ def peak(src):
     i = max(range(len(a)), key=lambda k: abs(a[k]))
     return i / 8000
 
+# 28/10 : un son du kit introuvable (SSD débranché ?) = alerte, jamais un reel sans bruitage en silence
+_manque = [k for k, v in CFG.get("sfx", {}).items() if not os.path.exists(v["src"])]
+if _manque:
+    print(f"ALERTE SONS : {len(CFG['sfx']) - len(_manque)}/{len(CFG['sfx'])} trouvés, manque {', '.join(_manque)} (SSD branché ?)")
+
 # --- SFX auto : gros événements seulement, anti-collision ---
 if "sfx" not in plan:
     kit = {k: v for k, v in CFG.get("sfx", {}).items() if os.path.exists(v["src"])}
@@ -233,7 +238,7 @@ PEAKS = {}
 # (1er mot à 0,1 s). music.intro = {"db": 4, "dur": 2.0, "ramp": 2.0} : départ sec, +db pendant dur secondes, puis retour à la
 # cible en ramp secondes. Le niveau mesuré (cible -29) reste celui de tout le morceau ; l'impact se met dans plan.sfx
 # (kind "impact-intro" : la musique ne s'efface pas dessous, contrairement à "impact").
-# 28/10 (l'utilisateur, « oui, partout ») : ce début est le DÉFAUT de tous les reels. "intro": false dans music pour l'enlever.
+# 28/10 (l’utilisateur, « oui, partout ») : ce début est le DÉFAUT de tous les reels. "intro": false dans music pour l'enlever.
 # 28/10 suite : « l'impact n'est pas nécessaire, trouve le moment de la musique qui a de l'impact » -> pas de bruitage par défaut
 # ("impact": true pour le remettre) ; music.from se pose sur un temps fort du morceau (scripts/attaque.py le trouve).
 _i = segs[0].get("intro", True) if segs else False
@@ -281,7 +286,7 @@ print(f"{out} : voix{' + musique' if segs else ''} + {len(plan.get('sfx', []))} 
 if p_ is not None:
     print(f"final : {i_} LUFS, crête vraie {p_} dBTP" + ("  <- crête trop haute (> -2)" if p_ > -2.0 else "  OK"))
 
-# 28/10 (l'utilisateur : « il faut bien varier les musiques en fonction de l'ambiance et pas toujours réutiliser les mêmes ») :
+# 28/10 (l’utilisateur : « il faut bien varier les musiques en fonction de l'ambiance et pas toujours réutiliser les mêmes ») :
 # carnet des musiques montées, 1 ligne par reel (le dernier mix du dossier gagne). Lu par le Gardien (musique d'un des
 # 3 reels précédents = bloquant) et par musiques.py (liste du dossier music_reels, jamais utilisées d'abord).
 if segs and "/tmp/" not in os.path.abspath(out):

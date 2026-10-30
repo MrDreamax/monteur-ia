@@ -35,8 +35,9 @@ EN_COURS = set()
 
 
 def port_superda():
-    """Port de SuperDA : réglages communs (apps/config.json), 8781 par défaut."""
+    """Port de SuperDA : celui de son entrée dans .claude/launch.json, sinon celui du contrat (8765)."""
     return reglages_apps.port("superda")
+    return 8765
 
 
 def config():
@@ -66,6 +67,34 @@ def _telecharger_lien(lien, dest):
     return os.path.join(dest, vids[0])
 
 
+def _images_carrousel(lien, dest):
+    """29/10 : yt-dlp ne prend que les vidéos (« No video formats found » sur un carrousel photo). On lit les slides
+    avec la session Instagram déjà ouverte dans Chrome (module insta de SuperVeille, lecture seule). Renvoie le nombre."""
+    code = re.search(r"instagram\.com/(?:[^/?#]+/)?(?:p|reel|reels|tv)/([A-Za-z0-9_-]+)", lien)
+    if not code:
+        raise RuntimeError("pas un lien de post Instagram")
+    sys.path.insert(0, os.path.join(os.path.dirname(ICI), "superveille"))
+    import insta
+    n = 0
+    for ch in code.group(1)[:11]:  # le code du lien = le numéro du post en base 64 d'Instagram
+        n = n * 64 + "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_".index(ch)
+    for p in insta.profils():
+        try:
+            op, _ = insta.session(p)
+            if not op:
+                continue
+            it = (json.load(op.open(f"https://www.instagram.com/api/v1/media/{n}/info/", timeout=20)).get("items") or [{}])[0]
+        except Exception:
+            continue
+        slides = [c for c in (it.get("carousel_media") or [it]) if (c.get("image_versions2") or {}).get("candidates")]
+        for i, c in enumerate(slides, 1):
+            with open(os.path.join(dest, f"modele-{i:02d}.jpg"), "wb") as f:
+                f.write(op.open(c["image_versions2"]["candidates"][0]["url"], timeout=30).read())
+        if slides:
+            return len(slides)
+    raise RuntimeError("Instagram n'a rien rendu (session Chrome fermée ?)")
+
+
 def preparer(pid):
     d = m.lire(m.chemin(pid, "demande.json"))
     try:
@@ -82,7 +111,7 @@ def preparer(pid):
                     m.maj_etat(pid, message="J'écoute ton reel…")
                     sys.path.insert(0, os.path.expanduser("~/.claude/skills/supermonteur/scripts"))
                     from mots import transcrire
-                    words, _ = transcrire(video, langue="fr")
+                    words, _ = transcrire(video, langue="fr", secours=True)   # 29/10 : le blocage ElevenLabs vise le montage seul
                     mots = os.path.join(reel, "words.json")
                     m.ecrire(mots, {"words": words})
                 m.maj_etat(pid, message="Je choisis les meilleures images…")
@@ -97,7 +126,10 @@ def preparer(pid):
                 else:
                     m.maj_etat(pid, statut="prepa", message="Je récupère le carrousel…")
                     try:
-                        _telecharger_lien(d["lien"], mod)
+                        try:
+                            _images_carrousel(d["lien"], mod)
+                        except Exception:
+                            _telecharger_lien(d["lien"], mod)
                     except Exception as e:
                         m.maj_etat(pid, statut="besoin_images", message="Je n'arrive pas à lire ce lien. Dépose les captures "
                                    "du carrousel (une image par slide) dans la zone de dépôt.", detail=str(e))
@@ -158,7 +190,7 @@ def boucle():
         time.sleep(1)
 
 
-CONSIGNE = """Tu es Claude, DANS l'appli SuperCarrousel de l'utilisateur (dossier actuel). N'ouvre rien, ne lance aucun serveur, ne publie rien.
+CONSIGNE = """Tu es Claude, DANS l'appli SuperCarrousel de l’utilisateur (dossier actuel). N'ouvre rien, ne lance aucun serveur, ne publie rien.
 L'écran attend que tu fasses ceci pour le projet %s : %s.
 1. Lance `python3 sc.py a-faire` : il dit tout (départ, idée ou lien, images du reel, texte, DA, retours à corriger).
 2. Lis le skill carrousel (~/.claude/skills/carrousel/SKILL.md et les fichiers qu'il cite) et suis sa méthode pour écrire la description
@@ -166,7 +198,7 @@ L'écran attend que tu fasses ceci pour le projet %s : %s.
    Ajoute "name", "legendes" {instagram, tiktok, facebook, linkedin} (1-2 phrases, 0 hashtag) et, pour des retours, "corrections".
 3. Écris le fichier dans projets/%s/brouillon.json puis lance `python3 sc.py ecrire %s projets/%s/brouillon.json`.
    S'il refuse, corrige le fichier et recommence. Jamais d'image IA. Ne touche qu'au dossier projets/%s.
-   Photos : regarde chaque photo avant de la prendre ; évite celles où un grand texte se lit derrière l'utilisateur (écran,
+   Photos : regarde chaque photo avant de la prendre ; évite celles où un grand texte se lit derrière l’utilisateur (écran,
    slide projetée, panneau) : il se bat avec le titre. Titres sans point final (« ? » et « ! » ok).
 Réponds en 1 ligne quand c'est posé."""
 TENTATIVES = {}  # (projet, quoi, version) -> nombre d'essais
@@ -233,7 +265,7 @@ def mes_carrousels(n=8):
 
 
 def publieur():
-    """Dès qu'un carrousel a un publication.json « a_faire » (clic confirmé de l'utilisateur), Claude l'envoie à Metricool."""
+    """Dès qu'un carrousel a un publication.json « a_faire » (clic confirmé de l’utilisateur), Claude l'envoie à Metricool."""
     for pid in os.listdir(m.PROJETS):   # envoi coupé par un redémarrage : on ne sait pas ce qui est parti
         if os.path.isdir(m.chemin(pid)) and publier.etat(m.chemin(pid)).get("statut") == "en_cours":
             publier._maj(m.chemin(pid), statut="erreur", etape="", message="Envoi coupé (serveur relancé) : vérifie le planner Metricool avant de relancer.")
@@ -287,14 +319,9 @@ def nouveau_projet(d):
     return pid
 
 
-def RACINES_VIDEOS():
-    """Où SuperCarrousel cherche les vidéos : les reels de SuperMonteur et les montages faits dans un chat."""
-    return [("reels", os.path.join(os.path.dirname(ICI), "supermonteur", "reels")), ("montages", reglages_apps.chemin("montages"))]
-
-
 def videos():
     out = []
-    for dossier, racine in RACINES_VIDEOS():
+    for dossier, racine in (("reels", os.path.join(os.path.dirname(ICI), "supermonteur", "reels")), ("montages", reglages_apps.chemin("montages"))):
         if not os.path.isdir(racine):
             continue
         for n in sorted(os.listdir(racine), reverse=True):
@@ -365,7 +392,7 @@ class H(BaseHTTPRequestHandler):
             return self._json(videos())
         if p == "/api/vignette":
             v = os.path.normpath(q.get("c", [""])[0])
-            return self._fichier(vignette(v)) if any(v.startswith(r + os.sep) for _, r in RACINES_VIDEOS()) and v.endswith(".mp4") else self._json({}, 403)
+            return self._fichier(vignette(v)) if v.startswith((os.path.dirname(ICI), reglages_apps.chemin("montages"))) and v.endswith(".mp4") else self._json({}, 403)
         mo = re.fullmatch(r"/api/projet/([\w-]+)", p)
         if mo and os.path.isdir(m.chemin(mo.group(1))):
             return self._json(vue_projet(mo.group(1)))
@@ -457,7 +484,7 @@ class H(BaseHTTPRequestHandler):
         if action == "publier":
             if config()["mode_essai"]:
                 return self._json({"essai": True, "message": "Mode essai : rien n'est publié."})
-            # 28/10 : vraie publication. Le clic confirmé = le OK de l'utilisateur pour CE carrousel ; Claude envoie (apps/publier.py).
+            # 28/10 : vraie publication. Le clic confirmé = le OK de l’utilisateur pour CE carrousel ; Claude envoie (apps/publier.py).
             ok, msg = publier.demander(m.chemin(pid), "carrousel",
                                        [r for r in (d.get("reseaux") or []) if r in ("instagram", "tiktok", "facebook", "linkedin")],
                                        d.get("quand") or "", m.etat(pid).get("titre", pid), cles_registre=(pid,), forcer=bool(d.get("forcer")))

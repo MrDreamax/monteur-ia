@@ -1,9 +1,9 @@
 {
-  "_doc": "Réglages communs de SuperDA, SuperMonteur et SuperCarrousel. Créé à l'installation, jamais écrasé par une mise à jour.",
+  "_doc": "Réglages communs des applis de Super. Créé à l'installation, jamais écrasé par une mise à jour.",
   "nom": "",
   "_nom": "Ton prénom (Claude l'utilise dans ses consignes).",
   "montages": "~/Documents/Montage/MONTAGES",
   "_montages": "Les reels montés dans un chat Claude : ils apparaissent aussi dans « Tes reels ».",
   "registre": "~/Documents/Montage/PUBLICATION/registre.md",
-  "ports": {"superda": 8781, "supermonteur": 8801, "supercarrousel": 8797}
+  "ports": {"superveille": 8811, "superda": 8781, "supermonteur": 8801, "supercarrousel": 8797}
 }

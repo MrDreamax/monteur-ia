@@ -1,0 +1,6 @@
+{
+ "claude_auto": true,
+ "modele_recherche": "sonnet",
+ "modele_traduction": "sonnet",
+ "_aide": "claude_auto false = c'est un chat Claude qui fait la recherche (sv.py)."
+}

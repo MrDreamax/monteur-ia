@@ -1,4 +1,4 @@
-"""Style « Apple » des carrousels (validé par l'utilisateur le 22/10/2026, 2 rounds), appelé par carrousel.py quand
+"""Style « Apple » des carrousels (validé par l’utilisateur le 22/10/2026, 2 rounds), appelé par carrousel.py quand
 la description contient "style": "apple". Rendu en local avec Chrome (pas besoin d'Open Carrusel).
   Fond blanc, titres SF Pro gras serrés, sous-titre gris, notes manuscrites Kalam couleur principale.
   Photo BORD À BORD (touche les bords gauche et droit) ; la personne détourée dépasse au-dessus : seulement les cheveux.
@@ -22,7 +22,7 @@ from art import ARTS, BLUE
 W, H = 1080, 1440
 MODEL = os.path.expanduser("~/.cache/supermonteur/rvm_mobilenetv3_fp32.onnx")  # modèle du skill supermonteur
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-HAIR = 110  # pixels de cheveux qui dépassent au-dessus de la photo (choix de l'utilisateur : « jusqu'aux cheveux »)
+HAIR = 110  # pixels de cheveux qui dépassent au-dessus de la photo (choix de l’utilisateur : « jusqu'aux cheveux »)
 INK, MUTE, GRAY = "#1D1D1F", "#6E6E73", "#E9E9EB"
 
 CSS = f"""<!doctype html><html lang="fr"><head><meta charset="utf-8">

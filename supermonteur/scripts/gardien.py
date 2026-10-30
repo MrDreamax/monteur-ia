@@ -91,14 +91,14 @@ else:
     db = pcm(voix); thr = np.percentile(db, 95) - 30
     gaps = [g for g in runs(db < thr, 50) if g[0] > 0.3 and g[1] < len(db) / 100 - 0.3]  # blancs > 0,5 s, hors bords
     allowed = 1 if (plan.get("silences") or "--pause" in json.dumps(plan)) else 0
-    # 22/10 (IMG_6799 v2 : « enlève le carton plein écran de la signature ») : le petit temps naturel AVANT la signature finale
-    # (« … avec le cœur. [temps] la signature ») n'est pas une hésitation : couper = plan de 1,1 s (micro-coupure), cacher = carton
+    # 22/10 (IMG_6799 v2 : « enlève le carton plein écran de Mr Dreamax ») : le petit temps naturel AVANT la signature finale
+    # (« … avec le cœur. [temps] Mr Dreamax ») n'est pas une hésitation : couper = plan de 1,1 s (micro-coupure), cacher = carton
     # refusé. Avec "pause_signature": true dans plan.json, UN blanc de 0,8 s au plus dans les 2,5 dernières secondes de voix passe.
     # La musique continue dessous et la voix garde le bruit de la pièce (derush.py, 22/10) : pas de trou.
     if plan.get("pause_signature"):
         _vend = max((b for a, b in runs(db >= thr, 5)), default=len(db) / 100)
         gaps = [g for g in gaps if not (g[1] - g[0] <= 0.8 and g[1] >= _vend - 2.5)]
-    # 23/10 (règle de l'utilisateur : « ne coupe jamais en plein milieu d'une phrase ») : un blanc gardé EXPRÈS en milieu de phrase
+    # 23/10 (règle de l’utilisateur : « ne coupe jamais en plein milieu d'une phrase ») : un blanc gardé EXPRÈS en milieu de phrase
     # (cut.voice.json "pauses_phrase", écrit par derush.py) n'est pas une hésitation à couper : signalé, pas bloquant.
     _pp = (J("cut.voice.json") or {}).get("pauses_phrase", [])
     _ph = [g for g in gaps if any(pa - 0.15 <= g[0] and g[1] <= pb + 0.15 for pa, pb in _pp)]
@@ -121,7 +121,7 @@ if voix:
 # 2 quater. Mot coupé (22/10, IMG_6799 v1 : « à un moment le mot est coupé, et à la fin aussi le mot est coupé ») : derush.py
 # écrit cut.voice.json = chaque endroit du RUSH où la voix s'arrête (fin de plage, blanc baissé, fin de voix) ou reprend.
 #  - fin : la voix s'arrête avant la fin réelle du mot (queue_mot.py, même définition que derush.py : voix douce qui traîne,
-#    queue sourde de 0,25 s au plus, explosion d'un « t » après sa fermeture) = « t » de « script », « x » de « Dreamax » (la signature) ;
+#    queue sourde de 0,25 s au plus, explosion d'un « t » après sa fermeture) = « t » de « script », « x » de « Dreamax » ;
 #  - début : la trame juste avant la reprise est déjà de la voix (voisée, > bruit + 15 dB) = l'attaque est mangée (« M » de « Mr »).
 # Testé le 22/10 : la v1 d'IMG_6799 est bloquée (script, Dreamax, Mr), la v2 passe.
 vj = J("cut.voice.json")
@@ -191,16 +191,19 @@ if voix and segs:
 sil = plan.get("silences") or []
 check(not sil, "Musique jamais coupée", f"le plan coupe la musique : silences {sil}" if sil else "aucune coupure de musique prévue", "17/10 Tesla v1")
 mus = plan.get("music") or []
-# 28/10 (l'utilisateur : « il faut bien varier les musiques en fonction de l'ambiance et pas toujours réutiliser les mêmes ») :
+# 28/10 (l’utilisateur : « il faut bien varier les musiques en fonction de l'ambiance et pas toujours réutiliser les mêmes ») :
 # un morceau déjà monté dans un des 3 reels précédents (musiques_utilisees.csv, écrit par mix.py) = bloquant.
 _mj = os.path.join(S, "..", "musiques_utilisees.csv")
 if os.path.exists(_mj) and plan.get("music"):
     import csv as _csv
-    _rows = [r for r in _csv.DictReader(open(_mj)) if os.path.abspath(r["reel"]) != os.path.abspath(D)]
+    _un = os.path.abspath
+    # 28/10 (CAM20047 monté en Dynamique ET Minimaliste pour comparer) : plan.variantes = dossiers du même reel dans un autre style
+    _var = {_un(v) for v in plan.get("variantes", [])}
+    _rows = [r for r in _csv.DictReader(open(_mj)) if _un(r["reel"]) != _un(D) and _un(r["reel"]) not in _var]
     _reels = []
     for r in _rows:
-        if r["reel"] not in _reels: _reels.append(r["reel"])
-    _rec = {os.path.basename(r["musique"]): os.path.basename(r["reel"]) for r in _rows if r["reel"] in _reels[-3:]}
+        if _un(r["reel"]) not in _reels: _reels.append(_un(r["reel"]))
+    _rec = {os.path.basename(r["musique"]): os.path.basename(_un(r["reel"])) for r in _rows if _un(r["reel"]) in _reels[-3:]}
     _mus = [m.get("src", "") for m in (plan["music"] if isinstance(plan["music"], list) else [plan["music"]])]
     _dbl = [f"{os.path.basename(m)} ({_rec[os.path.basename(m)]})" for m in _mus if os.path.basename(m) in _rec]
     check(not _dbl, "Musique variée", f"déjà dans un des 3 derniers reels : {_dbl}" if _dbl else "aucune des 3 derniers reels", "28/10 CAM20062")
@@ -251,13 +254,22 @@ if segs:
     # 20/10 : un carton punchline calé sur la voix (« tu es déjà mort ») peut durer < 2 s, il ne doit juste pas dépasser la phrase
     cardiv = [(m["start"], m["end"]) for m in (plan.get("mini") or []) if m.get("type") == "card"]
     short = [s_ for s_ in shots if s_[1] < 1.95 and not any(ca - 0.06 <= s_[0] and s_[0] + s_[1] <= cb + 0.06 for ca, cb in cardiv)]
+    # 29/10 (l’utilisateur : « la règle des 2 secondes c'est pas une règle absolue, des fois je dis des phrases qui durent moins de
+    # 2 secondes ; l'idée c'est pas de faire un cut en plein milieu d'une phrase ») : un plan court qui contient une phrase
+    # ENTIÈRE (il démarre au début d'une phrase et finit sur . ? ! … : ou ,) passe.
+    _P = (J(plan.get("words", "words.json")) or {}).get("words") or []
+    _fin = lambda w: w["text"].rstrip(" »\"'").endswith((".", "?", "!", "…", ":", ","))
+    def phrase_entiere(t0, d):
+        dans = [k for k, w in enumerate(_P) if t0 - 0.1 <= w["start"] < t0 + d - 0.05]
+        return bool(dans) and (dans[0] == 0 or _fin(_P[dans[0] - 1])) and _fin(_P[dans[-1]])
+    short = [s_ for s_ in short if not phrase_entiere(*s_)]
     # coupe visible qui ne gagne presque rien (< 0,45 s) = micro-coupure (17/10 MINCUT, 20/10 « plus de micro-coupures ») : à cacher
     micro = []
     for k in range(1, len(segs)):
         g = segs[k][0] - segs[k - 1][1]; c = cuts[k - 1]
         if 0 < g < 0.45 and not any(a + 0.05 < c < b - 0.05 for a, b in ovl): micro.append((round(c, 2), round(g, 2)))
     check(not micro, "Zéro micro-coupure", f"{len(micro)} coupe(s) visible(s) qui gagnent < 0,45 s (instant, gain) : {micro} -> cacher sous un B-roll / carton" if micro else "aucune coupe visible pour rien", "20/10 Mode difficile v2")
-    check(not short, "Plans ≥ 2 s", f"{len(short)} plan(s) < 2 s (début, durée) : {short[:8]}" if short else f"{len(shots)} plans, tous ≥ 2 s", "20/10 Mode difficile v2")
+    check(not short, "Plans ≥ 2 s", f"{len(short)} plan(s) < 2 s (début, durée) : {short[:8]}" if short else f"{len(shots)} plans, tous ≥ 2 s ou phrase entière", "20/10 Mode difficile v2, 29/10 phrase entière")
 
 # 22/10 (IMG_6798, OK de l'utilisateur : « fais les 2 réglages dans le Monteur ») : un « flash » au MILIEU d'une prise continue de
 # la face cam, à plus de 0,15 s de toute coupe et de tout plein écran, c'est un GESTE FILMÉ (caméra tournée vers la softbox à 4 s,
@@ -337,6 +349,22 @@ for b in (plan.get("brolls") or []) + (plan.get("inserts") or []):
                             "-of", "csv=p=0", src], capture_output=True, text=True).stdout.strip()
         if t in ("arib-std-b67", "smpte2084"): hdrs.append(os.path.basename(src))
 check(not hdrs, "B-rolls sans HDR", f"{len(hdrs)} plan(s) HDR : {hdrs} -> broll.py prep les convertit" if hdrs else "aucun plan HDR", "20/10 Titanic HDR")
+
+# 13 bis. Vidéos assez longues (30/10, CAM20063 : rendu calé 3 fois à 77 % = un écran coupé plus court que sa place, ~40 min perdues).
+# build.mjs rallonge seul une vidéo trop courte ; ce contrôle vérifie qu'aucune ne passe au rendu (sinon Chrome cale).
+courtes = []
+for b in plan.get("brolls") or []:
+    src = b["src"] if os.path.isabs(b["src"]) else os.path.join(D, b["src"])
+    if os.path.exists(src) and not src.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
+        try:
+            fd = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", src],
+                                      capture_output=True, text=True).stdout.strip())
+        except ValueError:
+            continue
+        if fd < b["end"] - b["start"] + 0.1 - 0.02: courtes.append((os.path.basename(src), round(fd, 2), round(b["end"] - b["start"] + 0.1, 2)))
+check(not courtes, "Vidéos assez longues", f"{len(courtes)} vidéo(s) plus courte(s) que leur place (fichier, durée, place) : {courtes} -> relancer build.mjs (il les rallonge)"
+      if courtes else "chaque B-roll / écran coupé couvre sa place", "30/10 CAM20063 rendu calé")
+
 
 # 6. Plans trop courts (Tesla v3, 17/10 : « capture trop rapide », capture >= 1,2 s)
 ins = (plan.get("brolls") or []) + (plan.get("inserts") or [])

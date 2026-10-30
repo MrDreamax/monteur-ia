@@ -40,7 +40,7 @@ def _env():
 BREATH_DB = 6
 PAUSE_DB = 10   # pause / inspiration DANS une plage : >= 0,3 s sous « 95e centile - 11 dB » (CAM20031 : souffle à -22/-26, voix à -10/-16)
 # 22/10 (IMG_6799 v1 : « à un moment le mot est coupé, et à la fin aussi le mot est coupé ») : la queue SOURDE d'un mot
-# (« t » de « script » : 70 ms de silence puis l'explosion à -28/-35 dB ; « x » de « Dreamax » (la signature) à -36/-41 dB) est sous le seuil
+# (« t » de « script » : 70 ms de silence puis l'explosion à -28/-35 dB ; « x » de « Dreamax » à -36/-41 dB) est sous le seuil
 # de parole, donc speech_end / tail_end la prenaient pour un blanc et la coupaient. Elle est pourtant 20 dB au-dessus du bruit
 # de la pièce (FLOOR = 3e centile, -59 dB sur ce rush). word_tail() prolonge la fin tant que le son reste > FLOOR + 15 dB,
 # en tolérant UN trou de 30-90 ms (la fermeture d'un « t », « p », « k ») ; la queue doit finir dans le calme avant 0,45 s,
@@ -81,7 +81,7 @@ def speech_start(t, lo):   # vraie attaque du mot annoncé à t : DERNIER passag
     return best
 SERRE = []   # coupes sans blanc (phrase retirée collée au mot d'avant), voir plus bas
 MINCUT, MINSEG, BREATH = 0.45, 0.6, 0.3   # 17/10 : pas de coupe pour un blanc < 0,45 s ; pas de bout de face cam < 0,6 s entre deux coupes
-# 23/10 (l'utilisateur, règle pour TOUT 1er dérush : « ne coupe jamais en plein milieu d'une phrase, toujours sur un point ou une virgule »,
+# 23/10 (l’utilisateur, règle pour TOUT 1er dérush : « ne coupe jamais en plein milieu d'une phrase, toujours sur un point ou une virgule »,
 # déjà dit le 21/10 sur CAM20033). L'IMAGE n'est coupée qu'après un mot qui finit par . , ! ? … ; : (ou à une reprise sautée).
 # Un blanc ou une respiration en milieu de phrase reste à l'image ; seul son SON est baissé au bruit de la pièce (MUTE plus bas).
 # Les bords posés à la main (--bords, --plages : timeline du cockpit) ne sont pas concernés : c'est la personne qui décide.
@@ -169,7 +169,7 @@ def tail_end(p0, lim):
         run = run + 1 if db[k] < q else 0
         if run >= 6: return word_tail((k - 5) / 100, lim)   # 22/10 : fin réelle du mot (queue sourde gardée, souffle collé retiré)
     return None
-# 22/10 (IMG_6799 : le « M » de « la signature » mangé) : la voix qui reprend après une pause commence souvent par une consonne
+# 22/10 (IMG_6799 : le « M » de « Mr Dreamax » mangé) : la voix qui reprend après une pause commence souvent par une consonne
 # douce VOISÉE (m, n, l, j, v : -26/-36 dB) sous le seuil « voix forte » de inner_pauses ; p1 - EDGE_IN la coupait (ou la
 # baissait). soft_attack remonte depuis p1 tant que le son est au-dessus du bruit de la pièce (FLOOR + 12) et redevient voisé
 # (trous sourds de 80 ms max : le « st » de « Mister ») ; une inspiration (sourde) l'arrête : elle reste retirée.
@@ -269,6 +269,11 @@ def _fin_immobile(t0, t1):
     return None if go is None else t0 + go / 30   # d[i] = image i+1 contre image i : on garde jusqu'à l'image i comprise
 if segs and "--fin-libre" not in sys.argv:
     fe = _fin_immobile(keep[-1]["end"], segs[-1][1])
+    # 29/10 (CAM20047 dans le Derush Lab : Gardien « mot coupé » ('fin', 22.31) à chaque validation, impossible à corriger à la
+    # main) : il rebougeait AVANT la fin de son dernier mot, et la coupe immobile mangeait la queue du mot. Jamais avant la vraie
+    # fin du dernier mot (queue_mot.py, même définition que le Gardien) + 0,06 s.
+    _qf = speech_end(keep[-1]["end"], keep[-1]["end"] + 0.35, segs[-1][1]) if fe else None
+    if fe and _qf: fe = max(fe, _qf + 0.06)
     if fe and fe >= keep[-1]["end"] + 0.15 and fe < segs[-1][1] - 0.02:
         print(f"fin : il rebouge après le dernier mot -> coupe sur la dernière image immobile ({segs[-1][1] - fe:.2f} s retirées)")
         segs[-1][1] = fe
@@ -309,7 +314,7 @@ for sg in segs:
     if cut_at:
         k = int(cut_at * 100)
         while k < len(db) and db[k] < q + PAUSE_DB: k += 1
-        # 22/10 (IMG_6799 : « Mr » de « la signature » perdait son « M ») : la consonne douce du début (-26/-36 dB) est sous le seuil
+        # 22/10 (IMG_6799 : « Mr » de « Mr Dreamax » perdait son « M ») : la consonne douce du début (-26/-36 dB) est sous le seuil
         # « voix forte » et passait pour la pause. L'attaque = juste après le DERNIER vrai calme (bruit de la pièce + 12 dB)
         # de la pause ; s'il n'y en a pas (souffle d'un bout à l'autre), on garde l'ancien point.
         j = k - 1
@@ -353,6 +358,8 @@ for j, t in sorted((int(k), float(v)) for k, v in BORDS.get("fin", {}).items()):
     if t > W[j]["end"] + 0.02: LIBRE.append((W[j]["end"], t))
     print(f"bord posé à la main : fin de « {W[j]['text']} » à {t:.2f} s")
 segs = sorted([[a, b] for a, b in segs if b - a > 0.05])
+# 29/10 : un plan court qui est une phrase ENTIÈRE est permis (l’utilisateur : « l'idée c'est pas de faire un cut en plein milieu
+# d'une phrase ») : plus de silence ajouté pour atteindre 2 s, le Gardien accepte la phrase entière.
 # 23/10 (cockpit v5, dérushage en TIMELINE, maquette livrables/cockpit-montage/timeline-r2/1.png) : --plages plages.json =
 # [[a, b], ...] les plages GARDÉES posées à la main sur la timeline (secondes du RUSH). Elles remplacent tout le calcul
 # automatique (qui ne sert plus qu'à savoir ce que la personne a changé) :
@@ -403,7 +410,9 @@ HALF = 0.5 / FPS   # image : on prend les images de a à b exclu -> exactement (
 # 19/10 soir (CAM20031 v1 : « à la toute fin, tu pourrais cut mon souffle ») : TAIL garde 0,6 s d'IMAGE après le dernier
 # mot (la phrase retombe, la musique finit), mais le son de la voix s'éteint juste après le dernier mot : plus de souffle final.
 _lw = keep[-1]["end"] if keep else 0
-_se = speech_end(_lw, _lw + 0.35) if keep else None
+# 29/10 (CAM20047, Gardien « mot coupé » ('fin', 22.31)) : la queue du dernier mot était plafonnée à 0,35 s après lui, le Gardien
+# la cherche jusqu'à la fin de la vidéo : même limite que lui (fin de la dernière plage), sinon la voix s'éteint dans le mot.
+_se = speech_end(_lw, _lw + 0.35, segs[-1][1] if segs else None) if keep else None
 VOICE_END = (_se + 0.06 if _se else _lw + 0.1)   # +0,06 s : le « x » / « s » final reste entier
 if keep and str(W.index(keep[-1])) in BORDS.get("fin", {}):   # fin posée à la main sur le dernier mot : sa voix va jusque-là
     VOICE_END = max(VOICE_END, float(BORDS["fin"][str(W.index(keep[-1]))]))
@@ -415,13 +424,14 @@ if keep and str(W.index(keep[-1])) in BORDS.get("fin", {}):   # fin posée à la
 def room_gain(m0, m1):
     import numpy as np
     db = _env()[0]; seg = db[int(m0 * 100):max(int(m0 * 100) + 1, int(m1 * 100))]
+    if not len(seg): return 1.0   # 28/10 : blanc entièrement après la fin du son
     return min(1.0, 10 ** ((float(np.percentile(db, 10)) - float(np.percentile(seg, 90))) / 20))
 # 22/10 (IMG_6799, contrôle « mot coupé » du Gardien) : une « pause » de inner_pauses (sous la voix FORTE) peut être de la
 # voix douce (« concentre sur » à -27/-33 dB) : elle était baissée de 22 dB sur 60 ms = trou dans la phrase. Et quand la queue
 # du mot ne retombe pas dans le calme (souffle juste derrière), tail_end coupait l'explosion du « t » (word_tail la garde).
 # Désormais une zone de moins de 0,10 s ou voisée à plus de 20 % n'est jamais baissée.
 def voiced_share(m0, m1):
-    db = _env()[0]; ks = range(int(m0 * 100), int(m1 * 100))
+    db = _env()[0]; ks = range(int(m0 * 100), min(len(db), int(m1 * 100)))   # 28/10 CAM20047 : blanc final qui dépasse la fin du son
     return sum(1 for k in ks if db[k] >= _floor() + 12 and _voiced(k)) / max(1, len(ks))
 MUTE = []
 for a, b in segs:
@@ -453,9 +463,23 @@ fade = "+".join((f"clip(min(min((t-{a})/{AFADE},({b}-t)/{AFADE}),max({GEND:.3f},
 # JAMAIS -hwaccel videotoolbox au décodage : avec la conversion de plage, l'image sort toute VERTE (testé 19/10). Décodage processeur.
 RNG = "pc" if subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=color_range",
                               "-of", "csv=p=0", src], capture_output=True, text=True).stdout.strip() == "pc" else "tv"
-subprocess.check_call(["ffmpeg", "-y", "-v", "error", "-i", src,
-    "-vf", f"{VPRE}select='{vexpr}',setpts=N/FRAME_RATE/TB{VPOST},scale=out_range={RNG},format=nv12",
-    "-af", f"asetnsamples=n=64,volume='({fade})*(1-({mute}))':eval=frame,aselect='{expr}',asetpts=N/SR/TB",
+# 29/10 (CAM20065, 14 min de 4K pour 66 s gardées : 4 min de coupe, l’utilisateur : « trop long ») : on ne décode plus TOUT le rush.
+# Les plages proches (< 2 s) forment un bloc ; chaque bloc = une entrée ffmpeg qui saute droit dessus (-ss avant -i, 1 s de
+# marge) en gardant les temps du rush (-copyts) : select / volume / aselect gardent leurs expressions telles quelles.
+# Chaque bloc repart à 0 (setpts / asetpts) puis concat. Même image, même son ; seules les secondes utiles sont décodées.
+BLOCS = []
+for a, b in segs:
+    if BLOCS and a - BLOCS[-1][1] < 2: BLOCS[-1][1] = b
+    else: BLOCS.append([a, b])
+ENTREES, FC = [], []
+for k, (a, b) in enumerate(BLOCS):
+    t0 = max(0.0, a - 1.0)
+    ENTREES += ["-copyts", "-ss", f"{t0:.3f}", "-t", f"{b + 1.0 - t0:.3f}", "-i", src]
+    FC.append(f"[{k}:v:0]{VPRE}select='{vexpr}',setpts=N/FRAME_RATE/TB[v{k}]")
+    FC.append(f"[{k}:a:0]asetnsamples=n=64,volume='({fade})*(1-({mute}))':eval=frame,aselect='{expr}',asetpts=N/SR/TB[a{k}]")
+FC.append("".join(f"[v{k}][a{k}]" for k in range(len(BLOCS))) + f"concat=n={len(BLOCS)}:v=1:a=1[vc][ac]")
+FC.append(f"[vc]null{VPOST},scale=out_range={RNG},format=nv12[vo]")
+subprocess.check_call(["ffmpeg", "-y", "-v", "error", *ENTREES, "-filter_complex", ";".join(FC), "-map", "[vo]", "-map", "[ac]",
     "-c:v", "h264_videotoolbox", "-q:v", "75", "-g", "60", "-color_range", RNG, *BT709, "-c:a", "aac", "-b:a", "192k", out])
 json.dump(segs, open(out.rsplit(".", 1)[0] + ".segments.json", "w"))
 # 22/10 : pour le Gardien (« Pas de mot coupé ») : chaque endroit du RUSH où la voix s'arrête ou est baissée.

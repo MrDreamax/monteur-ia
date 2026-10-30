@@ -58,7 +58,7 @@ def montrer(kind, pid):
         print(f"   images du reel : {reel}/00-candidates.jpg (planche) · image-01..16.jpg · texte : {reel}/texte.txt")
     mod = m.chemin(pid, "_modele")
     if os.path.isdir(mod):
-        print(f"   carrousel à reprendre : {mod}/ ({len(os.listdir(mod))} images) : garder son idée et son ordre, changer DA, mots, photos")
+        print(f"   carrousel à reprendre : {mod}/ ({len(os.listdir(mod))} images) : FIDÈLE à son concept et son style (mise en page, couleurs, ordre, rythme) ; on change SEULEMENT la police (duo SuperDA) et les mots pour la cible ; images : les proposer ou les demander à l’utilisateur, slide par slide")
     da = m.resume_da()
     print(f"   DA : {da['pastille']} (modèle rendu : {m.modele_rendu(m.lire_da())})")
     if kind == "corrections":

@@ -2,9 +2,10 @@
 (clés commun + montage, contrat da-schema.json). Tant que SuperDA n'a rien écrit : repli sur la DA du moteur
 (Brain 00-Moi/reglages/da-montage.json, sinon le da/exemple.json du skill), lue en lecture seule.
 """
-import json, os, sys
+import json, os
 
 SUPERDA = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "superda")
+import sys
 sys.path.insert(0, os.path.dirname(SUPERDA))
 import reglages_apps  # noqa: E402
 SK = os.path.expanduser("~/.claude/skills/supermonteur")
@@ -98,7 +99,7 @@ def pour_moteur():
             "t1": {"font": fp, "weight": p.get("graisse", 700), "size": t1, "color": co.get("titre") or "#FFFFFF", "caps": bool(p.get("majuscules", True))},
             "t2": {"font": fs, "weight": s.get("graisse", 400), "size": t2, "color": co.get("ligne2") or "#FFFFFF",
                    "italic": bool(s.get("italique", True)), "caps": bool(s.get("majuscules", False))},
-            "sub": {"font": fp, "weight": p.get("graisse", 700), "caps": True, "scale": 1, "color": co.get("sous_titres") or "#FFFFFF",
+            "sub": {"font": fp, "weight": p.get("graisse", 700), "caps": bool(m.get("sous_titres", {}).get("majuscules", True)), "scale": 1, "color": co.get("sous_titres") or "#FFFFFF",
                     "track": 0.5},   # sous-titres du moteur : majuscules, 0,5 px (moteur.md, Style Lab 13/10)
             "shadow": "douce", "align": "center"},
         "subMax": max(1, min(4, int(m.get("mots_par_ligne") or 4))),   # le moteur plafonne à 4 mots (plan.subMax)

@@ -1,0 +1,195 @@
+[
+ {
+  "t": 0.7,
+  "src": "epidemic - whoosh-air-subtle.wav",
+  "db": -3,
+  "pourquoi": "le téléphone arrive"
+ },
+ {
+  "t": 2.6,
+  "src": "epidemic - ui-pop-dull.wav",
+  "db": 2,
+  "pourquoi": "les 2 offres s'allument"
+ },
+ {
+  "t": 4.3,
+  "src": "epidemic - whoosh-air-subtle.wav",
+  "db": -4,
+  "pourquoi": "le 2e coach part, zoom"
+ },
+ {
+  "t": 5.2,
+  "src": "dragon-studio-new-notification-3-398649.mp3",
+  "db": -9,
+  "pourquoi": "notif Instagram"
+ },
+ {
+  "t": 6.45,
+  "src": "dragon-studio-pop-402324.mp3",
+  "db": -15,
+  "pourquoi": "tap sur la notif"
+ },
+ {
+  "t": 12.35,
+  "src": "epidemic - ui-pop-dull.wav",
+  "db": 1,
+  "pourquoi": "Modules"
+ },
+ {
+  "t": 13.3,
+  "src": "epidemic - ui-pop-dull.wav",
+  "db": 1,
+  "pourquoi": "Suivi"
+ },
+ {
+  "t": 14.75,
+  "src": "epidemic - ui-pop-dull.wav",
+  "db": 1,
+  "pourquoi": "Accompagnement"
+ },
+ {
+  "t": 15.85,
+  "src": "raccroche.wav",
+  "db": -10,
+  "pourquoi": "fin de l'appel"
+ },
+ {
+  "t": 16.45,
+  "src": "epidemic - whoosh-air-subtle.wav",
+  "db": -5,
+  "pourquoi": "passage à Messages"
+ },
+ {
+  "t": 17.15,
+  "src": "universfield-bubble-pop-06-351337.mp3",
+  "db": -9,
+  "pourquoi": "message reçu"
+ },
+ {
+  "t": 18.68,
+  "src": "universfield-bubble-pop-06-351337.mp3",
+  "db": -9,
+  "pourquoi": "message reçu"
+ },
+ {
+  "t": 19.6,
+  "src": "mister-horse - Swoosh 04 - 02.wav",
+  "db": -14,
+  "pourquoi": "message envoyé"
+ },
+ {
+  "t": 21.45,
+  "src": "epidemic - whoosh-air-subtle.wav",
+  "db": -5,
+  "pourquoi": "coach n°2"
+ },
+ {
+  "t": 23.55,
+  "src": "dragon-studio-pop-402324.mp3",
+  "db": -15,
+  "pourquoi": "2e appel"
+ },
+ {
+  "t": 24.55,
+  "src": "epidemic - ui-pop-dull.wav",
+  "db": 0,
+  "pourquoi": "Modules barré"
+ },
+ {
+  "t": 24.95,
+  "src": "epidemic - ui-pop-dull.wav",
+  "db": 0,
+  "pourquoi": "Programme barré"
+ },
+ {
+  "t": 31.5,
+  "src": "epidemic - ui-pop-dull.wav",
+  "db": 1,
+  "pourquoi": "mal dans son corps"
+ },
+ {
+  "t": 32.55,
+  "src": "epidemic - ui-pop-dull.wav",
+  "db": 1,
+  "pourquoi": "essoufflé"
+ },
+ {
+  "t": 34.65,
+  "src": "epidemic - ui-pop-dull.wav",
+  "db": 1,
+  "pourquoi": "mauvaise santé"
+ },
+ {
+  "t": 36.65,
+  "src": "epidemic - whoosh-air-subtle.wav",
+  "db": -5,
+  "pourquoi": "l'appel change"
+ },
+ {
+  "t": 40.75,
+  "src": "epidemic - ui-pop-dull.wav",
+  "db": 1,
+  "pourquoi": "douleur"
+ },
+ {
+  "t": 41.85,
+  "src": "dragon-studio-ding-402325.mp3",
+  "db": 3,
+  "pourquoi": "résoudre"
+ },
+ {
+  "t": 42.2,
+  "src": "epidemic - whoosh-air-subtle.wav",
+  "db": -4,
+  "pourquoi": "le téléphone sort"
+ },
+ {
+  "t": 46.95,
+  "src": "epidemic - ui-pop-dull.wav",
+  "db": 1,
+  "pourquoi": "être compris"
+ },
+ {
+  "t": 48.3,
+  "src": "epidemic - whoosh-air-subtle.wav",
+  "db": -4,
+  "pourquoi": "les 2 coachs reviennent"
+ },
+ {
+  "t": 55.55,
+  "src": "argent - modestas123123-cash-register-kaching-sound-effect-125042.mp3",
+  "db": -14,
+  "pourquoi": "a vendu",
+  "duree": 1.4
+ },
+ {
+  "t": 56.5,
+  "src": "epidemic - whoosh-air-subtle.wav",
+  "db": -5,
+  "pourquoi": "passage au reel"
+ },
+ {
+  "t": 61.75,
+  "src": "universfield-bubble-pop-06-351337.mp3",
+  "db": -11,
+  "pourquoi": "commentaire"
+ },
+ {
+  "t": 62.25,
+  "src": "universfield-bubble-pop-06-351337.mp3",
+  "db": -11,
+  "pourquoi": "commentaire"
+ },
+ {
+  "t": 62.75,
+  "src": "universfield-bubble-pop-06-351337.mp3",
+  "db": -11,
+  "pourquoi": "commentaire"
+ },
+ {
+  "t": 63.6,
+  "src": "dragon-studio-ding-402325.mp3",
+  "db": 3,
+  "pourquoi": "résous-les"
+ }
+]

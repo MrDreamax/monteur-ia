@@ -110,6 +110,7 @@ def normaliser(da):
     if s.get("position") not in ("col", "poitrine", "bas"):
         s["position"] = "col"
     s["decalage"] = borne(s.get("decalage"), -600, 600, 0)
+    s["majuscules"] = bool(s.get("majuscules", True))  # sous-titres en majuscules (le moteur le faisait déjà par défaut)
     y = c["positions"]["sous_titres"][s["position"]] + s["decalage"]
     demi = int(s["taille"] * 0.7)
     s["_y"] = max(zi["haut"] + demi, min(zi["bas"] - demi, y))
@@ -380,7 +381,7 @@ SAUTE = {"historique", "preuves", "projets", "reels", "fonts", "img", "inspirati
 SERVEURS = {"supercarrousel": 8797, "supermonteur": 8801}
 EXCLUS = {"a-corriger.json", "metricool.json", "config.json"}  # état vivant des applis (retours en cours) : jamais remis en arrière
 
-CONSIGNES_CODE = """Tu es dans le dossier des 3 applis de l'utilisateur (créateur de contenu, pas développeur). Elles se parlent :
+CONSIGNES_CODE = """Tu es dans le dossier des 3 applis de l’utilisateur (créateur de contenu, pas développeur). Elles se parlent :
 - superda/ : la DA. server.py (normaliser() = bornes et valeurs par défaut de chaque réglage, resume()), app.js (SECTIONS, panneau() = les réglages de chaque section avec les aides pm / seg / inter / dots, et les aperçus reel() / slides()), catalogue.json, da-schema.json, da.json (la DA en cours).
 - supercarrousel/ : fabrique les carrousels avec la DA (modeles.py, moteur.py, README.md).
 - supermonteur/ : monte les reels avec la DA (lis d'abord supermonteur/CLAUDE.md).
@@ -391,7 +392,7 @@ Le réglage n'existe pas encore : ajoute-le pour de vrai.
 2. Le contrôle dans panneau() d'app.js, dans la bonne section, avec les mêmes aides et le même style que les autres réglages (sinon ajoute les bornes dans le gestionnaire data-pas).
 3. L'aperçu d'app.js qui suit le réglage.
 4. Le vrai rendu : supercarrousel pour un carrousel, supermonteur pour un reel. Sinon le réglage ne sert à rien.
-5. Mets dans da.json la valeur que l'utilisateur demande.
+5. Mets dans da.json la valeur que l’utilisateur demande.
 
 %s
 - Change le moins de lignes possible. Ne casse rien de ce qui marche. Garde les noms et le style du code autour.

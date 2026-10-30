@@ -206,7 +206,7 @@
     const l = SUB.split(" ").slice(0, da.montage.mots_par_ligne);
     if (fort && cl.accent) l[l.length - 1] = `<span style="color:${cl.accent}">${l[l.length - 1]}</span>`; // mot fort = couleur de marque
     const mots = l.join(" ");
-    return `<div style="position:absolute;left:65px;right:65px;top:${y}px;transform:translateY(-50%);text-align:center;${f1()}font-size:${s.taille}px;line-height:1.15;color:${cl.sous_titres};text-shadow:0 3px 18px rgba(0,0,0,.45)">${mots}</div>`;
+    return `<div style="position:absolute;left:65px;right:65px;top:${y}px;transform:translateY(-50%);text-align:center;${f1()}font-size:${s.taille}px;line-height:1.15;color:${cl.sous_titres};${s.majuscules !== false ? "text-transform:uppercase;" : ""}text-shadow:0 3px 18px rgba(0,0,0,.45)">${mots}</div>`;
   }
   function reel(sec) {
     const m = da.montage;
@@ -418,7 +418,8 @@
           `<h4>Titre</h4><div class="pas"><div><div class="lab">Taille</div>${pm("montage.titre.taille", m.titre.taille, " px", 2)}</div><div><div class="lab">Ajuster haut / bas</div>${fleches("montage.titre.decalage", m.titre.decalage)}</div></div>
            <div class="lab" style="margin-top:12px">Position</div>${seg("montage.titre.position", [["haut", "Haut"], ["milieu", "Milieu"], ["bas", "Bas"]], m.titre.position)}${al(bloque.titre)}
            <h4 style="margin-top:26px">Sous-titres</h4><div class="pas"><div><div class="lab">Taille</div>${pm("montage.sous_titres.taille", m.sous_titres.taille, " px", 2)}</div><div><div class="lab">Ajuster haut / bas</div>${fleches("montage.sous_titres.decalage", m.sous_titres.decalage)}</div></div>
-           <div class="lab" style="margin-top:12px">Position</div>${seg("montage.sous_titres.position", [["col", "Au col"], ["poitrine", "Poitrine"], ["bas", "Bas"]], m.sous_titres.position)}${al(bloque.sous)}` };
+           <div class="lab" style="margin-top:12px">Position</div>${seg("montage.sous_titres.position", [["col", "Au col"], ["poitrine", "Poitrine"], ["bas", "Bas"]], m.sous_titres.position)}${al(bloque.sous)}
+           <div style="margin-top:14px">${inter("montage.sous_titres.majuscules", m.sous_titres.majuscules !== false, "Sous-titres en majuscules")}</div>` };
       }
       case "montage:mots":
         return { t: "Mots par ligne", s: "Combien de mots s'affichent à la fois dans tes sous-titres.", h: seg("montage.mots_par_ligne", [1, 2, 3, 4, 5].map((n) => [n, String(n)]), m.mots_par_ligne) + `<p class="note">Le texte ne s'anime jamais : il apparaît net, puis disparaît en fondu.</p>` };

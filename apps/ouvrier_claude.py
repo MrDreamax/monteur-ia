@@ -5,6 +5,7 @@ import glob
 import os
 import shutil
 import subprocess
+import contextlib
 import threading
 import time
 
@@ -30,7 +31,7 @@ def trouver_claude():
     return trouves[-1] if trouves else None
 
 
-def lancer(prompt, dossier, outils, delai=900, modele="opus", autres_dossiers=()):
+def lancer(prompt, dossier, outils, delai=900, modele="opus", autres_dossiers=(), attendre_son_tour=True):
     """Lance `claude -p` dans le dossier de l'appli, avec seulement les outils donnés. Renvoie (ok, fin de la sortie)."""
     exe = trouver_claude()
     if not exe:
@@ -42,7 +43,8 @@ def lancer(prompt, dossier, outils, delai=900, modele="opus", autres_dossiers=()
     # Sans les variables de la session qui a lancé le serveur : Claude utilise le compte connecté sur le Mac
     env = {k: v for k, v in os.environ.items() if not k.startswith(("CLAUDE", "ANTHROPIC")) and k not in ("AI_AGENT", "BAGGAGE")}
     debut = time.strftime("%Y-%m-%d %H:%M:%S")
-    with UN_A_LA_FOIS:
+    # attendre_son_tour=False : une tâche courte et pressée (la Recherche rapide de SuperVeille) passe sans attendre la file
+    with UN_A_LA_FOIS if attendre_son_tour else contextlib.nullcontext():
         try:
             r = subprocess.run(cmd, capture_output=True, text=True, timeout=delai, cwd=dossier, env=env, stdin=subprocess.DEVNULL)
             sortie, ok = (r.stdout or "") + (r.stderr or ""), r.returncode == 0

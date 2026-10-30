@@ -1,0 +1,346 @@
+<!doctype html><html><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=1080, height=960"/>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+  /* CAM20065 « Deux coachs, la même offre » : moitié HAUTE de l'écran coupé (1080 x 960), reel entier (64,2 s).
+     Direction A « Écrans iPhone » v2 (29/10, gardée par l’utilisateur, échantillon 20 s noté 8/10) : UN SEUL iPhone qui se transforme
+     (profil -> notif -> appel -> Messages -> coach n°2 -> 2e appel), la caméra zoome pour lire, dérive continue, typo géante,
+     cartes iOS (Santé, listes). Fin : les 2 coachs reviennent côte à côte (pas vendu / vendu), puis un reel Instagram.
+     Sons : ../sons/sons.json (posés au montage). Textes lisibles entre 290 et 840 px ; sous-titres du moteur à 885 px.
+     Copies : ../echantillon/anim-v1-apple.html (v1), ../echantillon/anim-v2-20s.html (échantillon 20 s). */
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1080px;height:960px;overflow:hidden;background:#F5F5F7}
+  body{font-family:-apple-system,"SF Pro Display",system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:#1D1D1F}
+  #root{position:relative;width:1080px;height:960px;overflow:hidden;background:linear-gradient(180deg,#EDEDF0 0%,#F5F5F7 35%,#FBFBFD 100%)}
+  #glow{position:absolute;left:380px;top:180px;width:760px;height:760px;border-radius:50%;
+        background:radial-gradient(circle,rgba(0,113,227,.10) 0%,rgba(0,113,227,0) 65%)}
+  .abs{position:absolute}
+  h1{font-size:110px;font-weight:700;letter-spacing:-.035em;line-height:.98}
+  h2{font-size:40px;font-weight:600;letter-spacing:-.01em;color:#86868B;line-height:1.15}
+  .ctr{left:0;right:0;text-align:center}
+  #cam{position:absolute;inset:0}
+  .phone{position:absolute;width:300px;height:560px;border-radius:58px;background:#1D1D1F;padding:12px;
+         box-shadow:0 40px 80px rgba(0,0,0,.20),0 8px 20px rgba(0,0,0,.10)}
+  .scr{position:absolute;inset:12px;border-radius:47px;overflow:hidden}
+  .island{position:absolute;left:50%;top:14px;width:96px;height:28px;margin-left:-48px;border-radius:14px;background:#000;z-index:9}
+  /* profil Instagram */
+  .prof{background:#fff;padding:60px 22px 0}
+  .prof .row{display:flex;align-items:center;gap:16px}
+  .prof .av{width:76px;height:76px;border-radius:38px;background:linear-gradient(135deg,#0071E3,#5AC8FA)}
+  .prof .av.g{background:linear-gradient(135deg,#34C759,#30D5C8)}
+  .prof .nm{font-size:22px;font-weight:700}
+  .prof .st{font-size:16px;margin-top:6px}
+  .prof .offer{margin-top:22px;border-radius:18px;background:#F5F5F7;padding:16px;border:2px solid transparent}
+  .prof .offer b{display:block;font-size:20px}
+  .prof .offer span{font-size:17px;color:#86868B}
+  .prof .btn{margin-top:14px;height:44px;border-radius:12px;background:#0071E3;color:#fff;font-size:18px;font-weight:600;display:flex;align-items:center;justify-content:center}
+  .prof .tiles{margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
+  .prof .tiles i{display:block;aspect-ratio:1;background:#E8E8ED}
+  /* bannière iOS */
+  .notif{position:absolute;left:22px;right:22px;top:58px;border-radius:24px;background:rgba(246,246,248,.97);
+         box-shadow:0 12px 30px rgba(0,0,0,.22);padding:14px 14px;display:flex;gap:12px;z-index:8}
+  .notif .ic{width:40px;height:40px;border-radius:11px;flex:none;background:linear-gradient(45deg,#F58529,#DD2A7B,#8134AF)}
+  .notif .ic.w{background:#34C759;display:flex;align-items:center;justify-content:center;color:#fff;font-size:26px;font-weight:800}
+  .notif b{display:block;font-size:17px}
+  .notif span{display:block;font-size:17px;color:#1D1D1F;line-height:1.22;margin-top:2px}
+  /* appel */
+  .call{background:linear-gradient(180deg,#3a4a5e 0%,#1c2430 100%);color:#fff;text-align:center}
+  .call .who{margin-top:96px;font-size:32px;font-weight:600}
+  .call .t{margin-top:8px;font-size:26px;color:rgba(255,255,255,.8);font-variant-numeric:tabular-nums}
+  .call .grid{position:absolute;left:30px;right:30px;top:250px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px 0;justify-items:center}
+  .call .b{width:62px;height:62px;border-radius:31px;background:rgba(255,255,255,.18)}
+  .call .end{position:absolute;left:50%;bottom:44px;width:70px;height:70px;margin-left:-35px;border-radius:35px;background:#FF3B30;
+             display:flex;align-items:center;justify-content:center}
+  .call .fin{position:absolute;left:0;right:0;top:150px;font-size:26px;font-weight:600;color:#FF6961}
+  .wave{position:absolute;left:0;right:0;top:200px;height:80px;display:flex;align-items:center;justify-content:center;gap:9px}
+  .wave i{display:block;width:10px;height:70px;border-radius:5px;background:#5AC8FA;transform-origin:50% 50%}
+  /* Messages */
+  .msg{background:#fff}
+  .msg .top{height:126px;border-bottom:1px solid #E5E5EA;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:10px;background:#F9F9F9}
+  .msg .top i{width:52px;height:52px;border-radius:26px;background:linear-gradient(135deg,#A1A1A6,#D1D1D6)}
+  .msg .top b{font-size:16px;font-weight:600;margin-top:4px}
+  .bub{position:absolute;left:14px;max-width:236px;padding:12px 16px;border-radius:22px;background:#E9E9EB;font-size:22px;line-height:1.22}
+  .bub.me{left:auto;right:14px;background:#0A84FF;color:#fff}
+  .dots{position:absolute;left:14px;width:74px;height:44px;border-radius:22px;background:#E9E9EB;display:flex;align-items:center;justify-content:center;gap:7px}
+  .dots i{width:11px;height:11px;border-radius:6px;background:#8E8E93}
+  /* reel Instagram */
+  .reel{background:linear-gradient(180deg,#2b2f3a 0%,#11131a 100%)}
+  .reel .who{position:absolute;left:96px;top:120px;width:84px;height:84px;border-radius:42px;background:#5b6475}
+  .reel .body{position:absolute;left:58px;top:200px;width:160px;height:200px;border-radius:80px 80px 0 0;background:#5b6475}
+  .reel .side{position:absolute;right:14px;bottom:110px;display:flex;flex-direction:column;gap:22px;align-items:center}
+  .reel .cap{position:absolute;left:16px;right:70px;bottom:40px;color:#fff;font-size:17px;line-height:1.25}
+  .reel .cap b{display:block;font-size:16px;margin-bottom:4px}
+  /* cartes et listes iOS */
+  .li{position:absolute;left:500px;width:500px;height:96px;display:flex;align-items:center;gap:20px;padding:0 26px;border-radius:24px;background:#fff;
+      box-shadow:0 10px 30px rgba(0,0,0,.07);font-size:36px;font-weight:600}
+  .li .sq{width:52px;height:52px;border-radius:13px;flex:none;display:flex;align-items:center;justify-content:center}
+  .li .ok{margin-left:auto;color:#34C759;font-size:38px;font-weight:700}
+  .li.x{color:#86868B}
+  .li .bar{position:absolute;left:96px;right:30px;top:47px;height:4px;border-radius:2px;background:#FF3B30;transform-origin:0 50%}
+  .hc{position:absolute;left:490px;width:520px;height:112px;display:flex;align-items:center;gap:20px;padding:0 24px;border-radius:26px;background:#fff;
+      box-shadow:0 10px 30px rgba(0,0,0,.07)}
+  .hc .sq{width:58px;height:58px;border-radius:15px;flex:none;display:flex;align-items:center;justify-content:center}
+  .hc b{display:block;font-size:32px;font-weight:700;letter-spacing:-.01em}
+  .hc span{display:block;font-size:23px;color:#86868B;margin-top:2px}
+  .pill{position:absolute;height:84px;border-radius:42px;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.07);display:flex;align-items:center;
+        justify-content:center;font-size:36px;font-weight:600;color:#86868B}
+  .pill .bar{position:absolute;left:24px;right:24px;top:40px;height:4px;border-radius:2px;background:#FF3B30;transform-origin:0 50%}
+  .qcard{position:absolute;left:480px;top:350px;width:535px;padding:40px 42px;border-radius:40px;background:#fff;box-shadow:0 20px 50px rgba(0,0,0,.08)}
+  .qcard p{font-size:52px;font-weight:700;letter-spacing:-.02em;line-height:1.12}
+  .qcard p span{color:#C7C7CC}
+  .stat{position:absolute;left:0;right:0;bottom:0;height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+        background:rgba(255,255,255,.96);z-index:8}
+  .stat .rond{width:64px;height:64px;border-radius:32px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:38px;font-weight:800}
+  .stat b{font-size:30px;font-weight:700;margin-top:8px}
+  .tag{position:absolute;top:230px;height:56px;padding:0 22px;border-radius:28px;background:#1D1D1F;color:#fff;font-size:26px;font-weight:600;
+       display:flex;align-items:center;gap:10px;z-index:9;left:50%;white-space:nowrap}
+  .com{position:absolute;left:490px;width:520px;height:104px;display:flex;align-items:center;gap:18px;padding:0 22px;border-radius:26px;background:#fff;
+       box-shadow:0 10px 30px rgba(0,0,0,.07)}
+  .com i{width:52px;height:52px;border-radius:26px;flex:none}
+  .com small{display:block;font-size:20px;color:#86868B;font-weight:600}
+  .com b{display:block;font-size:28px;font-weight:600;letter-spacing:-.01em}
+  .com .ck{position:absolute;right:22px;top:30px;width:44px;height:44px;border-radius:22px;background:#0071E3;color:#fff;font-size:26px;font-weight:800;
+           display:flex;align-items:center;justify-content:center}
+  /* 29/10 v3 : le téléphone zoomé passait sous les sous-titres (6 s, 18 s) -> fondu clair en bas, comme une barre iOS */
+  #fond{position:absolute;left:0;right:0;top:800px;height:160px;z-index:50;background:linear-gradient(180deg,rgba(251,251,253,0) 0%,rgba(251,251,253,.96) 45%,#FBFBFD 100%)}
+  .strike{position:absolute;height:8px;border-radius:4px;background:#FF3B30;transform-origin:0 50%}
+</style></head>
+<body>
+<div id="root" data-composition-id="root" data-start="0" data-duration="64.2" data-width="1080" data-height="960" data-fps="30">
+  <div id="glow"></div>
+
+  <!-- ===== textes et cartes (hors caméra) ===== -->
+  <div class="abs" id="t1" style="left:80px;top:340px"><h1 id="t1a">Même<br>offre.</h1><h2 id="t1b" style="margin-top:18px">Deux coachs.<br>Sur Instagram.</h2></div>
+  <div class="abs" id="t2" style="left:80px;top:420px"><h1 style="font-size:88px">Un<br>prospect.</h1></div>
+  <div class="abs" id="t3" style="left:500px;top:370px"><h1 style="font-size:150px">1 heure.</h1><h2 style="margin-top:14px">à vanter son<br>programme.</h2></div>
+  <div class="li" id="l1" style="top:400px"><div class="sq" style="background:#0071E3"><svg width="28" height="28" viewBox="0 0 28 28" fill="#fff"><rect x="1" y="1" width="11" height="11" rx="3"/><rect x="16" y="1" width="11" height="11" rx="3"/><rect x="1" y="16" width="11" height="11" rx="3"/><rect x="16" y="16" width="11" height="11" rx="3"/></svg></div>Modules<span class="ok">✓</span></div>
+  <div class="li" id="l2" style="top:510px"><div class="sq" style="background:#FF9500"><svg width="28" height="28" viewBox="0 0 28 28"><rect x="2" y="5" width="24" height="21" rx="4" fill="none" stroke="#fff" stroke-width="3.5"/><line x1="2" y1="12" x2="26" y2="12" stroke="#fff" stroke-width="3.5"/></svg></div>Suivi<span class="ok">✓</span></div>
+  <div class="li" id="l3" style="top:620px"><div class="sq" style="background:#34C759"><svg width="30" height="26" viewBox="0 0 30 26" fill="#fff"><circle cx="10" cy="7" r="6"/><circle cx="21" cy="7" r="6" opacity=".7"/><path d="M0 26 q0 -12 10 -12 q10 0 10 12z"/><path d="M11 26 q0 -12 10 -12 q9 0 9 12z" opacity=".7"/></svg></div>Accompagnement<span class="ok">✓</span></div>
+
+  <div class="abs" id="t4" style="left:500px;top:400px"><h1 style="font-size:104px">Jamais<br>revenu.</h1></div>
+  <div class="abs" id="t5" style="left:80px;top:420px"><h1 style="font-size:96px">Coach<br>n°2.</h1></div>
+  <div class="li x" id="x1" style="top:420px"><div class="sq" style="background:#C7C7CC"><svg width="28" height="28" viewBox="0 0 28 28" fill="#fff"><rect x="1" y="1" width="11" height="11" rx="3"/><rect x="16" y="1" width="11" height="11" rx="3"/><rect x="1" y="16" width="11" height="11" rx="3"/><rect x="16" y="16" width="11" height="11" rx="3"/></svg></div>Modules<div class="bar" id="x1b"></div></div>
+  <div class="li x" id="x2" style="top:530px"><div class="sq" style="background:#C7C7CC"><svg width="28" height="28" viewBox="0 0 28 28"><rect x="2" y="5" width="24" height="21" rx="4" fill="none" stroke="#fff" stroke-width="3.5"/><line x1="2" y1="12" x2="26" y2="12" stroke="#fff" stroke-width="3.5"/></svg></div>Programme<div class="bar" id="x2b"></div></div>
+  <div class="abs" id="t6" style="left:500px;top:400px"><h1 style="font-size:104px">1 seule<br>question.</h1></div>
+  <div class="qcard" id="q"><p><span id="q1">Qu'est-ce</span> <span id="q2">qui</span> <span id="q3">fait</span> <span id="q4">que</span> <span id="q5">tu</span> <span id="q6">veux</span> <span id="q7">changer</span> <span id="q8">maintenant&nbsp;?</span></p></div>
+  <div class="hc" id="h1" style="top:380px"><div class="sq" style="background:#FF2D55"><svg width="34" height="30" viewBox="0 0 34 30"><path d="M17 29 C5 20 1 14 1 9 a8 8 0 0 1 16 -3 a8 8 0 0 1 16 3 c0 5 -4 11 -16 20z" fill="#fff"/></svg></div><div><b>Mal dans son corps</b><span>tous les jours</span></div></div>
+  <div class="hc" id="h2" style="top:505px"><div class="sq" style="background:#5AC8FA"><svg width="34" height="30" viewBox="0 0 34 30" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round"><path d="M2 10 h18 a5 5 0 1 0 -5 -5"/><path d="M2 17 h26 a5 5 0 1 1 -5 5"/><path d="M2 24 h10"/></svg></div><div><b>Essoufflé</b><span>en jouant avec ses enfants</span></div></div>
+  <div class="hc" id="h3" style="top:630px"><div class="sq" style="background:#FF9500"><svg width="30" height="30" viewBox="0 0 30 30" fill="#fff"><rect x="11" y="2" width="8" height="26" rx="2"/><rect x="2" y="11" width="26" height="8" rx="2"/></svg></div><div><b>Mauvaise santé</b><span>selon les médecins</span></div></div>
+  <div class="abs" id="t7" style="left:500px;top:340px"><h1 style="font-size:104px">L'appel<br>change.</h1></div>
+  <div class="pill" id="y1" style="left:500px;top:610px;width:230px">Modules<div class="bar" id="y1b"></div></div>
+  <div class="pill" id="y2" style="left:750px;top:610px;width:265px">Programme<div class="bar" id="y2b"></div></div>
+  <div class="hc" id="d1" style="top:380px"><div class="sq" style="background:#FF3B30"><svg width="30" height="30" viewBox="0 0 30 30" fill="#fff"><path d="M17 1 L4 17 h9 l-2 12 l13 -16 h-9z"/></svg></div><div><b>Une douleur</b><span>qu'il vit au quotidien</span></div></div>
+  <svg class="abs" id="ar" style="left:730px;top:505px" width="60" height="70" viewBox="0 0 60 70"><path d="M30 4 v52 M10 38 l20 22 l20 -22" fill="none" stroke="#86868B" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <div class="hc" id="d2" style="top:590px"><div class="sq" style="background:#34C759"><svg width="30" height="26" viewBox="0 0 30 26"><path d="M3 14 l8 8 l16 -18" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><b>Qu'il veut résoudre</b><span>c'est ça qu'il achète</span></div></div>
+  <div class="abs ctr" id="t8" style="top:400px"><h2 style="font-size:46px">D'un point de vue psychologique,</h2></div>
+  <div class="abs ctr" id="t9" style="top:480px"><h1 style="font-size:130px">ça change tout.</h1></div>
+  <div class="abs ctr" id="t10" style="top:360px"><h1 style="font-size:120px;color:#86868B">Comprendre.</h1></div>
+  <div class="strike" id="s10" style="left:225px;top:420px;width:630px"></div>
+  <div class="abs ctr" id="t11" style="top:540px"><h1 style="font-size:130px;color:#0071E3">Être compris.</h1></div>
+  <div class="abs" id="t12" style="left:500px;top:390px"><h2 id="t12a">Tes vidéos sur les réseaux :</h2><h1 id="t12b" style="font-size:104px;margin-top:12px">Même<br>chose.</h1></div>
+  <div class="abs" id="t13" style="left:490px;top:420px;width:530px"><h1 style="font-size:64px;line-height:1.08">« Je suis le<br>plus fort. »</h1></div>
+  <div class="strike" id="s13" style="left:484px;top:452px;width:330px"></div>
+  <div class="strike" id="s13b" style="left:484px;top:521px;width:318px"></div>
+  <div class="com" id="k1" style="top:380px"><i style="background:linear-gradient(135deg,#FF9500,#FF2D55)"></i><div><small>client</small><b>Je manque de temps</b></div><div class="ck" id="k1c">✓</div></div>
+  <div class="com" id="k2" style="top:500px"><i style="background:linear-gradient(135deg,#5856D6,#5AC8FA)"></i><div><small>client</small><b>Je ne sais pas quoi poster</b></div><div class="ck" id="k2c">✓</div></div>
+  <div class="com" id="k3" style="top:620px"><i style="background:linear-gradient(135deg,#34C759,#30D5C8)"></i><div><small>client</small><b>Je n'ai pas de clients</b></div><div class="ck" id="k3c">✓</div></div>
+
+  <!-- 2e coach : au début seulement -->
+  <div class="phone" id="pb" style="left:740px;top:300px"><div class="scr prof"><div class="island"></div>
+    <div class="row"><div class="av g"></div><div><div class="nm">coach.max</div><div class="st"><b>987</b> posts</div></div></div>
+    <div class="offer" id="ob"><b>Programme 12 semaines</b><span>Suivi chaque semaine</span></div><div class="btn">Réserver un appel</div>
+    <div class="tiles"><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+
+  <!-- la fin : les 2 coachs côte à côte, puis le n°2 devient un reel -->
+  <div class="phone" id="pc" style="left:150px;top:290px"><div class="scr prof"><div class="island"></div>
+    <div class="row"><div class="av"></div><div><div class="nm">coach.alex</div><div class="st"><b>1 204</b> posts</div></div></div>
+    <div class="offer"><b>Programme 12 semaines</b><span>Suivi chaque semaine</span></div><div class="btn">Réserver un appel</div>
+    <div class="tiles"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="stat" id="pcs"><div class="rond" style="background:#FF3B30">✕</div><b>Pas vendu</b></div></div>
+    <div class="tag" id="pct"><svg width="26" height="22" viewBox="0 0 26 22" fill="#fff"><path d="M3 1 h20 a2 2 0 0 1 2 2 v11 a2 2 0 0 1 -2 2 h-12 l-6 5 v-5 h-2 a2 2 0 0 1 -2 -2 v-11 a2 2 0 0 1 2 -2z"/></svg>Il parle</div></div>
+  <div class="phone" id="pd" style="left:630px;top:290px">
+    <div class="scr prof"><div class="island"></div>
+      <div class="row"><div class="av g"></div><div><div class="nm">coach.max</div><div class="st"><b>987</b> posts</div></div></div>
+      <div class="offer"><b>Programme 12 semaines</b><span>Suivi chaque semaine</span></div><div class="btn">Réserver un appel</div>
+      <div class="tiles"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="stat" id="pds"><div class="rond" style="background:#34C759">✓</div><b>Vendu</b></div></div>
+    <div class="notif" id="pdn"><div class="ic w">✓</div><div><b>Paiement reçu</b><span>Nouveau client inscrit au programme</span></div></div>
+    <div class="tag" id="pdt"><svg width="22" height="26" viewBox="0 0 22 26" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M4 9 a7 7 0 0 1 14 0 c0 6 -6 6 -6 12 a3 3 0 0 1 -6 0"/><path d="M9 10 a2 2 0 0 1 4 0"/></svg>Il écoute</div>
+    <div class="scr reel" id="sReel"><div class="island"></div><div class="who"></div><div class="body"></div>
+      <div class="side"><svg width="34" height="30" viewBox="0 0 34 30"><path d="M17 28 C5 19 2 13 2 9 a7.5 7.5 0 0 1 15 -2 a7.5 7.5 0 0 1 15 2 c0 4 -3 10 -15 19z" fill="none" stroke="#fff" stroke-width="3"/></svg>
+        <svg width="32" height="32" viewBox="0 0 32 32"><path d="M16 3 a13 13 0 1 1 -11 20 l-3 7 l8 -3 a13 13 0 0 0 6 2" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg>
+        <svg width="32" height="30" viewBox="0 0 32 30"><path d="M30 2 L2 12 l11 4 l4 11z M13 16 l17 -14" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg></div>
+      <div class="cap"><b>coach.max</b>Ce que tes clients vivent vraiment…</div></div>
+  </div>
+
+  <!-- ===== LE téléphone, dans la caméra ===== -->
+  <div id="cam">
+    <div class="phone" id="pa" style="left:520px;top:290px">
+      <div class="scr prof" id="sProf"><div class="island"></div>
+        <div class="row"><div class="av"></div><div><div class="nm">coach.alex</div><div class="st"><b>1 204</b> posts</div></div></div>
+        <div class="offer" id="oa"><b>Programme 12 semaines</b><span>Suivi chaque semaine</span></div><div class="btn">Réserver un appel</div>
+        <div class="tiles"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+      <div class="notif" id="nt"><div class="ic"></div><div><b>Instagram</b><span>prospect : salut, je veux des infos sur ton programme</span></div></div>
+      <div class="scr call" id="sCall"><div class="island"></div>
+        <div class="who">Prospect</div><div class="t" id="tm">00:00</div>
+        <div class="grid" id="grid"><div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div></div>
+        <div class="end" id="end"><svg width="34" height="34" viewBox="0 0 34 34"><path d="M5 19 q12 -9 24 0" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg></div>
+        <div class="fin" id="fin">Appel terminé · 1:00:12</div></div>
+      <div class="scr msg" id="sMsg"><div class="island"></div>
+        <div class="top"><i></i><b>Prospect</b></div>
+        <div class="bub" id="b1" style="top:146px">Merci beaucoup pour l'appel !</div>
+        <div class="dots" id="dt" style="top:228px"><i></i><i></i><i></i></div>
+        <div class="bub" id="b2" style="top:228px;font-weight:600">Je vais y réfléchir…</div>
+        <div class="bub me" id="b3" style="top:300px">Alors, tu as réfléchi ?</div>
+        <div class="abs" id="b3v" style="right:20px;top:358px;font-size:14px;color:#8E8E93">Distribué</div></div>
+      <div class="scr prof" id="sProf2"><div class="island"></div>
+        <div class="row"><div class="av g"></div><div><div class="nm">coach.max</div><div class="st"><b>987</b> posts</div></div></div>
+        <div class="offer"><b>Programme 12 semaines</b><span>Suivi chaque semaine</span></div><div class="btn">Réserver un appel</div>
+        <div class="tiles"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+      <div class="scr call" id="sCall2"><div class="island"></div>
+        <div class="who">Prospect</div><div class="t">avec coach.max</div>
+        <div class="wave" id="wv"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="grid" style="top:310px"><div class="b"></div><div class="b"></div><div class="b"></div></div>
+        <div class="end"><svg width="34" height="34" viewBox="0 0 34 34"><path d="M5 19 q12 -9 24 0" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg></div></div>
+    </div>
+  </div>
+  <div id="fond"></div>
+</div>
+<script>
+  window.__timelines = window.__timelines || {};
+  var tl = gsap.timeline({paused:true}), DUR = 64.2;
+  gsap.set(["#pa", "#pb", "#pc", "#pd"], {transformPerspective:1400});
+  // plusieurs états à la suite : K(sel, [état0, [t, durée, changements, ease], ...]) ; chaque état est tenu jusqu'au suivant
+  // (rendu parallèle = on saute dans le temps : chaque instant doit se calculer seul)
+  function K(sel, etats) {
+    var cur = etats[0], t0 = 0;
+    for (var i = 1; i < etats.length; i++) {
+      var e = etats[i], nxt = Object.assign({}, cur, e[2]);
+      tl.fromTo(sel, cur, Object.assign({}, cur, {duration:Math.max(e[0] - t0, .001), ease:"none", immediateRender:i === 1}), t0);
+      tl.fromTo(sel, cur, Object.assign({}, nxt, {duration:e[1], ease:e[3] || "power3.inOut", immediateRender:false}), e[0]);
+      cur = nxt; t0 = e[0] + e[1];
+    }
+    tl.fromTo(sel, cur, Object.assign({}, cur, {duration:Math.max(DUR - t0, .001), ease:"none", immediateRender:false}), t0);
+  }
+  var B0 = "blur(12px)", B1 = "blur(0px)";
+  var UP0 = {opacity:0, y:60, filter:B0}, UP1 = {opacity:1, y:0, filter:B1}, GONE = {opacity:0, y:-30, filter:B0};
+  function texte(sel, a, b) { K(sel, [UP0, [a, .7, UP1, "expo.out"], [b, .35, GONE, "power2.in"]]); }
+  function carte(sel, a, b) { var e = [{opacity:0, y:40, filter:B0}, [a, .55, {opacity:1, y:0, filter:B1}, "expo.out"]];   // b = 0 : reste jusqu'à la fin
+    if (b) e.push([b, .35, {opacity:0, y:0, filter:B0}, "power2.in"]); K(sel, e); }
+  function trait(sel, t) { K(sel, [{scaleX:0}, [t, .35, {scaleX:1}, "power2.out"]]); }
+  function ecran(sel, a, b, entree) { var e = entree || {opacity:0, x:120, scale:1, filter:B1};
+    K(sel, b ? [e, [a, .5, {opacity:1, x:0, scale:1, filter:B1}, "power3.inOut"], [b, .5, {opacity:0, x:-60}, "power3.inOut"]]
+             : [e, [a, .5, {opacity:1, x:0, scale:1, filter:B1}, "power3.inOut"]]); }
+
+  // ================= LE téléphone : position, inclinaison 3D, caméra =================
+  // 0 arrive · 4,3 de face + zoom notif · 6,45 appel, à gauche · 16,4 Messages au centre + zoom · 19,9 dézoom, à gauche
+  // 21,5 coach n°2 (à droite) · 23,5 2e appel, à gauche · 42,3 il sort (place aux mots, puis aux 2 coachs)
+  K("#pa", [{opacity:0, x:0, y:140, rotationY:-18, rotationX:4, rotation:-3, scale:.9},
+    [0.7, 1.1, {opacity:1, y:0}, "expo.out"],
+    [4.3, .9, {x:90, rotationY:0, rotationX:0, rotation:0, scale:1}],
+    [6.45, .9, {x:-410, rotationY:10}],
+    [16.4, 1.0, {x:-130, rotationY:0}],
+    [19.9, .9, {x:-410, rotationY:10}],
+    [21.45, .8, {x:90, rotationY:-8}],
+    [23.5, .8, {x:-410, rotationY:10}],
+    [42.2, .8, {x:-1000, opacity:0}, "power3.in"]]);
+  K("#cam", [{scale:1, transformOrigin:"760px 400px"},
+    [4.6, 1.1, {scale:1.6}],
+    [6.45, .9, {scale:1}],
+    [16.9, 1.1, {scale:1.55, transformOrigin:"540px 520px"}],
+    [19.95, .9, {scale:1}]]);
+  // dérive continue : le téléphone flotte, la lumière glisse (jamais une image figée)
+  tl.fromTo("#cam", {y:0}, {y:-10, duration:2.2, ease:"sine.inOut", repeat:28, yoyo:true, immediateRender:false}, 1.8);
+  tl.fromTo("#glow", {x:0, y:0}, {x:-260, y:60, duration:DUR / 2, ease:"sine.inOut", repeat:1, yoyo:true, immediateRender:true}, 0);
+
+  // 2e coach du début : arrive à « coachs » 0,91, part à droite à 4,3
+  K("#pb", [{opacity:0, x:0, y:160, rotationY:-18, rotation:4, scale:.82, filter:B1},
+    [0.88, 1.1, {opacity:1, y:20}, "expo.out"],
+    [4.3, .8, {opacity:0, x:360, rotation:10, filter:B0}, "power3.in"]]);
+  // « même offre » 2,67 : les 2 offres s'allument en bleu
+  K(["#oa", "#ob"], [{borderColor:"rgba(0,113,227,0)", backgroundColor:"#F5F5F7"},
+    [2.6, .5, {borderColor:"rgba(0,113,227,1)", backgroundColor:"#EAF3FF"}, "power2.out"],
+    [4.3, .5, {borderColor:"rgba(0,113,227,0)", backgroundColor:"#F5F5F7"}, "power2.out"]]);
+
+  // ================= écrans du téléphone =================
+  K("#nt", [{opacity:0, y:-90, scale:1}, [5.2, .7, {opacity:1, y:0}, "expo.out"], [6.45, .2, {scale:.94}, "power2.out"], [6.65, .25, {opacity:0, scale:1.05}, "power2.in"]]);
+  K("#sCall", [{opacity:0, x:0, scale:.92, filter:B0}, [6.6, .6, {opacity:1, scale:1, filter:B1}, "expo.out"], [16.5, .5, {opacity:0, x:-60}, "power3.inOut"]]);
+  K("#end", [{scale:1}, [15.8, .15, {scale:.82}, "power2.out"], [15.95, .25, {scale:1}, "power2.out"]]);
+  K("#fin", [{opacity:0}, [15.96, .3, {opacity:1}, "power2.out"]]);
+  K(["#grid", "#tm"], [{opacity:1}, [15.96, .3, {opacity:0}, "power2.out"]]);
+  ecran("#sMsg", 16.5, 21.45);
+  var horloge = {s:0};
+  K(horloge, [{s:0}, [7.6, 2.9, {s:3599}, "power2.inOut"]]);
+  tl.eventCallback("onUpdate", function () {
+    var s = Math.round(horloge.s), m = Math.floor(s / 60), r = s % 60;
+    document.getElementById("tm").textContent = (m < 10 ? "0" : "") + m + ":" + (r < 10 ? "0" : "") + r;
+  });
+  K("#b1", [{opacity:0, y:20, scale:.9, transformOrigin:"0% 100%"}, [17.15, .45, {opacity:1, y:0, scale:1}, "expo.out"]]);
+  K("#dt", [{opacity:0, scale:.6}, [18.15, .3, {opacity:1, scale:1}, "expo.out"], [18.62, .12, {opacity:0}, "none"]]);
+  K("#b2", [{opacity:0, y:20, scale:.9, transformOrigin:"0% 100%"}, [18.68, .45, {opacity:1, y:0, scale:1}, "expo.out"]]);
+  // « Et bien sûr » 19,62 : le coach relance… « jamais revenu » 20,77 : rien ne revient
+  K("#b3", [{opacity:0, y:20, scale:.9, transformOrigin:"100% 100%"}, [19.6, .45, {opacity:1, y:0, scale:1}, "expo.out"]]);
+  K("#b3v", [{opacity:0}, [20.2, .3, {opacity:1}, "power2.out"]]);
+  ecran("#sProf2", 21.45, 23.55);
+  ecran("#sCall2", 23.55, 0, {opacity:0, x:0, scale:.92, filter:B0});
+  // l'onde : le prospect parle (29,3 -> 36,4)
+  document.querySelectorAll("#wv i").forEach(function (b, k) {
+    K(b, [{scaleY:.15}, [29.3, .3, {scaleY:.5}, "power2.out"], [36.4, .4, {scaleY:.15}, "power2.out"]]);
+    tl.fromTo(b, {scaleY:.5}, {scaleY:1, duration:.22 + k * .03, ease:"sine.inOut", repeat:Math.floor(7 / (.22 + k * .03)), yoyo:true, immediateRender:false}, 29.6);
+  });
+
+  // ================= textes, cartes =================
+  K("#t1a", [UP0, [2.6, .7, UP1, "expo.out"], [4.25, .35, GONE, "power2.in"]]);
+  K("#t1b", [UP0, [3.3, .7, UP1, "expo.out"], [4.25, .35, GONE, "power2.in"]]);
+  texte("#t2", 4.8, 6.4);
+  texte("#t3", 8.55, 11.3);
+  carte("#l1", 12.35, 15.3); carte("#l2", 13.3, 15.3); carte("#l3", 14.75, 15.3);
+  texte("#t4", 20.65, 21.4);                                   // « jamais revenu » 20,77
+  texte("#t5", 21.7, 23.45);                                    // « deuxième coach » 21,75
+  carte("#x1", 24.55, 25.85); carte("#x2", 24.95, 25.85);       // « détailler le programme » 24,62
+  trait("#x1b", 25.15); trait("#x2b", 25.3);
+  texte("#t6", 26.45, 27.25);                                   // « une seule question » 26,55
+  carte("#q", 27.25, 29.2);                                     // « Qu'est-ce qui fait… maintenant ? » 27,33 -> 28,75
+  [["#q1", 27.33], ["#q2", 27.55], ["#q3", 27.75], ["#q4", 27.97], ["#q5", 28.13], ["#q6", 28.25], ["#q7", 28.41], ["#q8", 28.75]].forEach(function (m) {
+    K(m[0], [{color:"#C7C7CC"}, [m[1], .25, {color:m[0] === "#q8" ? "#0071E3" : "#1D1D1F"}, "power2.out"]]);
+  });
+  carte("#h1", 31.5, 36.35); carte("#h2", 32.55, 36.35); carte("#h3", 34.65, 36.35);   // corps 31,55 · essouffle 32,61 · médecins 34,69
+  texte("#t7", 36.65, 39.3);                                    // « l'appel change » 36,71
+  carte("#y1", 37.6, 39.3); carte("#y2", 38.3, 39.3);
+  trait("#y1b", 37.9); trait("#y2b", 38.68);                    // « plus de module » 37,89 · « plus de programme » 38,67
+  carte("#d1", 40.75, 42.25);                                   // « une douleur » 40,91
+  K("#ar", [{opacity:0, y:-20}, [41.5, .4, {opacity:1, y:0}, "expo.out"], [42.25, .35, {opacity:0}, "power2.in"]]);
+  carte("#d2", 41.85, 42.25);                                   // « la résoudre » 41,95
+  texte("#t8", 42.7, 44.55);                                    // « psychologique » 43,15
+  texte("#t9", 43.7, 44.55);                                    // « ça change tout » 43,77
+  texte("#t10", 45.75, 47.75);                                  // « comprendre » 46,01
+  K("#s10", [{scaleX:0, opacity:1}, [46.35, .35, {scaleX:1}, "power2.out"], [47.75, .35, {opacity:0}, "power2.in"]]);
+  texte("#t11", 46.95, 47.75);                                  // « être compris » 47,11
+
+  // ================= la fin : les 2 coachs reviennent (47,96 « C'est pourquoi ») =================
+  K("#pc", [{opacity:0, x:0, y:140, rotationY:12, scale:.95, filter:B1},
+    [48.3, 1.0, {opacity:1, y:0}, "expo.out"],
+    [56.05, .7, {opacity:0, x:-500, filter:B0}, "power3.in"]]);
+  K("#pct", [{opacity:0, xPercent:-50, y:20}, [49.75, .5, {opacity:1, y:0}, "expo.out"], [51.15, .3, {opacity:0}, "power2.in"]]);   // « parler » 49,8
+  K("#pcs", [{opacity:0, y:40}, [51.2, .5, {opacity:1, y:0}, "expo.out"]]);                                       // « n'a pas vendu » 51,24
+  K("#pd", [{opacity:0, x:0, y:140, rotationY:-12, scale:.95},
+    [52.1, 1.0, {opacity:1, y:0}, "expo.out"],
+    [56.05, 1.0, {x:-520, rotationY:10, scale:1}]]);
+  K("#pdt", [{opacity:0, xPercent:-50, y:20}, [53.2, .5, {opacity:1, y:0}, "expo.out"], [55.5, .3, {opacity:0}, "power2.in"]]);     // « écouter » 53,26
+  K("#pdn", [{opacity:0, y:-90}, [55.55, .6, {opacity:1, y:0}, "expo.out"], [56.6, .3, {opacity:0, y:-40}, "power2.in"]]);   // « a vendu » 55,66
+  K("#pds", [{opacity:0, y:40}, [55.6, .5, {opacity:1, y:0}, "expo.out"], [56.6, .3, {opacity:0}, "power2.in"]]);
+  ecran("#sReel", 56.5, 0);                                     // « des vidéos sur les réseaux » 56,77
+  K("#t12a", [UP0, [56.75, .6, UP1, "expo.out"], [59.15, .35, GONE, "power2.in"]]);
+  K("#t12b", [UP0, [58.5, .7, UP1, "expo.out"], [59.15, .35, GONE, "power2.in"]]);   // « même chose » 58,59
+  texte("#t13", 59.5, 61.3);                                    // « à quel point tu es fort » 59,77 -> 60,43
+  K("#s13", [{scaleX:0, opacity:1}, [60.45, .3, {scaleX:1}, "power2.out"], [61.3, .35, {opacity:0}, "power2.in"]]);
+  K("#s13b", [{scaleX:0, opacity:1}, [60.7, .3, {scaleX:1}, "power2.out"], [61.3, .35, {opacity:0}, "power2.in"]]);
+  carte("#k1", 61.75, 0); carte("#k2", 62.25, 0); carte("#k3", 62.75, 0);   // « écoute les problématiques de tes clients » 61,49 -> 62,93
+  [["#k1c", 63.6], ["#k2c", 63.75], ["#k3c", 63.9]].forEach(function (m) {   // « résous-les » 63,61
+    K(m[0], [{opacity:0, scale:.3}, [m[1], .35, {opacity:1, scale:1}, "back.out(1.4)"]]);
+  });
+
+  tl.to({}, {duration:DUR}, 0);
+  window.__timelines["root"] = tl;
+</script>
+</body></html>

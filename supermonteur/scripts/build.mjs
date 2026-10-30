@@ -14,7 +14,7 @@
 // ni à droite des sous-titres là où sont les boutons (sous-titres entre 120 et 960 px). Fonds et décors peuvent déborder.
 // Contrôle après chaque montage : node scripts/zones.mjs <dossier> (0 élément attendu).
 import { readFileSync, writeFileSync, mkdirSync, copyFileSync, existsSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, resolve, isAbsolute, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
 
@@ -57,7 +57,7 @@ const TY = plan.typo || DA.typo || null;
 if (TY) DA.fonts.sub = TY.sub.font;
 for (const f of new Set([DA.fonts.sans, DA.fonts.serif, DA.fonts.sub, ...(TY ? [TY.t1.font, TY.t2.font] : [])])) if (!existsSync(join("fonts", f))) copyFileSync(join(SKILL, "fonts", f), join("fonts", f));
 const SUBSIZE = Math.round((plan.subSize || DA.subSize || 52) * (TY?.sub.scale || 1)), SUBTRACK = TY ? TY.sub.track ?? .5 : plan.subTrack ?? DA.subTrack ?? .5;
-// 22/10 (cockpit v2, reels d'essai) : plan.subMax = mots max par sous-titre (1 = mot à mot, 2 = deux mots) ; défaut 4 = inchangé
+// 22/10 (cockpit v2) : plan.subMax = mots max par sous-titre (1 = mot à mot, 2 = deux mots) ; défaut 4 = inchangé
 const SUBMAX = Math.max(1, Math.min(4, plan.subMax || 4));
 const out = args.out || "index.html";
 const esc = t => String(t).replace(/[<>&]/g, "");
@@ -535,6 +535,28 @@ lists.forEach((l, li) => {
   ops += `tl.fromTo("#l${li} .lt",{opacity:0,y:-20},{opacity:1,y:0,duration:.3,ease:"power3.out",immediateRender:false},${(l.start + 0.05).toFixed(3)});`;
 });
 
+// ---------- 30/10 (CAM20063 : rendu calé 3 fois à 77 %, « injecting video frames », ~40 min perdues) : le calage (+0,07 s) et
+//            l'anti-flash (+0,35 s) allongent un B-roll ou un écran coupé AU-DELÀ de la durée de son fichier ; HyperFrames demande
+//            alors des images qui n'existent pas et Chrome cale. Toute vidéo trop courte pour sa place est rallongée ici
+//            (dernière image tenue, NOUVEAU nom : jamais un fichier refait sous le même nom). Gardien avant : « Vidéos assez longues ». ----------
+const BASE = dirname(resolve(args.plan));
+const dureeFichier = f => +execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", f]).toString();
+function assezLongue(src, need) {
+  const abs = resolve(BASE, src);
+  if (!existsSync(abs)) return src;
+  const have = dureeFichier(abs);
+  if (have >= need + 0.05) return src;
+  const nom = join(isAbsolute(src) ? "broll" : dirname(src), basename(src).replace(/\.[^.]+$/, "") + `.long${Math.round((need + 0.5) * 1000)}.mp4`);
+  const out = resolve(BASE, nom);
+  if (!existsSync(out) || dureeFichier(out) < need + 0.05) {
+    mkdirSync(dirname(out), { recursive: true });
+    execFileSync("ffmpeg", ["-v", "error", "-y", "-i", abs, "-vf", `tpad=stop_mode=clone:stop_duration=${(need - have + 0.5).toFixed(3)},format=yuv420p`,
+      "-an", "-c:v", "libx264", "-crf", "16", "-preset", "fast", out]);
+  }
+  console.log(`vidéo trop courte pour sa place : ${src} (${have.toFixed(2)} s < ${need.toFixed(2)} s) -> ${nom} (dernière image tenue)`);
+  return nom;
+}
+
 // ---------- B-rolls plein écran (au-dessus de la cam, sous les sous-titres) : légère poussée, entrée nette ----------
 (plan.brolls || []).forEach((b, i) => {
   // 21/10 (CAM20033, Gardien final : 2 « plans éclair » de 0,03 s à 26,63 et 41,63 s) : un début de B-roll entre deux images
@@ -542,6 +564,7 @@ lists.forEach((l, li) => {
   // Début calé sur la grille des images (juste avant) : le B-roll est entier dès sa 1re image.
   b.start = Math.max(0, +(Math.round(b.start * 30) / 30 - 0.002).toFixed(4));
   const d = (b.end - b.start).toFixed(3), img = /\.(jpe?g|png|webp)$/i.test(b.src);
+  if (!img) b.src = assezLongue(b.src, +d + 0.1);   // la vidéo couvre son cadre (data-duration = d + 0,1 s)
   layers += img
     ? `<div class="broll" id="b${i}"><div class="bw" id="b${i}m"><img class="bm" src="${esc(b.src)}"/></div></div>`
     // 23/10 (cockpit, Gardien : « plan éclair » de 0,03 s à 17,53 et 31,73 s = 1 image NOIRE) : la vidéo s'arrêtait 1 image avant
@@ -889,7 +912,7 @@ groups.forEach((grp, gi) => {
 // 21/10 (CAM20033 v1 : « dans le titre, ne mets jamais de virgule ou de points, et deux petits points aussi ») :
 // virgules, points, points de suspension, deux-points et points-virgules retirés du titre (le « ? » d'un titre-question reste).
 const TP = t => String(t || "").replace(/\s*[,.;:…]+/g, "").replace(/\s{2,}/g, " ").trim();
-// 23/10 (l'utilisateur : « jamais trois lignes ») : chaque ligne du titre reste sur UNE ligne, sa taille baisse jusqu'à tenir dans 940 px
+// 23/10 (l’utilisateur : « jamais trois lignes ») : chaque ligne du titre reste sur UNE ligne, sa taille baisse jusqu'à tenir dans 940 px
 // (x 70-1010, zone interdite des côtés = 65 px). Mesure Pillow avec la graisse et la largeur (axes variables) de la police.
 const MESURE = "import sys\nfrom PIL import ImageFont\nf=ImageFont.truetype(sys.argv[1],1000)\ntry:\n v=[]\n for a in f.get_variation_axes():\n  n=a['name'];n=n.decode() if isinstance(n,bytes) else n\n  x=float(sys.argv[3]) if n=='Weight' else float(sys.argv[4]) if n=='Width' else a['default']\n  v.append(max(a['minimum'],min(a['maximum'],x)))\n f.set_variation_by_axes(v)\nexcept Exception: pass\nprint(f.getlength(sys.argv[2]))";
 const fitLigne = (text, file, base, { weight = 400, stretch = 100, track = 0, caps = false } = {}, maxW = 940) => {
@@ -903,11 +926,20 @@ const T2S = TY ? TY.t2 : { font: DA.fonts.serif, weight: 400, size: DA.titleSize
 let FS1 = T1S.size, FS2 = T2S.size;
 if (plan.title) {
   const T = plan.title;
-  FS1 = fitLigne(TP(T.l1), T1S.font, T1S.size, T1S); FS2 = fitLigne(TP(T.l2), T2S.font, T2S.size, T2S);
+  // 28/10 (CAM20047 clip 5, « Focus : une seule plateforme » en encadré noir) : l'encadré ajoute 2 x 48 px de marge,
+  // le titre le plus long sortait dans la zone morte de droite -> on mesure dans 940 - 96 px quand il y a un encadré.
+  const TW = T.box ? 940 - 96 : 940;
+  FS1 = fitLigne(TP(T.l1), T1S.font, T1S.size, T1S, TW); FS2 = fitLigne(TP(T.l2), T2S.font, T2S.size, T2S, TW);
   if (FS1 < T1S.size || FS2 < T2S.size) console.log(`titre rétréci pour tenir sur 2 lignes : ${T1S.size} -> ${FS1} px, ${T2S.size} -> ${FS2} px`);
   const tz = (plan.subYAt || []).find(z => (T.start ?? 0) >= z.start - 0.02 && (T.start ?? 0) < z.end);   // fond clair = pas de voile (14/10)
-  layers += `<div class="htitle${tz && tz.light ? " onlight" : ""}" id="htitle" style="top:${T.top ?? 280}px"><div class="ht1">${esc(TP(T.l1))}</div><div class="ht2">${esc(TP(T.l2))}</div></div>`;
-  // 28/10 (l'utilisateur : « pourquoi sur la toute première frame il n'y a pas de texte ? ») : un titre qui ouvre le reel est net dès
+  // 28/10 (CAM20047, écran de projection blanc derrière : « blanc sur blanc ») : T.light = ombre forte, prime sur la DA
+  // 29/10 (IMG_6945 : « mets le titre en noir dans un fond blanc ») : T.box = "#FFFFFF" -> encadré de cette couleur, sans ombre
+  // sur le texte (couleur du texte = typo.t1 / t2 color)
+  const BOXC = typeof T.box === "string" && T.box.startsWith("#") ? T.box : null;
+  const TSH = BOXC ? ";text-shadow:none" : T.light ? ";text-shadow:0 0 3px rgba(0,0,0,.95),0 2px 8px rgba(0,0,0,.85),0 0 34px rgba(0,0,0,.7),0 0 70px rgba(0,0,0,.45)" : "";
+  layers += `<div class="htitle${(tz && tz.light) || T.light ? " onlight" : ""}" id="htitle" style="top:${T.top ?? 280}px${TSH}">${T.box ? `<div style="display:inline-block;background:${BOXC || `rgba(0,0,0,${T.box === true ? .8 : T.box})`};border-radius:24px;padding:20px 48px 26px">` : ""}<div class="ht1">${esc(TP(T.l1))}</div><div class="ht2">${esc(TP(T.l2))}</div>${T.box ? "</div>" : ""}</div>`;
+  // 28/10 (CAM20047 : « mets un encadré noir dans le fond ») : T.box = encadré noir arrondi autour du titre (true = 80 %, ou l'opacité)
+  // 28/10 (l’utilisateur : « pourquoi sur la toute première frame il n'y a pas de texte ? ») : un titre qui ouvre le reel est net dès
   // l'image 0 (1re image = ce que le pouce voit), sans fondu d'entrée ; plus tard dans le reel, il garde son petit fondu.
   const T0 = (T.start ?? 0) < 0.05;
   V("#htitle", T0 ? 0 : T.start, Math.min(T.end ?? 4, dur), T0 ? `{}` : `{y:10}`, T0 ? `{}` : `{y:0,ease:"power2.out"}`, T0 ? 0 : 0.25);
@@ -958,7 +990,7 @@ const fitPx = (text, file, base, maxW, upper) => {   // taille qui tient dans ma
   try { const em = +execFileSync("python3", ["-c", "import sys;from PIL import ImageFont;print(ImageFont.truetype(sys.argv[1],1000).getlength(sys.argv[2])/1000)", join("fonts", file), upper ? String(text).toUpperCase() : String(text)]).toString();
         return Math.round(Math.min(base, maxW / (em * 1.04))); } catch { return base; }
 };
-// ---------- 23/10 cockpit étape 3 « Motion design » : 2 variantes VALIDÉES par l'utilisateur (maquettes motion-r2 F + L, 23/10 ; leçon Jun Yuh :
+// ---------- 23/10 cockpit étape 3 « Motion design » : 2 variantes VALIDÉES par l’utilisateur (maquettes motion-r2 F + L, 23/10 ; leçon Jun Yuh :
 //            rien de « mignon », pas de rebond, tout arrive en coupe franche ; jamais d'IA). Les anciens coeur / entoure / souligne
 //            (« dégueulasses ») restent lus pour les vieux plans mais ne sont plus proposés.
 //   chiffres : 1, 2, 3 géants DERRIÈRE la tête (matte.py → fg), contour fin, le chiffre en cours plein, son mot au-dessus (couleur serif).
@@ -1004,7 +1036,7 @@ const fitPx = (text, file, base, maxW, upper) => {   // taille qui tient dans ma
     // 4 coins comme la réf (sombre en haut à gauche, couleur vive en haut à droite, clair en bas) ; défaut = studio nuit + LED bleue
     const G = C.grad || ["#060a1c", "#2f74ff", "#132b66", "#9fbcf0", "#11235a"];
     // "blur" (19/10) = SA vidéo floutée et assombrie derrière le carton (on reste dans sa pièce)
-    // 23/10 (l'utilisateur : « les cartes en plein écran, fais toujours des dégradés, jamais une couleur unie, c'est dégueulasse ») :
+    // 23/10 (l’utilisateur : « les cartes en plein écran, fais toujours des dégradés, jamais une couleur unie, c'est dégueulasse ») :
     // une couleur "#hex" ou "flat" devient un dégradé de cette couleur (coin éclairé en haut à droite, coin sombre en bas à gauche).
     const DEG = h => { const x = parseInt(h.slice(1).padEnd(6, "0").slice(0, 6), 16), r = x >> 16, g = (x >> 8) & 255, b2 = x & 255;
       const mix = (k, t) => `rgb(${Math.round(r + (t - r) * k)},${Math.round(g + (t - g) * k)},${Math.round(b2 + (t - b2) * k)})`;

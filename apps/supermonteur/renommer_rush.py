@@ -1,4 +1,4 @@
-"""Renomme le rush d'un reel pour le retrouver d'un coup d'œil (28/10/2026, l'utilisateur : « renomme les rushes pour qu'ils
+"""Renomme le rush d'un reel pour le retrouver d'un coup d'œil (28/10/2026, l’utilisateur : « renomme les rushes pour qu'ils
 soient plus facilement trouvables »).
 
     CAM20058.MP4  ->  2026-10-28 Tourner sans téléprompteur - CAM20058.MP4
@@ -12,6 +12,7 @@ chemin (etat.json, rush.txt… des montages et de SuperMonteur) sont mises à jo
 """
 import datetime, json, os, re, sys
 
+import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import reglages_apps  # noqa: E402
 MONTAGES = reglages_apps.chemin("montages")

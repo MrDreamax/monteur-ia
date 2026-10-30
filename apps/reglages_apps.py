@@ -1,4 +1,4 @@
-"""Réglages communs de SuperDA, SuperMonteur et SuperCarrousel (chez l'utilisateur, jamais dans le code).
+"""Réglages communs des applis de Super (chez l'utilisateur, jamais dans le code).
 
     config.json (à côté de ce fichier) : créé par install.sh, rempli au 1er lancement, jamais écrasé par une mise à jour.
     Metricool (id de marque, compte Instagram attendu) : lus dans les réglages du skill publieur (~/.claude/skills/publieur/config.json).
@@ -14,7 +14,7 @@ DEFAUT = {
     "montages": "~/Documents/Montage/MONTAGES",                # reels montés dans un chat : ils apparaissent dans « Tes reels »
     "registre": "~/Documents/Montage/PUBLICATION/registre.md",  # 1 ligne par publication (évite de publier 2 fois)
     "erreurs": os.path.join(ICI, "erreurs.log"),
-    "ports": {"superda": 8781, "supermonteur": 8801, "supercarrousel": 8797},
+    "ports": {"superveille": 8811, "superda": 8781, "supermonteur": 8801, "supercarrousel": 8797},
 }
 
 

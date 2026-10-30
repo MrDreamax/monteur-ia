@@ -1,6 +1,6 @@
-"""Vraie publication depuis SuperMonteur et SuperCarrousel (28/10/2026, l'utilisateur : « Oui, active »).
+"""Vraie publication depuis SuperMonteur et SuperCarrousel (28/10/2026, l’utilisateur : « Oui, active »).
 
-Le clic sur « Publier maintenant » / « Programmer » (confirmé une 2e fois à l'écran) = le OK de l'utilisateur pour CE contenu.
+Le clic sur « Publier maintenant » / « Programmer » (confirmé une 2e fois à l'écran) = le OK de l’utilisateur pour CE contenu.
 Le serveur prépare les fichiers (vidéo au format Metricool, planche des images candidates pour la cover, slides en JPG)
 puis lance Claude (ouvrier_claude, connecteurs Metricool + Higgsfield, rien d'autre) qui suit le skill publieur :
 contrôle du compte .business, cover = meilleure image du reel, hébergement Higgsfield, createScheduledPost, vérification.
@@ -26,7 +26,7 @@ SKILL = os.path.expanduser("~/.claude/skills/publieur")
 MC = "mcp__claude_ai_Metricool_Social_Media_Management__"
 HF = "mcp__claude_ai_Higgsfield__"
 OUTILS = ["Read", "Write", "Edit", "Glob", "Grep", "ToolSearch",
-          "Bash(date:*)", "Bash(curl -X PUT:*)", "Bash(curl -sI:*)",
+          "Bash(date:*)", "Bash(python3 " + os.path.join(ICI, "heberger.py") + ":*)",   # 29/10 : le PUT passe par heberger.py (plus de curl écrit à la main)
           MC + "getBrandSettings", MC + "createScheduledPost", MC + "getScheduledPosts",
           HF + "media_upload", HF + "media_confirm"]
 VERROU = threading.Lock()
@@ -64,7 +64,8 @@ def deja_publie(*cles):
 
 
 def demander(dossier, quoi, reseaux, quand, titre, cles_registre=(), forcer=False):
-    """Le clic de l'utilisateur. Renvoie (ok, message). quoi = "reel" ou "carrousel" ; quand = "maintenant" ou "AAAA-MM-JJTHH:MM"."""
+    """Le clic de l’utilisateur. Renvoie (ok, message). quoi = "reel" ou "carrousel" ;
+    quand = "maintenant" ou "AAAA-MM-JJTHH:MM"."""
     e = etat(dossier)
     if e.get("statut") in ("a_faire", "en_cours"):
         return False, "Déjà en cours d'envoi : attends la fin."
@@ -116,7 +117,7 @@ def preparer_carrousel(dossier, slides):
     return pub, sortie
 
 
-CONSIGNE = """Tu es Claude, DANS l'appli {appli} de l'utilisateur. Il vient de cliquer « {bouton} » puis de confirmer à l'écran :
+CONSIGNE = """Tu es Claude, DANS l'appli {appli} de l’utilisateur. Il vient de cliquer « {bouton} » puis de confirmer à l'écran :
 c'est SON OK pour publier CE {quoi}, sur CES réseaux seulement : {reseaux}. Ne publie rien d'autre, ne touche à aucun autre post.
 
 À lire d'abord : ~/.claude/skills/publieur/SKILL.md (§ 2 légendes, § 3 cover, § 6 programmer), son mode-client.md, et le carnet
@@ -130,16 +131,17 @@ Heure : {heure}
 Étapes :
 1. getBrandSettings (blogId {brand}) : Instagram doit être « {instagram} ». Sinon : n'envoie RIEN, va à l'étape 6 avec l'erreur.
 2. {etape_cover}
-3. Héberge les fichiers avec Higgsfield : media_upload, puis pour chaque fichier EXACTEMENT
-   `curl -X PUT -H "Content-Type: <type>" -H "If-None-Match: *" --data-binary @<fichier> '<upload_url>'`, puis media_confirm,
-   puis `curl -sI <url>` doit répondre 200.
+3. Héberge les fichiers avec Higgsfield : media_upload, puis pour chaque fichier cette commande, SEULE (pas de cd, pas de &&,
+   pas de curl : toute autre forme est refusée) :
+   `python3 {heberger} <fichier> '<upload_url>' <type>` -> doit afficher « PUT 200 » ;
+   puis media_confirm, puis `python3 {heberger} --verifier '<url>'` -> doit afficher « URL 200 ».
 4. createScheduledPost (blogId {brand}, fuseau Europe/Paris, autoPublish true, draft false) : un post par groupe de réseaux
    comme dans le skill et le carnet ({groupes}). « maintenant » = lance `date` JUSTE avant chaque appel et mets l'heure + 1 min.
    Un appel qui échoue : relance-le UNE fois. Ne recrée JAMAIS un réseau déjà parti (vérifie avec getScheduledPosts).
 5. getScheduledPosts sur la journée : vérifie qu'il y a bien un post par réseau demandé.
 6. Écris {dossier}/publication.json en gardant ses champs et en changeant : "statut" ("programme" si tout est parti,
    "partiel" si un réseau manque, "erreur" si rien n'est parti), "fini_le", "heure" (l'heure de publication),
-   "posts" [{{"reseaux": [...], "planner": "<plannerUrl>"}}], "manque" [réseaux pas partis], "message" (1 phrase pour l'utilisateur),
+   "posts" [{{"reseaux": [...], "planner": "<plannerUrl>"}}], "manque" [réseaux pas partis], "message" (1 phrase pour l’utilisateur),
    "legendes" (celles envoyées){cover_champ}.
 7. Ajoute 1 ligne au tableau de {registre} (crée-le s'il manque : | date | titre | fichier | statut | réseaux | liens |), au format des lignes existantes
    (date et heure, titre, chemin du fichier, statut, réseaux, liens planner).
@@ -150,11 +152,6 @@ def lancer(dossier, appli, contexte):
     """Fait le travail pour un dossier dont publication.json est « a_faire ». contexte = ce que l'appli sait du contenu :
     quoi, video ou slides, legendes (dict réseau -> texte)."""
     e = etat(dossier)
-    pub = reglages_apps.publieur()
-    if not pub["brand"]:
-        _maj(dossier, statut="erreur", etape="", message="Metricool n'est pas branché : dans Claude, écris « Programme ma semaine » "
-                                                          "pour le 1er lancement du Publieur. Rien n'est parti.")
-        return
     with VERROU:
         _maj(dossier, statut="en_cours", etape="Je prépare les fichiers…", debut=time.time())
         try:
@@ -182,8 +179,7 @@ def lancer(dossier, appli, contexte):
             prompt = CONSIGNE.format(appli=appli, bouton="Publier maintenant" if e["quand"] == "maintenant" else "Programmer",
                                      quoi=e["quoi"], reseaux=reseaux, titre=e.get("titre", ""), dossier=dossier, fichiers=fichiers,
                                      legendes=json.dumps(contexte.get("legendes") or {}, ensure_ascii=False), heure=heure,
-                                     brand=pub["brand"], instagram=pub["instagram"] or "le compte de la marque (getBrandSettings)",
-                                     carnet=pub["carnet"], registre=pub["registre"], etape_cover=cover, groupes=groupes, cover_champ=cover_champ)
+                                     brand=pub["brand"], instagram=pub["instagram"] or "le compte de la marque (getBrandSettings)", carnet=pub["carnet"], registre=pub["registre"], heberger=os.path.join(ICI, "heberger.py"), etape_cover=cover, groupes=groupes, cover_champ=cover_champ)
             _maj(dossier, etape="Claude envoie à Metricool (2 à 5 min)…")
             ok, sortie = ouvrier_claude.lancer(prompt, dossier, OUTILS, delai=1500, modele="opus",
                                                autres_dossiers=(os.path.dirname(pub["registre"]), SKILL))

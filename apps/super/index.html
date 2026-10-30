@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Super</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<style>
+/* Super : maquette super-maquettes/r1/A validée le 29/10 (onglets en haut, Apple clair) */
+:root{--fond:#F5F5F7;--texte:#1D1D1F;--gris:#6E6E73;--ligne:#E3E3E8;--bleu:#0071E3}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--fond);color:var(--texte);font-family:-apple-system,"SF Pro Text",Inter,sans-serif;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.top{height:52px;background:#fff;border-bottom:1px solid var(--ligne);display:flex;align-items:center;padding:0 18px;gap:10px;flex:none}
+.logo{width:26px;height:26px;border-radius:8px;background:var(--bleu);color:#fff;font-weight:800;font-size:16px;display:grid;place-items:center}
+.top h1{font-size:18px;font-weight:700;letter-spacing:-.01em;width:150px}
+.tabs{margin:0 auto;display:flex;gap:2px;background:#EDEDF0;padding:3px;border-radius:12px}
+.tabs button{padding:7px 18px;border-radius:9px;font-size:14px;font-weight:600;color:var(--gris);position:relative}
+.tabs button.on{background:#fff;color:var(--texte);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.tabs button.off::after{content:"";position:absolute;top:6px;right:7px;width:6px;height:6px;border-radius:50%;background:#E5484D}
+.droite{width:176px}
+.cadres{flex:1;position:relative;min-height:0}
+iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--fond)}
+.dort{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.dort b{display:block;font-size:20px;margin-bottom:6px}.dort p{color:var(--gris);font-size:14px;margin-bottom:16px}
+.dort button{background:var(--texte);color:#fff;font-weight:600;padding:12px 22px;border-radius:12px}
+[hidden]{display:none!important}
+@media (max-width:760px){.top h1,.droite{display:none}.tabs button{padding:7px 11px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="logo">S</div><h1>Super</h1>
+  <nav class="tabs" id="tabs">
+    <button data-k="veille">Veille</button><button data-k="da">DA</button><button data-k="monteur">Monteur</button><button data-k="carrousel">Carrousel</button>
+  </nav><span class="droite"></span></header>
+<main class="cadres" id="cadres"></main>
+<script>
+// Un cadre par outil, créé au 1er clic puis gardé : changer d'onglet ne recharge rien (montage, choix en cours…).
+const OUTILS = {veille: {port: 8811, nom: "SuperVeille"}, da: {port: 8781, nom: "SuperDA"}, monteur: {port: 8801, nom: "SuperMonteur"}, carrousel: {port: 8797, nom: "SuperCarrousel"}};
+const $ = s => document.querySelector(s);
+let etat = {}, actif = null;
+
+// #monteur&reel=<id> : ouvre l'outil directement sur ce reel (Claude, quand on lui donne une vidéo dans le chat)
+function ouvrir(k, extra = "") {
+  if (!OUTILS[k]) k = "monteur";
+  actif = k;
+  history.replaceState(null, "", "#" + k);
+  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.k === k));
+  document.title = `Super · ${OUTILS[k].nom}`;
+  for (const [c, o] of Object.entries(OUTILS)) {
+    const f = $(`#f-${c}`), d = $(`#d-${c}`);
+    if (f) f.hidden = c !== k;
+    if (d) d.hidden = c !== k;
+  }
+  if (etat[k] === false) return dort(k);
+  if (!$(`#f-${k}`)) {
+    const f = document.createElement("iframe");
+    f.id = `f-${k}`; f.src = `http://localhost:${OUTILS[k].port}/${extra ? "?" + extra : ""}`; f.title = OUTILS[k].nom;
+    f.allow = "microphone; clipboard-read; clipboard-write; fullscreen";
+    $("#cadres").append(f);
+  }
+}
+function dort(k) {
+  let d = $(`#d-${k}`);
+  if (!d) {
+    d = document.createElement("div"); d.className = "dort"; d.id = `d-${k}`;
+    d.innerHTML = `<div><b>${OUTILS[k].nom} est éteint</b><p>Un clic et je le rallume.</p><button>Rallumer</button></div>`;
+    d.querySelector("button").onclick = async ev => {
+      ev.target.textContent = "Je le rallume…"; ev.target.disabled = true;
+      const r = await fetch(`/api/rallumer/${k}`, {method: "POST"}).then(r => r.json()).catch(() => ({}));
+      if (r.ok) { etat[k] = true; d.remove(); maj(); ouvrir(k); } else { ev.target.textContent = "Pas rallumé : réessaie"; ev.target.disabled = false; }
+    };
+    $("#cadres").append(d);
+  }
+  d.hidden = false;
+}
+function maj() { document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("off", etat[b.dataset.k] === false)); }
+async function verifier() {
+  etat = await fetch("/api/etat").then(r => r.json()).catch(() => etat);
+  maj();
+  if (actif && etat[actif] === false && !$(`#f-${actif}`)) dort(actif);
+}
+document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => ouvrir(b.dataset.k));
+function depuisAdresse() {
+  const [k, ...x] = location.hash.slice(1).split("&"), extra = x.join("&"), f = $(`#f-${k}`);
+  if (f && extra) f.src = `http://localhost:${OUTILS[k].port}/?${extra}`;   // outil déjà ouvert : on le pose sur ce reel
+  ouvrir(k || "monteur", extra);
+}
+window.addEventListener("hashchange", () => { if (!location.hash.slice(1).startsWith(actif) || location.hash.includes("&")) depuisAdresse(); });
+verifier().then(depuisAdresse);
+setInterval(verifier, 15000);
+</script>
+</body>
+</html>

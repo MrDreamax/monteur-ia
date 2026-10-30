@@ -21,7 +21,7 @@ SKILL = os.path.abspath(os.path.join(ICI, "..", ".."))
 S = os.path.join(SKILL, "scripts")
 D = os.path.abspath(sys.argv[1])
 PORT = int(sys.argv[sys.argv.index("--port") + 1]) if "--port" in sys.argv else 8790
-LAB = "--lab" in sys.argv   # Derush Lab (23/10, l'utilisateur : « exclusivement pour dérusher ») : pas de plan.json, pas de Style ni d'Export
+LAB = "--lab" in sys.argv   # Derush Lab (23/10, l’utilisateur : « exclusivement pour dérusher ») : pas de plan.json, pas de Style ni d'Export
 AP = os.path.join(D, "_cockpit")
 os.makedirs(AP, exist_ok=True)
 VERROU = threading.Lock()
@@ -90,7 +90,7 @@ def relire_cockpit():
 
 
 relire_cockpit()
-ETAT.setdefault("coches", ["reel"])   # 23/10 (l'utilisateur) : carrousel, story et reels d'essai décochés ; proposés à la fin, après le reel
+ETAT.setdefault("coches", ["reel"])   # 23/10 (l’utilisateur) : carrousel, story et reels d'essai décochés ; proposés à la fin, après le reel
 ETAT.setdefault("look", None)       # v3 (23/10) : aucun look = 1er lancement (3 looks proposés) ; plan inchangé tant qu'il n'y en a pas
 ETAT.setdefault("affine", {})       # « Affiner » : polices, couleur des mots en serif, rythme
 ETAT.setdefault("style", None)      # 23/10 : le style réglé (police, tailles, couleurs, position, plus) ; None = 1er lancement
@@ -447,7 +447,7 @@ def onde():
 PLACES = {"haut": -140, "normal": 0, "bas": 110}
 
 
-# Styles de sous-titres des reels d'essai (22/10, l'utilisateur : « changer aussi la musique et le style de sous-titrage »).
+# Styles de sous-titres des reels d'essai (22/10, l’utilisateur : « changer aussi la musique et le style de sous-titrage »).
 # Toujours en MAJUSCULES, toujours sous 60 px (Style Lab). Police et couleur = le look du reel (décision 23/10 : les essais
 # prennent le même look que le reel ; avant les looks : toujours Montserrat blanc).
 STYLES_ST = {
@@ -648,13 +648,13 @@ def ecrire_da_look(lk):
 #   zoom "avant" | "arriere" ; mot "tete" (derrière la tête) | "sous" (en géant dans le sous-titre) ; carton {l1, l2, fond} ;
 #   motion "coeur" | "entoure" | "souligne" (dessins faits par le code, jamais d'IA) ; broll = un plan de SA bibliothèque
 #   (chemin relatif au dossier des B-rolls) ou "perso" (la vidéo envoyée). Jamais d'image ni de vidéo générée par IA.
-# 23/10 (l'utilisateur, après test dans Chrome) : l'étape 3 ne propose plus que Zoom, Carton plein et Rien, POUR TOUT LE MONDE.
+# 23/10 (l’utilisateur, après test dans Chrome) : l'étape 3 ne propose plus que Zoom, Carton plein et Rien, POUR TOUT LE MONDE.
 # Mot géant, Motion design et Ton B-roll sont CACHÉS, pas supprimés (build.mjs, matte.py, headtop.py, /api/biblio, /illus/ intacts) :
 # pour les remettre, reprendre TOUS_EFFETS ici (la page lit la liste dans /api/etat "effets").
 TOUS_EFFETS = ("zoom", "mot", "carton", "motion", "broll", "rien")
 CHOIX_MOMENT = ("zoom", "carton", "rien")
 REGLAGE_DEF = {"zoom": "avant", "mot": "tete", "motion": "chiffres"}
-# Motion design (23/10, maquettes motion-r2 F + L validées par l'utilisateur après 5 rounds ; leçon Jun Yuh : pro, sans fond, coupe franche) :
+# Motion design (23/10, maquettes motion-r2 F + L validées par l’utilisateur après 5 rounds ; leçon Jun Yuh : pro, sans fond, coupe franche) :
 #   "chiffres" = 1-2-3 géants derrière la tête (les moments « chiffres » de la vidéo sont numérotés dans l'ordre) ;
 #   "trait" = une illustration au trait blanc (celles du skill Carrousel, art.py, dessinées, jamais d'IA) + son mot.
 # Les anciens coeur / entoure / souligne (« dégueulasses ») deviennent "chiffres".
@@ -699,7 +699,7 @@ def illus_svg(nom):
         os.makedirs(ILLUS_DIR, exist_ok=True)
         open(p, "w").write(art.ARTS[nom]())
     return p
-# Fonds du carton plein : TOUJOURS un dégradé, jamais une couleur unie (l'utilisateur 23/10 : « une couleur unie, c'est dégueulasse »)
+# Fonds du carton plein : TOUJOURS un dégradé, jamais une couleur unie (l’utilisateur 23/10 : « une couleur unie, c'est dégueulasse »)
 FONDS = {"nuit": "radial-gradient(85% 60% at 100% 0%,#2f74ff 0%,transparent 70%),radial-gradient(90% 65% at 0% 100%,#132b66 0%,transparent 75%),linear-gradient(165deg,#0d1836 0%,#060a1c 60%,#03050d 100%)",
          "noir": "radial-gradient(80% 55% at 100% 0%,#3a3f4a 0%,transparent 70%),radial-gradient(70% 50% at 0% 100%,#1a1d24 0%,transparent 75%),linear-gradient(165deg,#15171c 0%,#050506 70%)",
          "bleu": "radial-gradient(85% 60% at 100% 0%,#7fb2ff 0%,transparent 70%),radial-gradient(90% 65% at 0% 100%,#0a2a6b 0%,transparent 75%),linear-gradient(165deg,#2b6fff 0%,#0b3b8c 60%,#061f4d 100%)",
@@ -975,7 +975,7 @@ def plan_final(h=None, st=None, m="choisie"):
     elif lk:   # sans look, le plan reste celui de Claude (rendu identique) ; « look » dans le plan = refaire le rendu s'il change
         plan["da"] = ecrire_da_look(lk)
         plan["look"] = {k: lk[k] for k in ("id", "sans", "serif", "texte", "serif_couleur", "accent", "rythme")}
-    # 23/10 (l'utilisateur, après test) : étape 3 SUPPRIMÉE (zoom, carton, mot géant, motion, B-roll des moments) : ajouter_moments n'est plus appelé.
+    # 23/10 (l’utilisateur, après test) : étape 3 SUPPRIMÉE (zoom, carton, mot géant, motion, B-roll des moments) : ajouter_moments n'est plus appelé.
     if plan.get("keywords") and plan.get("bigwords"):   # un mot fort qui contient un mot géant (« piège du script » / SCRIPT) :
         geants = {norm(b["text"]) for b in plan["bigwords"]}   # le mot géant le remplace (avant : « piège du » seul en serif)
         plan["keywords"] = [k for k in plan["keywords"] if not geants & {norm(x) for x in k.split()}]
@@ -1346,14 +1346,40 @@ def tout(ids, programmer):
 
 
 # ---------- aperçu du rush (le rush original est souvent en HEVC 4K : le navigateur ne le lit pas partout) ----------
+APERCU = []   # son ffmpeg : coupé avec le cockpit (29/10 : un cockpit arrêté le laissait tourner seul)
+
+
+def arreter(*_):
+    for p in APERCU:
+        if p.poll() is None:
+            p.terminate()
+    sys.exit(0)
+
+
 def apercu_rush():
     out = os.path.join(AP, "rush.mp4")
     if os.path.exists(out) or not RUSH:
         return
+    # un seul aperçu à la fois (29/10 : 3 cockpits relancés = 3 ffmpeg sur le même fichier, 15 min de derush)
+    verrou = out + ".pid"
+    try:
+        while True:   # un autre aperçu tourne : on attend sa fin au lieu d'en lancer un 2e
+            os.kill(int(open(verrou).read()), 0)
+            time.sleep(2)
+    except (OSError, ValueError):
+        pass
+    if os.path.exists(out):
+        return
     vf = (lire("cadre.json") or {}).get("vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920")
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", RUSH, "-vf", vf + ",scale=540:960", "-c:v", "libx264",
-                    "-preset", "veryfast", "-crf", "27", "-c:a", "aac", "-b:a", "96k", out + ".part.mp4"])
-    if os.path.exists(out + ".part.mp4"):
+    p = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-i", RUSH, "-vf", vf + ",scale=540:960", "-c:v", "libx264",
+                          "-preset", "veryfast", "-crf", "27", "-c:a", "aac", "-b:a", "96k", out + ".part.mp4"])
+    APERCU.append(p)
+    with open(verrou, "w") as f:
+        f.write(str(p.pid))
+    ok = p.wait() == 0
+    if os.path.exists(verrou):
+        os.remove(verrou)
+    if ok and os.path.exists(out + ".part.mp4"):
         os.replace(out + ".part.mp4", out)
 
 
@@ -1685,6 +1711,8 @@ class Page(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    signal.signal(signal.SIGTERM, arreter)
+    signal.signal(signal.SIGINT, arreter)
     threading.Thread(target=lambda: (apercu_rush(), planche_rush()), daemon=True).start()
     print(f"Cockpit : http://127.0.0.1:{PORT}  ({D})")
     ThreadingHTTPServer(("127.0.0.1", PORT), Page).serve_forever()

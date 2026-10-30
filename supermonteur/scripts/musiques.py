@@ -1,4 +1,4 @@
-"""Musiques du dossier music_reels (réglages), avec leur dernière utilisation (28/10, l'utilisateur : « varier les musiques en
+"""Musiques du dossier music_reels (réglages), avec leur dernière utilisation (28/10, l’utilisateur : « varier les musiques en
 fonction de l'ambiance, pas toujours réutiliser les mêmes »).
 
     python3 musiques.py        -> jamais utilisées d'abord, puis la plus ancienne ; « INTERDITE » = dans les 3 derniers reels
@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import reglages
 
 CFG = reglages.config()
-dossier = CFG.get("music_reels") or CFG.get("music_epidemic")   # client sans music_reels (config d avant la 1.4)
+dossier = CFG.get("music_reels")
 J = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "musiques_utilisees.csv")
 rows = list(csv.DictReader(open(J))) if os.path.exists(J) else []
 reels = []

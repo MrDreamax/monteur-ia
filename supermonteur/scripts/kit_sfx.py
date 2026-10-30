@@ -15,9 +15,9 @@ Limite sans clé : 20 recherches/min, 200/jour. Ne pas mettre category=sound_eff
   python3 kit_sfx.py fabrique manque|tout  -> toutes les clés ⬜ (ou toutes) ; le pic du son est noté dans _kit.json (pic_s)
 """
 import json, os, subprocess, sys, tempfile, urllib.parse, urllib.request
+import reglages  # mêmes sons que mix.py : config.json du kit écrasé par les réglages de CETTE machine (28/10 : lisait le kit seul -> faux 0/12)
 
-SK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CFG = json.load(open(os.path.join(SK, "config.json")))
+CFG = reglages.config()
 SFX = CFG.get("sfx") or {}
 DIR = os.path.expanduser("~/Documents/Montage/SFX")
 KIT = os.path.join(DIR, "_kit.json")
@@ -130,6 +130,6 @@ elif cmd == "verifie":
     manque = [k for k in SFX if not ok(dest(k))]
     if manque:
         print(f"KIT SFX INCOMPLET {len(SFX) - len(manque)}/{len(SFX)} : manque {', '.join(manque)}"); sys.exit(1)
-    print(f"KIT SFX OK {len(SFX)}/{len(SFX)} ({DIR})")
+    print(f"KIT SFX OK {len(SFX)}/{len(SFX)} ({os.path.dirname(dest(next(iter(SFX))))})")
 else:
     sys.exit(__doc__)

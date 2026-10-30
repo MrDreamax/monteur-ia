@@ -1,11 +1,11 @@
 """Monte un carrousel Instagram 1080x1440 (3:4) au modèle validé le 16/10 (v4 « Quand tous les coachs se ressemblent »)
 à partir d'un fichier de description, via Open Carrusel (localhost:3210), puis exporte les PNG + planche + légende.
   python3 carrousel.py spec.json
-Le fichier spec : voir ../exemples/coachs-pareils-v4.json. Types de slide :
+Le fichier spec : voir ../exemples/exemple-v4.json. Types de slide :
   cover : photo + mot géant derrière la tête + 1 ligne en majuscules (couverture validée)
   photo : vraie photo étalonnée (prep.py) + titre serif + 1 phrase
   art   : illustration 2D (art.py "art" ou fichier "svg") + titre + 1 phrase | "steps" (liste 1-2-3) | "cta" (mot-clé)
-"style": "apple" (validé le 22/10/2026) : rendu local par apple.py, sans Open Carrusel. Voir ../exemples/coachs-pareils-apple.json.
+"style": "apple" (validé le 22/10/2026) : rendu local par apple.py, sans Open Carrusel. Voir ../exemples/exemple-apple.json.
 Pas de numéro de slide, pas de @, flèche « swipe » sur toutes sauf la dernière.
 """
 import io

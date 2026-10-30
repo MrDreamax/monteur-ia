@@ -18,7 +18,9 @@ EYES, FACE, ZMAX = opt("--eyes", 35) / 100, opt("--face", 33) / 100, opt("--max"
 W0, H0, _ = _size(src)
 if abs(W0 / H0 - 9 / 16) > 0.02: sys.exit(f"source {W0}x{H0} pas en 9:16 : recadrage 16:9 -> 9:16 pas encore géré (SKILL : monter en 9:16)")
 F = face(src, 16)
-if not F.get("yeux_y"): sys.exit("pas de visage détecté : pas de recadrage")
+if not F.get("yeux_y"):   # 28/10 (CAM20047, plan de scène déjà recadré en 9:16 : visage trop petit pour MediaPipe) : mise au format, pas d'arrêt
+    json.dump({"source": src, "zoom": 1.0, "visage": None, "vf": "scale=1080:1920:flags=lanczos,fps=30"}, open("cadre.json", "w"), indent=1)
+    sys.exit(print("pas de visage détecté : pas de recadrage, simple mise au format") or 0)
 ey, fx, fw = F["yeux_y"] / 100, F["visage_x"] / 100, F["visage_largeur"] / 100
 zmax = ZMAX if W0 >= 1080 * ZMAX else max(1.0, min(1.10, W0 / 1080 * 1.10))
 z = 1.0 if (ey <= 0.40 and fw >= 0.28) else max(1.0, min(zmax, FACE / fw))   # déjà bien cadrée : on ne touche pas

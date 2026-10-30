@@ -1,96 +1,587 @@
 {
-  "_doc": "Les choix proposés dans SuperDA (duos, palettes, univers, modèles...). Lu par le serveur et par la page. Ajouter une entrée = OK ; ne pas renommer un id.",
-  "duos": [
-    { "id": "elegant", "nom": "Élégant", "desc": "Montserrat + Instrument Serif",
-      "principale": { "famille": "Montserrat", "fichier": "Montserrat.ttf", "graisse": 700, "majuscules": true, "interlettrage": 1 },
-      "secondaire": { "famille": "Instrument Serif", "fichier": "InstrumentSerif-Italic.ttf", "graisse": 400, "italique": true, "majuscules": false } },
-    { "id": "impact", "nom": "Impact", "desc": "Bebas Neue",
-      "principale": { "famille": "Bebas Neue", "fichier": "BebasNeue-Regular.ttf", "graisse": 400, "majuscules": true, "interlettrage": 1 },
-      "secondaire": { "famille": "Bebas Neue", "fichier": "BebasNeue-Regular.ttf", "graisse": 400, "italique": false, "majuscules": true } },
-    { "id": "moderne", "nom": "Moderne", "desc": "Outfit fin + gras",
-      "principale": { "famille": "Outfit", "fichier": "Outfit.ttf", "graisse": 700, "majuscules": false, "interlettrage": 0 },
-      "secondaire": { "famille": "Outfit", "fichier": "Outfit.ttf", "graisse": 300, "italique": false, "majuscules": false } },
-    { "id": "affirme", "nom": "Affirmé", "desc": "Archivo large",
-      "principale": { "famille": "Archivo", "fichier": "Archivo.ttf", "graisse": 800, "majuscules": true, "interlettrage": 0.5 },
-      "secondaire": { "famille": "Archivo", "fichier": "Archivo.ttf", "graisse": 400, "italique": false, "majuscules": false } },
-    { "id": "personnel", "nom": "Personnel", "desc": "Figtree + Caveat",
-      "principale": { "famille": "Figtree", "fichier": "Figtree.ttf", "graisse": 700, "majuscules": false, "interlettrage": 0 },
-      "secondaire": { "famille": "Caveat", "fichier": "Caveat.ttf", "graisse": 700, "italique": false, "majuscules": false } },
-    { "id": "tech", "nom": "Tech", "desc": "Space Grotesk + Space Mono",
-      "principale": { "famille": "Space Grotesk", "fichier": "SpaceGrotesk.ttf", "graisse": 700, "majuscules": false, "interlettrage": 0 },
-      "secondaire": { "famille": "Space Mono", "fichier": "SpaceMono-BoldItalic.ttf", "graisse": 700, "italique": true, "majuscules": false } }
+ "_doc": "Les choix proposés dans SuperDA (duos, palettes, univers, modèles...). Lu par le serveur et par la page. Ajouter une entrée = OK ; ne pas renommer un id.",
+ "duos": [
+  {
+   "id": "apple",
+   "nom": "Apple",
+   "desc": "Inter gras",
+   "principale": {
+    "famille": "Inter",
+    "fichier": "Inter.ttf",
+    "graisse": 700,
+    "majuscules": true,
+    "interlettrage": 0.5
+   },
+   "secondaire": {
+    "famille": "Inter",
+    "fichier": "Inter.ttf",
+    "graisse": 700,
+    "italique": false,
+    "majuscules": false
+   }
+  },
+  {
+   "id": "elegant",
+   "nom": "Élégant",
+   "desc": "Montserrat + Instrument Serif",
+   "principale": {
+    "famille": "Montserrat",
+    "fichier": "Montserrat.ttf",
+    "graisse": 700,
+    "majuscules": true,
+    "interlettrage": 1
+   },
+   "secondaire": {
+    "famille": "Instrument Serif",
+    "fichier": "InstrumentSerif-Italic.ttf",
+    "graisse": 400,
+    "italique": true,
+    "majuscules": false
+   }
+  },
+  {
+   "id": "impact",
+   "nom": "Impact",
+   "desc": "Bebas Neue",
+   "principale": {
+    "famille": "Bebas Neue",
+    "fichier": "BebasNeue-Regular.ttf",
+    "graisse": 400,
+    "majuscules": true,
+    "interlettrage": 1
+   },
+   "secondaire": {
+    "famille": "Bebas Neue",
+    "fichier": "BebasNeue-Regular.ttf",
+    "graisse": 400,
+    "italique": false,
+    "majuscules": true
+   }
+  },
+  {
+   "id": "moderne",
+   "nom": "Moderne",
+   "desc": "Outfit fin + gras",
+   "principale": {
+    "famille": "Outfit",
+    "fichier": "Outfit.ttf",
+    "graisse": 700,
+    "majuscules": false,
+    "interlettrage": 0
+   },
+   "secondaire": {
+    "famille": "Outfit",
+    "fichier": "Outfit.ttf",
+    "graisse": 300,
+    "italique": false,
+    "majuscules": false
+   }
+  },
+  {
+   "id": "affirme",
+   "nom": "Affirmé",
+   "desc": "Archivo large",
+   "principale": {
+    "famille": "Archivo",
+    "fichier": "Archivo.ttf",
+    "graisse": 800,
+    "majuscules": true,
+    "interlettrage": 0.5
+   },
+   "secondaire": {
+    "famille": "Archivo",
+    "fichier": "Archivo.ttf",
+    "graisse": 400,
+    "italique": false,
+    "majuscules": false
+   }
+  },
+  {
+   "id": "personnel",
+   "nom": "Personnel",
+   "desc": "Figtree + Caveat",
+   "principale": {
+    "famille": "Figtree",
+    "fichier": "Figtree.ttf",
+    "graisse": 700,
+    "majuscules": false,
+    "interlettrage": 0
+   },
+   "secondaire": {
+    "famille": "Caveat",
+    "fichier": "Caveat.ttf",
+    "graisse": 700,
+    "italique": false,
+    "majuscules": false
+   }
+  },
+  {
+   "id": "tech",
+   "nom": "Tech",
+   "desc": "Space Grotesk + Space Mono",
+   "principale": {
+    "famille": "Space Grotesk",
+    "fichier": "SpaceGrotesk.ttf",
+    "graisse": 700,
+    "majuscules": false,
+    "interlettrage": 0
+   },
+   "secondaire": {
+    "famille": "Space Mono",
+    "fichier": "SpaceMono-BoldItalic.ttf",
+    "graisse": 700,
+    "italique": true,
+    "majuscules": false
+   }
+  }
+ ],
+ "polices_perso": {
+  "principales": [
+   {
+    "famille": "Montserrat",
+    "fichier": "Montserrat.ttf",
+    "graisse": 700
+   },
+   {
+    "famille": "Inter",
+    "fichier": "Inter.ttf",
+    "graisse": 700
+   },
+   {
+    "famille": "Poppins",
+    "fichier": "Poppins-SemiBold.ttf",
+    "graisse": 600
+   },
+   {
+    "famille": "Oswald",
+    "fichier": "Oswald.ttf",
+    "graisse": 600
+   },
+   {
+    "famille": "Outfit",
+    "fichier": "Outfit.ttf",
+    "graisse": 700
+   },
+   {
+    "famille": "Figtree",
+    "fichier": "Figtree.ttf",
+    "graisse": 700
+   },
+   {
+    "famille": "Archivo",
+    "fichier": "Archivo.ttf",
+    "graisse": 800
+   },
+   {
+    "famille": "Space Grotesk",
+    "fichier": "SpaceGrotesk.ttf",
+    "graisse": 700
+   },
+   {
+    "famille": "Bebas Neue",
+    "fichier": "BebasNeue-Regular.ttf",
+    "graisse": 400
+   }
   ],
-  "polices_perso": {
-    "principales": [
-      { "famille": "Montserrat", "fichier": "Montserrat.ttf", "graisse": 700 },
-      { "famille": "Inter", "fichier": "Inter.ttf", "graisse": 700 },
-      { "famille": "Poppins", "fichier": "Poppins-SemiBold.ttf", "graisse": 600 },
-      { "famille": "Oswald", "fichier": "Oswald.ttf", "graisse": 600 },
-      { "famille": "Outfit", "fichier": "Outfit.ttf", "graisse": 700 },
-      { "famille": "Figtree", "fichier": "Figtree.ttf", "graisse": 700 },
-      { "famille": "Archivo", "fichier": "Archivo.ttf", "graisse": 800 },
-      { "famille": "Space Grotesk", "fichier": "SpaceGrotesk.ttf", "graisse": 700 },
-      { "famille": "Bebas Neue", "fichier": "BebasNeue-Regular.ttf", "graisse": 400 }
-    ],
-    "secondaires": [
-      { "famille": "Instrument Serif", "nom": "Instrument Serif italique", "fichier": "InstrumentSerif-Italic.ttf", "graisse": 400, "italique": true },
-      { "famille": "Playfair Display", "nom": "Playfair italique", "fichier": "PlayfairDisplay-Italic.ttf", "graisse": 400, "italique": true },
-      { "famille": "Bodoni Moda", "nom": "Bodoni italique", "fichier": "BodoniModa-Italic.ttf", "graisse": 400, "italique": true },
-      { "famille": "DM Serif Display", "nom": "DM Serif italique", "fichier": "DMSerifDisplay-Italic.ttf", "graisse": 400, "italique": true },
-      { "famille": "Caveat", "nom": "Caveat (écrit main)", "fichier": "Caveat.ttf", "graisse": 700, "italique": false },
-      { "famille": "Space Mono", "nom": "Space Mono", "fichier": "SpaceMono-BoldItalic.ttf", "graisse": 700, "italique": true },
-      { "famille": "Montserrat", "nom": "Montserrat", "fichier": "Montserrat.ttf", "graisse": 400, "italique": false }
-    ]
-  },
-  "couleurs": {
-    "texte_reel": [ { "hex": "#FFFFFF", "nom": "Blanc" }, { "hex": "#F3E9D2", "nom": "Crème" }, { "hex": "#4F9BFF", "nom": "Bleu" }, { "hex": "#E8C547", "nom": "Jaune" }, { "hex": "#111111", "nom": "Noir" } ],
-    "accent_carrousel": [ { "hex": "#4F9BFF", "nom": "Bleu" }, { "hex": "#E8C547", "nom": "Jaune" }, { "hex": "#FF6B5B", "nom": "Corail" }, { "hex": "#2EC4A6", "nom": "Vert d'eau" } ],
-    "touches": [ { "hex": "#FFC845", "nom": "Jaune" }, { "hex": "#FF6B5B", "nom": "Corail" }, { "hex": "#2EC4A6", "nom": "Vert d'eau" }, { "hex": "#A3D977", "nom": "Vert tendre" } ],
-    "texte_carrousel": [ { "hex": "#FFFFFF", "nom": "Blanc" }, { "hex": "#F3E9D2", "nom": "Crème" }, { "hex": "#111111", "nom": "Noir" } ]
-  },
-  "cartons": {
-    "depart": [ { "hex": "#0E1220", "nom": "Nuit" }, { "hex": "#14110C", "nom": "Café" }, { "hex": "#0B0B0D", "nom": "Noir" }, { "hex": "#0E1A16", "nom": "Sapin" }, { "hex": "#1D1D1F", "nom": "Graphite" } ],
-    "arrivee": [ { "hex": "#1F3A66", "nom": "bleu" }, { "hex": "#5A4422", "nom": "bronze" }, { "hex": "#3A3A40", "nom": "gris" }, { "hex": "#1F5C4A", "nom": "vert" }, { "hex": "#4F9BFF", "nom": "bleu vif" } ]
-  },
-  "positions": {
-    "titre": { "haut": 290, "milieu": 760, "bas": 1180 },
-    "sous_titres": { "col": 1200, "poitrine": 1320, "bas": 1430 }
-  },
-  "zone_interdite": { "largeur": 1080, "hauteur": 1920, "haut": 270, "bas": 1480, "cotes": 65, "droite_bas": { "marge": 120, "sous_y": 1100 } },
-  "univers": [
-    { "id": "elegant", "nom": "Élégant", "desc": "traits fins, lent, raffiné", "deco": "", "plein": false, "ombre": false,
-      "defaut": { "mode": "sombre", "palette": "or", "trait": "fin", "formes": "carrees", "rythme": "pose" } },
-    { "id": "epure", "nom": "Épuré", "desc": "arrondi, aéré, ombres douces", "deco": "", "plein": true, "ombre": true,
-      "defaut": { "mode": "clair", "palette": "glacier", "trait": "fin", "formes": "arrondies", "rythme": "normal" } },
-    { "id": "futuriste", "nom": "Futuriste", "desc": "grille, lignes nettes, chiffres de code", "deco": "grille", "plein": false, "ombre": false,
-      "defaut": { "mode": "sombre", "palette": "glacier", "trait": "fin", "formes": "carrees", "rythme": "normal" } },
-    { "id": "magazine", "nom": "Magazine", "desc": "filets, gros chiffres, mise en page de journal", "deco": "magazine", "plein": false, "ombre": false,
-      "defaut": { "mode": "clair", "palette": "braise", "trait": "moyen", "formes": "carrees", "rythme": "normal" } },
-    { "id": "fait_main", "nom": "Fait main", "desc": "crayon, surligneur, papier", "deco": "papier", "plein": false, "ombre": false,
-      "defaut": { "mode": "clair", "palette": "or", "trait": "moyen", "formes": "arrondies", "rythme": "pose" } },
-    { "id": "impact", "nom": "Impact", "desc": "gros blocs pleins, rapide, contrasté", "deco": "", "plein": true, "ombre": false,
-      "defaut": { "mode": "sombre", "palette": "braise", "trait": "epais", "formes": "carrees", "rythme": "nerveux" } }
-  ],
-  "palettes": [
-    { "id": "glacier", "nom": "Glacier",
-      "sombre": { "fond": "#05070D", "fond2": "#0B1424", "texte": "#FFFFFF", "trait": "#7FD8FF", "touche": "#7FD8FF", "touche2": "#4F9BFF" },
-      "clair":  { "fond": "#F5F8FD", "fond2": "#FFFFFF", "texte": "#0B1424", "trait": "#1D5FBF", "touche": "#0A84FF", "touche2": "#7FD8FF" } },
-    { "id": "braise", "nom": "Braise",
-      "sombre": { "fond": "#0B0B0D", "fond2": "#17110F", "texte": "#FFFFFF", "trait": "#FF6B5B", "touche": "#FF6B5B", "touche2": "#FFC845" },
-      "clair":  { "fond": "#FFFFFF", "fond2": "#FFF6F2", "texte": "#111111", "trait": "#111111", "touche": "#E5534B", "touche2": "#FFC845" } },
-    { "id": "foret", "nom": "Forêt",
-      "sombre": { "fond": "#0E1A16", "fond2": "#13261F", "texte": "#E9F2EC", "trait": "#2EC4A6", "touche": "#2EC4A6", "touche2": "#A3D977" },
-      "clair":  { "fond": "#F1F7F3", "fond2": "#FFFFFF", "texte": "#0E1A16", "trait": "#1F7A66", "touche": "#2EC4A6", "touche2": "#A3D977" } },
-    { "id": "or", "nom": "Or",
-      "sombre": { "fond": "#14110C", "fond2": "#2A2014", "texte": "#F3E9D2", "trait": "#E9DFC8", "touche": "#C9A45C", "touche2": "#E8C547" },
-      "clair":  { "fond": "#F3EFE8", "fond2": "#EDE6DA", "texte": "#1A1A1A", "trait": "#1A1A1A", "touche": "#C9A45C", "touche2": "#F4D35E" } }
-  ],
-  "modeles": [
-    { "id": "epure", "nom": "Épuré", "desc": "blanc, photo bord à bord, dessins doux" },
-    { "id": "cinema", "nom": "Cinéma", "desc": "photo plein cadre sombre, titre blanc" },
-    { "id": "collage", "nom": "Collage", "desc": "photo encadrée, formes, scotch, très visuel" },
-    { "id": "carnet", "nom": "Carnet", "desc": "papier, écrit à la main, surligneur" },
-    { "id": "impact", "nom": "Impact", "desc": "blocs pleins, couleurs franches" },
-    { "id": "post_texte", "nom": "Post texte", "desc": "comme un tweet : photo ronde, nom, texte" }
+  "secondaires": [
+   {
+    "famille": "Instrument Serif",
+    "nom": "Instrument Serif italique",
+    "fichier": "InstrumentSerif-Italic.ttf",
+    "graisse": 400,
+    "italique": true
+   },
+   {
+    "famille": "Playfair Display",
+    "nom": "Playfair italique",
+    "fichier": "PlayfairDisplay-Italic.ttf",
+    "graisse": 400,
+    "italique": true
+   },
+   {
+    "famille": "Bodoni Moda",
+    "nom": "Bodoni italique",
+    "fichier": "BodoniModa-Italic.ttf",
+    "graisse": 400,
+    "italique": true
+   },
+   {
+    "famille": "DM Serif Display",
+    "nom": "DM Serif italique",
+    "fichier": "DMSerifDisplay-Italic.ttf",
+    "graisse": 400,
+    "italique": true
+   },
+   {
+    "famille": "Caveat",
+    "nom": "Caveat (écrit main)",
+    "fichier": "Caveat.ttf",
+    "graisse": 700,
+    "italique": false
+   },
+   {
+    "famille": "Space Mono",
+    "nom": "Space Mono",
+    "fichier": "SpaceMono-BoldItalic.ttf",
+    "graisse": 700,
+    "italique": true
+   },
+   {
+    "famille": "Montserrat",
+    "nom": "Montserrat",
+    "fichier": "Montserrat.ttf",
+    "graisse": 400,
+    "italique": false
+   }
   ]
+ },
+ "couleurs": {
+  "texte_reel": [
+   {
+    "hex": "#FFFFFF",
+    "nom": "Blanc"
+   },
+   {
+    "hex": "#F3E9D2",
+    "nom": "Crème"
+   },
+   {
+    "hex": "#4F9BFF",
+    "nom": "Bleu"
+   },
+   {
+    "hex": "#E8C547",
+    "nom": "Jaune"
+   },
+   {
+    "hex": "#111111",
+    "nom": "Noir"
+   }
+  ],
+  "accent_carrousel": [
+   {
+    "hex": "#4F9BFF",
+    "nom": "Bleu"
+   },
+   {
+    "hex": "#E8C547",
+    "nom": "Jaune"
+   },
+   {
+    "hex": "#FF6B5B",
+    "nom": "Corail"
+   },
+   {
+    "hex": "#2EC4A6",
+    "nom": "Vert d'eau"
+   }
+  ],
+  "touches": [
+   {
+    "hex": "#FFC845",
+    "nom": "Jaune"
+   },
+   {
+    "hex": "#FF6B5B",
+    "nom": "Corail"
+   },
+   {
+    "hex": "#2EC4A6",
+    "nom": "Vert d'eau"
+   },
+   {
+    "hex": "#A3D977",
+    "nom": "Vert tendre"
+   }
+  ],
+  "texte_carrousel": [
+   {
+    "hex": "#FFFFFF",
+    "nom": "Blanc"
+   },
+   {
+    "hex": "#F3E9D2",
+    "nom": "Crème"
+   },
+   {
+    "hex": "#111111",
+    "nom": "Noir"
+   }
+  ]
+ },
+ "cartons": {
+  "depart": [
+   {
+    "hex": "#0E1220",
+    "nom": "Nuit"
+   },
+   {
+    "hex": "#14110C",
+    "nom": "Café"
+   },
+   {
+    "hex": "#0B0B0D",
+    "nom": "Noir"
+   },
+   {
+    "hex": "#0E1A16",
+    "nom": "Sapin"
+   },
+   {
+    "hex": "#1D1D1F",
+    "nom": "Graphite"
+   }
+  ],
+  "arrivee": [
+   {
+    "hex": "#1F3A66",
+    "nom": "bleu"
+   },
+   {
+    "hex": "#5A4422",
+    "nom": "bronze"
+   },
+   {
+    "hex": "#3A3A40",
+    "nom": "gris"
+   },
+   {
+    "hex": "#1F5C4A",
+    "nom": "vert"
+   },
+   {
+    "hex": "#4F9BFF",
+    "nom": "bleu vif"
+   }
+  ]
+ },
+ "positions": {
+  "titre": {
+   "haut": 290,
+   "milieu": 760,
+   "bas": 1180
+  },
+  "sous_titres": {
+   "col": 1200,
+   "poitrine": 1320,
+   "bas": 1430
+  }
+ },
+ "zone_interdite": {
+  "largeur": 1080,
+  "hauteur": 1920,
+  "haut": 270,
+  "bas": 1480,
+  "cotes": 65,
+  "droite_bas": {
+   "marge": 120,
+   "sous_y": 1100
+  }
+ },
+ "univers": [
+  {
+   "id": "elegant",
+   "nom": "Élégant",
+   "desc": "traits fins, lent, raffiné",
+   "deco": "",
+   "plein": false,
+   "ombre": false,
+   "defaut": {
+    "mode": "sombre",
+    "palette": "or",
+    "trait": "fin",
+    "formes": "carrees",
+    "rythme": "pose"
+   }
+  },
+  {
+   "id": "epure",
+   "nom": "Épuré",
+   "desc": "arrondi, aéré, ombres douces",
+   "deco": "",
+   "plein": true,
+   "ombre": true,
+   "defaut": {
+    "mode": "clair",
+    "palette": "glacier",
+    "trait": "fin",
+    "formes": "arrondies",
+    "rythme": "normal"
+   }
+  },
+  {
+   "id": "futuriste",
+   "nom": "Futuriste",
+   "desc": "grille, lignes nettes, chiffres de code",
+   "deco": "grille",
+   "plein": false,
+   "ombre": false,
+   "defaut": {
+    "mode": "sombre",
+    "palette": "glacier",
+    "trait": "fin",
+    "formes": "carrees",
+    "rythme": "normal"
+   }
+  },
+  {
+   "id": "magazine",
+   "nom": "Magazine",
+   "desc": "filets, gros chiffres, mise en page de journal",
+   "deco": "magazine",
+   "plein": false,
+   "ombre": false,
+   "defaut": {
+    "mode": "clair",
+    "palette": "braise",
+    "trait": "moyen",
+    "formes": "carrees",
+    "rythme": "normal"
+   }
+  },
+  {
+   "id": "fait_main",
+   "nom": "Fait main",
+   "desc": "crayon, surligneur, papier",
+   "deco": "papier",
+   "plein": false,
+   "ombre": false,
+   "defaut": {
+    "mode": "clair",
+    "palette": "or",
+    "trait": "moyen",
+    "formes": "arrondies",
+    "rythme": "pose"
+   }
+  },
+  {
+   "id": "impact",
+   "nom": "Impact",
+   "desc": "gros blocs pleins, rapide, contrasté",
+   "deco": "",
+   "plein": true,
+   "ombre": false,
+   "defaut": {
+    "mode": "sombre",
+    "palette": "braise",
+    "trait": "epais",
+    "formes": "carrees",
+    "rythme": "nerveux"
+   }
+  }
+ ],
+ "palettes": [
+  {
+   "id": "glacier",
+   "nom": "Glacier",
+   "sombre": {
+    "fond": "#05070D",
+    "fond2": "#0B1424",
+    "texte": "#FFFFFF",
+    "trait": "#7FD8FF",
+    "touche": "#7FD8FF",
+    "touche2": "#4F9BFF"
+   },
+   "clair": {
+    "fond": "#F5F8FD",
+    "fond2": "#FFFFFF",
+    "texte": "#0B1424",
+    "trait": "#1D5FBF",
+    "touche": "#0A84FF",
+    "touche2": "#7FD8FF"
+   }
+  },
+  {
+   "id": "braise",
+   "nom": "Braise",
+   "sombre": {
+    "fond": "#0B0B0D",
+    "fond2": "#17110F",
+    "texte": "#FFFFFF",
+    "trait": "#FF6B5B",
+    "touche": "#FF6B5B",
+    "touche2": "#FFC845"
+   },
+   "clair": {
+    "fond": "#FFFFFF",
+    "fond2": "#FFF6F2",
+    "texte": "#111111",
+    "trait": "#111111",
+    "touche": "#E5534B",
+    "touche2": "#FFC845"
+   }
+  },
+  {
+   "id": "foret",
+   "nom": "Forêt",
+   "sombre": {
+    "fond": "#0E1A16",
+    "fond2": "#13261F",
+    "texte": "#E9F2EC",
+    "trait": "#2EC4A6",
+    "touche": "#2EC4A6",
+    "touche2": "#A3D977"
+   },
+   "clair": {
+    "fond": "#F1F7F3",
+    "fond2": "#FFFFFF",
+    "texte": "#0E1A16",
+    "trait": "#1F7A66",
+    "touche": "#2EC4A6",
+    "touche2": "#A3D977"
+   }
+  },
+  {
+   "id": "or",
+   "nom": "Or",
+   "sombre": {
+    "fond": "#14110C",
+    "fond2": "#2A2014",
+    "texte": "#F3E9D2",
+    "trait": "#E9DFC8",
+    "touche": "#C9A45C",
+    "touche2": "#E8C547"
+   },
+   "clair": {
+    "fond": "#F3EFE8",
+    "fond2": "#EDE6DA",
+    "texte": "#1A1A1A",
+    "trait": "#1A1A1A",
+    "touche": "#C9A45C",
+    "touche2": "#F4D35E"
+   }
+  }
+ ],
+ "modeles": [
+  {
+   "id": "epure",
+   "nom": "Épuré",
+   "desc": "blanc, photo bord à bord, dessins doux"
+  },
+  {
+   "id": "cinema",
+   "nom": "Cinéma",
+   "desc": "photo plein cadre sombre, titre blanc"
+  },
+  {
+   "id": "collage",
+   "nom": "Collage",
+   "desc": "photo encadrée, formes, scotch, très visuel"
+  },
+  {
+   "id": "carnet",
+   "nom": "Carnet",
+   "desc": "papier, écrit à la main, surligneur"
+  },
+  {
+   "id": "impact",
+   "nom": "Impact",
+   "desc": "blocs pleins, couleurs franches"
+  },
+  {
+   "id": "post_texte",
+   "nom": "Post texte",
+   "desc": "comme un tweet : photo ronde, nom, texte"
+  }
+ ]
 }

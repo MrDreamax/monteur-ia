@@ -64,9 +64,7 @@ def quand(f):
 def fiche(f, dossier, sortie, statut=""):
     ig, yt, tk = f.get("instagram", {}), f.get("youtube", {}), f.get("tiktok", {})
     plats = f.get("plateformes", ["instagram", "facebook", "youtube", "tiktok"])
-    pills = [f"Reel {'trial' if ig.get('type') == 'TRIAL_REEL' else 'normal'}",
-             "Trial" if ig.get("type") == "TRIAL_REEL" else "Pas de trial",
-             f"{round(f.get('duree', 0))} s",
+    pills = [f"{round(f.get('duree', 0))} s",
              "Cover = ton B-roll" if f.get("cover", {}).get("source") == "broll" else "Cover"]
     # Les contrôles qui passent et qui comptent peu sont regroupés en 1 ligne (l'utilisateur ne lit pas les pavés)
     secondaires = ("Vidéo trouvée", "Légende sous", "1er commentaire prêt", "Texte alternatif rempli", "Titre YouTube sous",

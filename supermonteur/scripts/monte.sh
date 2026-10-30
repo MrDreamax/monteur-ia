@@ -8,6 +8,9 @@ D=$(cd "${1:-.}" && pwd) || exit 1; cd "$D" || exit 1
 export PATH="$HOME/.local/bin:$HOME/.local/node/bin:$PATH"
 # HyperFrames 0.8.149 depuis le 25/10 : la 0.6.81 sautait une image à 4,10 / 8,17 / 16,33 / 32,17 s… (arrondi), sur tous les reels.
 S=$(cd "$(dirname "$0")" && pwd); HF="npx --yes hyperframes@0.8.149"
+# 30/10 (CAM20063) : Chrome cale vers 400 Mo d'images vidéo reçues, toujours à la même image, même Mac redémarré et calme.
+# Rendu par morceaux de 20 s avec un Chrome neuf à chaque morceau : plus de calage, et 2 min au lieu de 6 pour 58 s.
+export HF_SEGMENTED_CAPTURE=true HF_SEGMENT_FRAMES=600 HF_SEGMENT_BROWSER_RECYCLE=1
 T0=$(date +%s); etape() { echo "▶ $1  ($(( $(date +%s) - T0 )) s)"; }
 stop() { echo "⛔ STOP ($(( $(date +%s) - T0 )) s) : $1"; exit 1; }
 

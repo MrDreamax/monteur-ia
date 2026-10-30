@@ -1,7 +1,7 @@
 # Règles maison (moule fixe Stratosphère) : lire AVANT chaque montage
 
 Ensuite, lire `retours-client.md` : les retours de CE client passent avant tout le reste.
-Dans SKILL.md, « l'utilisateur » = le goût de la maison (la règle s'applique), sauf ce qui touche à SA personne (visage, voix, DA, charte, SSD) : là, c'est la fiche du client (`da/<client>.json`, `config.json`).
+Dans SKILL.md, « l’utilisateur » = le goût de la maison (la règle s'applique), sauf ce qui touche à SA personne (visage, voix, DA, charte, SSD) : là, c'est la fiche du client (`da/<client>.json`, `config.json`).
 
 - **Univers = le rush.** Tout ce qu'on ajoute doit sembler filmé dans la même pièce. Zéro filtre, zéro chrome, zéro néon, zéro glow.
 - **Sous-titres** : police de la DA, blancs, gras, 1 à 3 mots ; mot fort en serif italique, seul à l'écran ; au niveau du col, jamais sur le menton.

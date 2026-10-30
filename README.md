@@ -42,4 +42,4 @@ Une fenêtre, 4 onglets. Tout tourne sur ton Mac, avec ton abonnement Claude.
 
 Ce qui est installé : les skills `super`, `superveille`, `supermonteur`, `publieur` et `carrousel` dans `~/.claude/skills/`, l'appli dans `~/Documents/SuperApps/`.
 
-Crédit : l’utilisateur MrDreamax · byStratosphere
+Crédit : Cyril MrDreamax · byStratosphere

@@ -31,3 +31,9 @@ apps/superveille/veilles/
 apps/superveille/mes-notes/
 apps/superveille/ma-marque.md
 *.lock
+apps/superveille/enregistres/
+apps/superveille/enregistres.json
+apps/superveille/veilles/
+apps/superveille/mes-notes/
+apps/superveille/ma-marque.md
+*.lock

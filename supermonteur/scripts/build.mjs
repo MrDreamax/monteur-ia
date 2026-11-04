@@ -13,7 +13,7 @@
 // au-dessus de 270 px (14 %, Meta Ads Guide Reels), à moins de 65 px des bords (6 %), sous 1480 px (pseudo + légende),
 // ni à droite des sous-titres là où sont les boutons (sous-titres entre 120 et 960 px). Fonds et décors peuvent déborder.
 // Contrôle après chaque montage : node scripts/zones.mjs <dossier> (0 élément attendu).
-import { readFileSync, writeFileSync, mkdirSync, copyFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, copyFileSync, existsSync, statSync } from "node:fs";
 import { dirname, join, resolve, isAbsolute, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
@@ -77,6 +77,55 @@ const camDur = +execFileSync("ffprobe", ["-v", "error", "-show_entries", "format
 // corrections des erreurs de Whisper (plan.fixes : {"boulettes": "bullet"}), relues par Claude avant chaque montage
 const FIX = Object.fromEntries(Object.entries(plan.fixes || {}).map(([k, v]) => [norm(k), v]));
 for (const w of W) { const k = norm(w.text); if (FIX[k] !== undefined) w.text = w.text.replace(/^[^.,!?]+/, FIX[k]); }
+// 03/11 (IMG_7023, l’utilisateur : « quand y'a un nombre, écris-le toujours avec des chiffres et non des lettres ») :
+// les nombres dits en lettres par Whisper (« vingt ans », « trente-cinq », « quatre-vingt-dix ») passent en chiffres à l'écran.
+// Jamais « un » / « une » seuls (articles), ni « neuf » en fin de phrase (« un téléphone neuf. »). Les mots fusionnés
+// gardent le début du 1er et la fin du dernier.
+const NB = { "zéro": 0, un: 1, une: 1, deux: 2, trois: 3, quatre: 4, cinq: 5, six: 6, sept: 7, huit: 8, neuf: 9, dix: 10, onze: 11,
+  douze: 12, treize: 13, quatorze: 14, quinze: 15, seize: 16, vingt: 20, vingts: 20, trente: 30, quarante: 40, cinquante: 50,
+  soixante: 60, cent: 100, cents: 100, mille: 1000 };
+const enChiffres = W => {
+  const coupe = text => { const m = String(text).match(/^(.*?)([«»“”"….,!?;:]*)$/); return [m[1], m[2]]; };
+  const parts = mot => mot.toLowerCase().replace("’", "'").split("-").filter(Boolean);
+  const out = [];
+  for (let i = 0; i < W.length; ) {
+    let total = 0, cur = 0, last = null, j = i, n = 0, ponct = "", seul = null;
+    while (j < W.length) {
+      const [mot, p] = coupe(W[j].text), ps = parts(mot);
+      if (!ps.length) break;
+      // « et » entre deux nombres (vingt et un, soixante et onze) : seulement après une dizaine et devant un / une / onze
+      const etOk = k => ps[k] === "et" && last !== null && last % 10 === 0 && last >= 20 && last <= 60;
+      let ok = true, c = cur, t = total, l = last;
+      for (let k = 0; k < ps.length; k++) {
+        if (ps[k] === "et") { if (!(etOk(k) || (l !== null && l % 10 === 0 && l >= 20 && l <= 60))) { ok = false; break; } continue; }
+        const v = NB[ps[k]];
+        if (v === undefined) { ok = false; break; }
+        if (l !== null && !(v === 100 || v === 1000 || (v === 20 && l === 4) || v < l)) { ok = false; break; }   // « deux trois » = 2 nombres
+        if (v === 100) c = (c || 1) * 100;
+        else if (v === 1000) { t += (c || 1) * 1000; c = 0; }
+        else if (v === 20 && l === 4) c += 76;   // quatre-vingt
+        else c += v;
+        l = v;
+      }
+      if (!ok) break;
+      // « et » isolé : il faut que le mot suivant soit un / une / onze
+      if (ps.length === 1 && ps[0] === "et") {
+        const nx = W[j + 1] && parts(coupe(W[j + 1].text)[0]);
+        if (!nx || nx.length !== 1 || !["un", "une", "onze"].includes(nx[0])) break;
+      }
+      cur = c; total = t; last = l; n++; seul = ps; j++; ponct = p;
+      if (p) break;   // une virgule ou un point ferme le nombre (« trente-cinq, quarante »)
+    }
+    const val = total + cur;
+    const article = n === 1 && seul.length === 1 && (seul[0] === "un" || seul[0] === "une");
+    const neufFin = n === 1 && seul.length === 1 && seul[0] === "neuf" && /[.!?…]/.test(ponct);
+    if (n && !article && !neufFin && !(n === 1 && seul.length === 1 && seul[0] === "et")) {
+      out.push({ ...W[i], e: W[j - 1].e, text: String(val) + ponct }); i = j;
+    } else { out.push(W[i]); i++; }
+  }
+  return out;
+};
+if (plan.chiffres !== false) W.splice(0, W.length, ...enChiffres(W));   // plan.chiffres = false : nombres laissés en lettres
 const dur = Math.min(plan.duration || camDur, camDur - 0.04);
 const kw = new Set((plan.keywords || []).map(norm));
 // règle (13/10, Style Lab final) : vidéo AVEC titre-question = ni mot géant derrière la tête, ni mot fort. Sans titre : les deux sont permis.
@@ -125,7 +174,8 @@ const cards = (plan.mini || []).filter(m => m.type === "card");
 }
 // plages plein écran sans sous-titres dessous : cartons liste, preuves, feuille de commentaires
 // + B-rolls "nosub": true (graphique, capture d'écran : les sous-titres crème deviennent illisibles sur fond clair et cachent l'info, 13/10)
-const FULL = [...lists, ...proofs, ...cards, ...(cta ? [cta] : []), ...(plan.ctaMenu ? [plan.ctaMenu] : []), ...(plan.brolls || []).filter(b => b.nosub)];
+// 30/10 (CAM20063 v2 : « lorsqu'il y a le titre, tu peux ne pas mettre de sous-titres ») : plan.noSub = [{start, end}] plages sans sous-titres
+const FULL = [...lists, ...proofs, ...cards, ...(cta ? [cta] : []), ...(plan.ctaMenu ? [plan.ctaMenu] : []), ...(plan.brolls || []).filter(b => b.nosub), ...(plan.noSub || [])];
 // 17/10 (selfie voiture, visage trop proche) : sous-titres posés AU-DESSUS de la tête (plan.subY < 760) = même place que les
 // chiffres et mots géants -> masqués pendant qu'un chiffre / mot géant est à l'écran (sinon ils se chevauchent)
 const TOPBIG = (plan.subY ?? 9999) < 760 ? [...(plan.numbers || []), ...(plan.bigwords || []),
@@ -136,7 +186,17 @@ const FS = [...lists, ...proofs, ...cards, ...(cta ? [cta] : []), ...(plan.broll
 const SOFT = (b, d) => Math.min(dur, ...FS.filter(x => x.start >= b - 0.02).map(x => x.start)) - b >= 1.5 ? d : 0;
 // sous-titres dans la zone la plus lisible (sombre + unie, ex. t-shirt noir), calculée sur le rush (13/10)
 let SUBY = plan.subY;
-if (SUBY == null) { try { SUBY = +execFileSync("python3", [join(SKILL, "scripts", "subzone.py"), plan.cam]).toString().trim(); } catch { SUBY = 1150; } console.log(`sous-titres à y=${SUBY}px`); }
+// 03/11 (IMG_7023 : 33 à 64 s de subzone.py à CHAQUE version, pour la même vidéo) : la hauteur est gardée dans subzone.json,
+// liée à la vidéo (chemin + taille + date) ; une autre vidéo (dérush refait) = nouvelle mesure.
+if (SUBY == null) {
+  let cle = "", cz = {};
+  try { const st = statSync(plan.cam); cle = `${resolve(plan.cam)}|${st.size}|${Math.round(st.mtimeMs)}`; cz = JSON.parse(readFileSync("subzone.json", "utf8")); } catch {}
+  if (cle && cz.cle === cle && Number.isFinite(cz.y)) SUBY = cz.y;
+  else {
+    try { SUBY = +execFileSync("python3", [join(SKILL, "scripts", "subzone.py"), plan.cam]).toString().trim(); if (cle && Number.isFinite(SUBY)) writeFileSync("subzone.json", JSON.stringify({ cle, y: SUBY })); } catch { SUBY = 1150; }
+  }
+  console.log(`sous-titres à y=${SUBY}px`);
+}
 // zones mortes Insta (16/10) : encre d'un sous-titre 52 px = de +8 à +53 px sous son haut ; mot fort serif 132 px = de +16 à +143 px
 // (jambages g, p, j compris), mesuré au navigateur le 16/10. Rien sous 1480 px, rien au-dessus de 270 px.
 const SUB_MAX = 1480 - Math.round(53 * SUBSIZE / 52), KW = plan.kwSize || 132, EMW = {};
@@ -835,9 +895,15 @@ const cleanW = j => normK(String(W[j].text).replace(/[.,!?;:…]+$/, ""));
 const pairKey = j => W[j + 1] && !/[.,!?;:…]$/.test(W[j].text) && !isCarry(cleanW(j)) && !isCarry(cleanW(j + 1)) && cleanW(j).length > 2 && cleanW(j + 1).length > 2 ? cleanW(j) + " " + cleanW(j + 1) : "";
 const PAIRN = {}; W.forEach((_, j) => { const k = pairKey(j); if (k) PAIRN[k] = (PAIRN[k] || 0) + 1; });
 const conceptAfter = j => { const k = pairKey(j); return k && PAIRN[k] >= 2; };
+// 02/11 (IMG_7004 : « QU'EST-CE / QUE TU AS », « QUE TOUT / LE MONDE ») : plan.subLies = expressions jamais coupées en deux sous-titres,
+// plan.subLarge = caractères max d'un bloc (défaut 18) pour qu'elles tiennent.
+const SUBLARGE = plan.subLarge || 18;
+const LIE = new Set();
+(plan.subLies || []).forEach(x => { const m = x.split(/\s+/).map(normK); W.forEach((_, i) => { if (m.every((t, k) => W[i + k] && cleanW(i + k) === t)) m.slice(1).forEach((_, k) => LIE.add(i + k)); }); });
 const blockCost = (a, b, last) => {
   const n = b - a + 1, L = W.slice(a, b + 1).map(w => w.text).join(" ").length;
-  if (n > SUBMAX || (L > 18 && n > 1)) return Infinity;
+  if (n > SUBMAX || (L > SUBLARGE && n > 1)) return Infinity;
+  if (!last && LIE.has(b)) return 50;
   let c = 1 + (L > 16 ? 3 : 0);
   if (n === 1) c += W[a].text.length >= 9 ? 0.5 : 2.5;
   const e = norm(W[b].text);
@@ -874,6 +940,16 @@ groups = groups.reduce((acc, gr, gi, all) => {
   if (small && prev && kwOf[prev[0]] < 0 && !/[.,!?]$/.test(W[prev.at(-1)].text) && txt([...prev, ...gr]).length <= 18 && prev.length + gr.length <= SUBMAX) prev.push(...gr); else acc.push(gr);
   return acc;
 }, []);
+// 02/11 (IMG_7004, débit 213 mots/min, blocs de 0,14 s illisibles) : plan.subMin = durée mini d'un bloc (s), sinon il rejoint son voisin
+// (4 mots max, plan.subLarge + 2 caractères max, jamais par-dessus une fin de phrase).
+if (plan.subMin) for (let g = 0; g < groups.length; g++) {
+  const gr = groups[g], next = groups[g + 1], prev = groups[g - 1];
+  if ((next ? W[next[0]].t : W[gr.at(-1)].e + 0.3) - W[gr[0]].t >= plan.subMin) continue;
+  const taille = (x, y) => !x || !y || /[.!?]$/.test(W[x.at(-1)].text) || x.length + y.length > 4 ? Infinity : W.slice(x[0], y.at(-1) + 1).map(w => w.text).join(" ").length;
+  const tn = taille(gr, next), tp = taille(prev, gr);
+  if (Math.min(tn, tp) > SUBLARGE + 2) continue;
+  if (tn <= tp) { gr.push(...next); groups.splice(g + 1, 1); g--; } else { prev.push(...gr); groups.splice(g, 1); g -= 2; }
+}
 // règle apprise (réf 12/10) : un chiffre ou un mot géant à l'écran sort du sous-titre (« DONNE-MOI » seul, pas « DONNE-MOI 30 »)
 const squash = t => normK(t).replace(/\s/g, "");   // « l'arnaque » sort aussi du sous-titre quand ARNAQUE est à l'écran
 const BIG = [...(plan.numbers || []).map(n => [n.start, n.end, squash(n.text + (n.suffix || ""))]), ...bigwords.map(w => [w.start, w.end, squash(w.text)])];
@@ -900,7 +976,9 @@ groups.forEach((grp, gi) => {
     const zone = ZS.find(z => p0 >= z.start - 0.02 && p0 < z.end), id = `c${gi}${k ? "_" + k : ""}`;
     const y0 = zone ? zone.y : SUBY, y = subY(y0, emTxt, emTxt ? grp.filter(j => kwOf[j] < 0).map(j => W[j].text.replace(/[.,!?]$/, "")).map(t => TY && TY.sub.caps === false ? t : t.toUpperCase()).join(" ") : "");
     if (y !== y0) console.log(`sous-titre ${gi} « ${emTxt || W[grp[0]].text} » : y ${y0} -> ${y} (zones mortes)`);
-    layers += `<div class="cap${zone && zone.light ? " onlight" : ""}" id="${id}"${zone || y !== y0 ? ` style="top:${y}px"` : ""}>${html}</div>`;
+    // 30/10 : zone.color = couleur des sous-titres sur cette plage (fond clair d'un écran coupé), sans ombre
+    const zc = zone && zone.color ? `;color:${zone.color};text-shadow:none` : "";
+    layers += `<div class="cap${zone && zone.light ? " onlight" : ""}" id="${id}"${zone || y !== y0 ? ` style="top:${y}px${zc}"` : ""}>${html}</div>`;
     CAPT.push([p0, p1]);
     if (first) V(`#${id}`, p0, p1, `{y:10}`, `{y:0,ease:"power2.out"}`, 0.1); else V(`#${id}`, p0, p1, "{}", "{}", 0.01);
     first = false;
@@ -921,8 +999,11 @@ const fitLigne = (text, file, base, { weight = 400, stretch = 100, track = 0, ca
         return Math.min(base, Math.floor((maxW - track * t.length) / (L * 1.03))); } catch { return base; }
 };
 // taille du titre fixée au setup (26/10) : DA.titleSize = [ligne 1, ligne 2]
-const T1S = TY ? TY.t1 : { font: DA.fonts.sub, weight: 700, size: DA.titleSize?.[0] || Math.round(SUBSIZE * 46 / 52), caps: true, track: plan.subTrack ?? DA.subTrack ?? 1 };
-const T2S = TY ? TY.t2 : { font: DA.fonts.serif, weight: 400, size: DA.titleSize?.[1] || 104, track: 0 };
+// 31/10 : plan.typo sans taille = taille par défaut (avant : « NaNpx » et plantage d'express.py)
+const T1D = { font: DA.fonts.sub, weight: 700, size: DA.titleSize?.[0] || Math.round(SUBSIZE * 46 / 52), caps: true, track: plan.subTrack ?? DA.subTrack ?? 1 };
+const T2D = { font: DA.fonts.serif, weight: 400, size: DA.titleSize?.[1] || 104, track: 0 };
+const T1S = TY ? { ...TY.t1, size: TY.t1.size || T1D.size } : T1D;
+const T2S = TY ? { ...TY.t2, size: TY.t2.size || T2D.size } : T2D;
 let FS1 = T1S.size, FS2 = T2S.size;
 if (plan.title) {
   const T = plan.title;
@@ -937,7 +1018,7 @@ if (plan.title) {
   // sur le texte (couleur du texte = typo.t1 / t2 color)
   const BOXC = typeof T.box === "string" && T.box.startsWith("#") ? T.box : null;
   const TSH = BOXC ? ";text-shadow:none" : T.light ? ";text-shadow:0 0 3px rgba(0,0,0,.95),0 2px 8px rgba(0,0,0,.85),0 0 34px rgba(0,0,0,.7),0 0 70px rgba(0,0,0,.45)" : "";
-  layers += `<div class="htitle${(tz && tz.light) || T.light ? " onlight" : ""}" id="htitle" style="top:${T.top ?? 280}px${TSH}">${T.box ? `<div style="display:inline-block;background:${BOXC || `rgba(0,0,0,${T.box === true ? .8 : T.box})`};border-radius:24px;padding:20px 48px 26px">` : ""}<div class="ht1">${esc(TP(T.l1))}</div><div class="ht2">${esc(TP(T.l2))}</div>${T.box ? "</div>" : ""}</div>`;
+  layers += `<div class="htitle${(tz && tz.light) || T.light ? " onlight" : ""}" id="htitle" style="top:${T.top ?? 250}px${TSH}">${T.box ? `<div style="display:inline-block;background:${BOXC || `rgba(0,0,0,${T.box === true ? .8 : T.box})`};border-radius:24px;padding:20px 48px 26px">` : ""}<div class="ht1">${esc(TP(T.l1))}</div><div class="ht2">${esc(TP(T.l2))}</div>${T.box ? "</div>" : ""}</div>`;
   // 28/10 (CAM20047 : « mets un encadré noir dans le fond ») : T.box = encadré noir arrondi autour du titre (true = 80 %, ou l'opacité)
   // 28/10 (l’utilisateur : « pourquoi sur la toute première frame il n'y a pas de texte ? ») : un titre qui ouvre le reel est net dès
   // l'image 0 (1re image = ce que le pouce voit), sans fondu d'entrée ; plus tard dans le reel, il garde son petit fondu.

@@ -5,7 +5,7 @@ Réfs validées (22/10, avant le nom « minimaliste ») : IMG_6798 « Comment mi
 
 1. Étapes communes de SKILL.md (transcription, dérush serré), MAIS cadre d'origine : `--vf "scale=1080:1920:flags=lanczos,fps=30"` au dérush, PAS le `vf` de `cadre.py` (27/10 CAM20062 puis 28/10 CAM20058 : le cadre serré met les cheveux dans le titre qui reste toute la vidéo). Avant le rendu : 1 image avec une ligne à 280 et 470 px, le haut de la tête doit être sous 470.
 2. **plan.json** : champs communs + `title` qui couvre toute la vidéo :
-   `"title": {"l1": "Comment mieux parler", "l2": "en face caméra ?", "start": 0, "end": 999}` (le moteur coupe à la durée du clip). FAQ = la question posée, mot pour mot. Clip = le sujet en 2 lignes. Jamais de virgule, point ni deux-points.
+   `"title": {"l1": "Comment mieux parler", "l2": "en face caméra ?", "start": 0, "end": 999}` (le moteur coupe à la durée du clip). FAQ = la question posée, mot pour mot. Clip = le sujet en 2 lignes. Jamais de virgule, point ni deux-points. Toujours en MAJUSCULES à l'écran (02/11, tous styles ; le moteur le fait seul).
    Pas de `keywords`, `bigwords`, `numbers`, `lists`, `brolls`.
 3. **Musique obligatoire** (tous les styles en ont une, 26/10) : règles de SKILL.md (28/10 : dossier `music_reels` des réglages seulement, sinon bibliothèque SUNO de son disque externe, continue d'un seul passage, montée calée sur la phrase forte).
 4. Taille et police du titre et des sous-titres = la DA du setup (`titleSize`, `subSize`, `fonts`), jamais réglées au montage.

@@ -24,12 +24,18 @@ PRE, POST, MID, MAXGAP = 0.06, 0.12, 0.15, 0.25
 # 17/10 (Tesla v3 : « on n'entend pas le mot data en entier ») : les temps de Whisper sont faux de 0,1-0,3 s aux bords
 # des mots. Aux coupes qui retirent un blanc entier (fin de phrase, prise sautée), on coupe sur le VRAI son : fin = 1er blanc
 # de 120 ms après le mot, début = vraie attaque de la voix. Seuil = niveau de parole (95e centile) - 21 dB (énergie lissée 30 ms).
+_RAW = []
+def _raw():
+    if not _RAW:
+        import numpy as np
+        raw = subprocess.run(["ffmpeg", "-v", "error", "-i", src, "-vn", "-ac", "1", "-ar", "16000", "-f", "f32le", "-"], capture_output=True).stdout
+        _RAW.append(np.frombuffer(raw, dtype=np.float32))
+    return _RAW[0]
 _ENV = []
 def _env():
     if not _ENV:
         import numpy as np
-        raw = subprocess.run(["ffmpeg", "-v", "error", "-i", src, "-vn", "-ac", "1", "-ar", "16000", "-f", "f32le", "-"], capture_output=True).stdout
-        x = np.frombuffer(raw, dtype=np.float32); n = len(x) // 160 * 160
+        x = _raw(); n = len(x) // 160 * 160   # 03/11 : le son du rush est décodé UNE fois (_raw), plus 3 fois
         db = 20 * np.log10(np.sqrt((x[:n].reshape(-1, 160) ** 2).mean(1)) + 1e-9)
         db = np.convolve(db, np.ones(3) / 3, "same")     # lissé sur 30 ms : le bruit de la pièce frôle le seuil
         _ENV.extend([db, float(np.percentile(db, 95)) - 21])
@@ -55,8 +61,7 @@ _SA = []
 def _voiced(k):
     import numpy as np
     if not _SA:
-        raw = subprocess.run(["ffmpeg", "-v", "error", "-i", src, "-vn", "-ac", "1", "-ar", "16000", "-f", "f32le", "-"], capture_output=True).stdout
-        _SA.append(np.frombuffer(raw, dtype=np.float32))
+        _SA.append(_raw())
     f = _SA[0][k * 160: k * 160 + 480].astype(np.float64); f = f - f.mean()
     if len(f) < 480 or (f * f).sum() <= 0: return False
     return max((f[:-l] * f[l:]).sum() / np.sqrt((f[:-l] ** 2).sum() * (f[l:] ** 2).sum() + 1e-12) for l in range(40, 200, 2)) > 0.55
@@ -81,6 +86,8 @@ def speech_start(t, lo):   # vraie attaque du mot annoncé à t : DERNIER passag
     return best
 SERRE = []   # coupes sans blanc (phrase retirée collée au mot d'avant), voir plus bas
 MINCUT, MINSEG, BREATH = 0.45, 0.6, 0.3   # 17/10 : pas de coupe pour un blanc < 0,45 s ; pas de bout de face cam < 0,6 s entre deux coupes
+# 03/11 (IMG_7022 : « fais des cuts un poil plus serrés ») : --serre = coupe aussi les blancs de 0,3 s et les respirations de 0,22 s
+if "--serre" in sys.argv: MINCUT, BREATH = 0.3, 0.22
 # 23/10 (l’utilisateur, règle pour TOUT 1er dérush : « ne coupe jamais en plein milieu d'une phrase, toujours sur un point ou une virgule »,
 # déjà dit le 21/10 sur CAM20033). L'IMAGE n'est coupée qu'après un mot qui finit par . , ! ? … ; : (ou à une reprise sautée).
 # Un blanc ou une respiration en milieu de phrase reste à l'image ; seul son SON est baissé au bruit de la pièce (MUTE plus bas).
@@ -132,7 +139,9 @@ for i, w in enumerate(keep):
             se = speech_end(prev["end"], W[pj + 1]["start"] + 0.15 if jumped else min(prev["end"] + 0.35, w["start"] - 0.05),
                             cap=W[pj + 1]["start"] if jumped else w["start"] - 0.05)   # 22/10 : la queue du mot s'arrête avant le mot suivant
             if se: segs[-1][1] = se                      # fin réelle du mot (pas celle de Whisper)
-            elif jumped and W[pj + 1]["start"] - prev["end"] < 0.1:
+            # 03/11 (IMG_7022 « vite, | mais si tu n'as pas de strat... » : 0,18 s, la voix ne retombe pas avant le mot retiré,
+            # speech_end rendait la butée = Gardien « mot coupé » bloquant) : jusqu'à 0,3 s, et aussi quand la fin = la butée
+            if jumped and W[pj + 1]["start"] - prev["end"] < 0.3 and (not se or se >= W[pj + 1]["start"] - 0.03):
                 # 23/10 (cockpit v4 : phrase barrée collée au mot d'avant, « sujet | et le message ») : aucun blanc entre les deux.
                 # On coupe au creux du son entre les deux mots ; la coupe est notée « serrée » (le Gardien la signale sans bloquer :
                 # c'est la personne qui a choisi de retirer la suite).
@@ -160,6 +169,7 @@ def inner_pauses(a, b):
 # 20/10 (retour : « enlève les respirations en début et en fin de phrase, sans couper le mot, il faut que ce soit bien audible ») :
 # marges autour de la voix forte = EDGE_IN avant l'attaque (consonne douce gardée), EDGE_OUT après la fin (« s », « x » finals gardés).
 EDGE_IN, EDGE_OUT = 0.12, 0.10
+if "--serre" in sys.argv: EDGE_IN, EDGE_OUT = 0.09, 0.07   # 03/11 : marges au bord de la voix resserrées (le Gardien « mot coupé » veille)
 # 20/10 (retour : « "longueur d'avance" : on n'entend pas la dernière syllabe ») : la fin douce d'un mot (« -vance », « s », « x »)
 # est sous le seuil « voix forte » : couper à p0 + 0,10 la mangeait. La fin du mot = 1er VRAI silence (sous le seuil de parole q,
 # 60 ms d'affilée) après la voix forte ; le souffle éventuel qui suit part avec le reste.
@@ -196,6 +206,19 @@ for a, b in segs:
         if pa - te >= MINCUT: _new.append([cur, te]); cur = pa
     if end - cur > 0.05: _new.append([cur, end])
 segs = _new
+# 03/11 (IMG_7022, Claude à sa limite d'usage -> secours drop_auto : « Mais quand c'est trop fort. » marmonné, 0,78 s de mots
+# selon la transcription mais 0,12 s de vraie voix -> bout de 0,2 s isolé, v1 bloquée par le Gardien « Micro-coupes ») : un bout
+# < MINSEG qu'on ne peut recoller à aucune voisine (blanc ≥ 0,5 s des deux côtés) n'a pas de vraie voix sous ses mots (mots mal
+# calés, prise avortée). Il saute avec ses mots (sous-titres), au lieu d'un plan éclair. Le Gardien garde sa règle des 0,6 s.
+def _retire_bout(k, ou):
+    global keep
+    a, b = segs[k]
+    p0 = segs[k - 1][1] if k > 0 else -1
+    p1 = segs[k + 1][0] if k + 1 < len(segs) else 1e9
+    mots = [i for i, w in enumerate(W) if i not in dead and w["end"] > p0 + 0.02 and w["start"] < p1 - 0.02]
+    print(f"bout de {b - a:.2f} s à {a:.2f} s {ou} retiré, pas de vraie voix sous ses mots : « {' '.join(W[i]['text'] for i in mots)[:60]} »")
+    dead.update(mots); keep = [w for i, w in enumerate(W) if i not in dead]
+    segs.pop(k)
 # 17/10 (Tesla 14,8 s : « enlève le micro rush inutile qui saccade ») : un bout gardé < MINSEG entre deux coupes
 # (« par » seul, 0,17 s, puis saut) = la tête saute deux fois. On le recolle au bout voisin de la même prise (blanc gardé).
 k = 0
@@ -205,7 +228,7 @@ while k < len(segs):
         # recollé seulement si le blanc gardé reste court (< 0,5 s) : sinon on entend un silence (17/10 v2, 15 s : « par … exemple »)
         if k + 1 < len(segs) and segs[k + 1][0] - b < 0.5:  segs[k + 1][0] = a; segs.pop(k); continue
         if k > 0 and a - segs[k - 1][1] < 0.5:            segs[k - 1][1] = b; segs.pop(k); continue
-        print(f"!! bout de {b - a:.2f} s à {a:.2f} s dans le rush, entre deux prises : le couvrir d'un B-roll ou prendre une autre prise (drop.json)")
+        _retire_bout(k, "entre deux prises"); continue
     k += 1
 # 20/10 (retour : « chaque plan dure minimum 2 secondes », « plus de micro-coupures ») : tout bout de face cam < MINSHOT est recollé
 # à son voisin quand la pause entre les deux est courte (< SHOTGAP : elle reste, c'est un temps naturel). Entre deux prises
@@ -285,13 +308,6 @@ if segs and "--fin-libre" not in sys.argv:
 #  - une pause >= 0,12 s À L'INTÉRIEUR du 1er mot selon Whisper = ce qui la précède n'est pas ce mot -> la plage démarre après ;
 #  - une inspiration n'a pas de note (pas de voix « voisée ») : la plage démarre EDGE_V avant la 1re trame voisée (la consonne
 #    sourde du début, « p », « s », « ch », reste entière).
-_RAW = []
-def _raw():
-    if not _RAW:
-        import numpy as np
-        raw = subprocess.run(["ffmpeg", "-v", "error", "-i", src, "-vn", "-ac", "1", "-ar", "16000", "-f", "f32le", "-"], capture_output=True).stdout
-        _RAW.append(np.frombuffer(raw, dtype=np.float32))
-    return _RAW[0]
 def first_voiced(t0, t1):   # 1re trame de 10 ms VOISÉE (note de voix : autocorrélation > 0,55 entre 80 et 400 Hz) et assez forte
     import numpy as np
     x, (db, q) = _raw(), _env()
@@ -390,17 +406,73 @@ if "--plages" in sys.argv:
     dead = {i for i, w in enumerate(W) if not any(a - 0.02 <= (w["start"] + w["end"]) / 2 <= b + 0.02 for a, b in segs)}
     keep = [w for i, w in enumerate(W) if i not in dead] or keep
     print(f"plages posées à la main : {len(segs)} ({len(LIBRE)} bout(s) remis, {len(SERRE) + len(SERRE_D)} bord(s) à la main)")
+# 03/11 (IMG_7023 : Gardien « mot coupé » sur 4 bords de prises, montage SuperMonteur arrêté sans réparation) : dernier filet,
+# avec la MÊME mesure que le Gardien (même trame, même AFADE) : une fin qui tombe avant la queue du mot (queue_mot.fin_du_mot)
+# va jusqu'à elle ; un début dont la trame d'avant est déjà de la voix (voisée, > bruit + 15 dB) recule jusqu'au calme.
+# Jamais jusqu'au mot voisin du rush. Les bords posés à la main (SERRE, SERRE_D) ne bougent pas.
+def _filet_mots(segs):
+    AFADE = 0.03   # = le micro-fondu anti-clic posé plus bas (le Gardien mesure à a + AFADE et b - AFADE)
+    db, q = _env(); fl = _floor(); n = len(db)
+    for s in segs:
+        a, b = s
+        if not any(abs(b - x) < 0.005 for x in SERRE):
+            k = int((b - AFADE) * 100); j = k
+            while j > max(0, k - 60) and db[j] < q + 6: j -= 1
+            if db[j] >= q + 6:
+                nx = k
+                while nx < n - 1 and nx < k + 150 and db[nx] < q + 6: nx += 1
+                f = fin_du_mot(db, _voiced, q, fl, j / 100, nx / 100)
+                if b - AFADE < f - 0.02:   # 1 trame de marge sur le seuil du Gardien (f - 0,03) : pile dessus = bloqué à l'arrondi
+                    # le mot suivant du RUSH à partir de la coupe (IMG_7022 : mesuré depuis la voix, il glissait d'un mot à chaque tour)
+                    cap = min((w["start"] for w in W if w["start"] > b - AFADE - 0.02), default=f + 1) - 0.02
+                    nb = max(b, min(f + 0.03, cap))
+                    if nb > b + 0.005: print(f"filet : fin {b:.2f} -> {nb:.2f} s (queue du mot gardée)"); s[1] = round(nb, 3)
+                    if nb - AFADE < f - 0.03 and not any(abs(nb - x) < 0.06 for x in SERRE):
+                        SERRE.append(round(nb, 3))   # collé au mot suivant supprimé, sans blanc : coupe serrée, signalée au Gardien
+                        print(f"filet : fin {nb:.2f} s collée au mot suivant (coupe serrée, à écouter)")
+        if not any(abs(a - x) < 0.005 for x in SERRE_D):
+            k = int((a + AFADE) * 100) - 1
+            lo = int(max([w["end"] for w in W if w["end"] < a + AFADE - 0.02] or [0]) * 100) + 2
+            if k > lo and db[k] >= fl + 15 and _voiced(k):
+                while k > lo and db[k] >= fl + 15 and _voiced(k): k -= 1
+                na = (k + 1) / 100 + 0.005 - AFADE
+                if na < a - 1e-4: print(f"filet : début {a:.2f} -> {na:.2f} s (attaque du mot gardée)"); s[0] = round(max(0, na), 3)
+    return sorted(segs)
 # Synchro image/son (13/10) : chaque plage est calée sur la grille des images (début arrondi en dessous, fin au-dessus).
 # Avant, l'image se coupait à l'image près et le son ailleurs : sur 40 coupes, la bouche pouvait se décaler.
 # Plages qui se touchent ou se chevauchent = fusionnées (sinon le fondu anti-clic doublerait le volume au raccord).
 # 19/10 : avec --vf (rush originale, souvent 29,97 i/s), le passage à 30 i/s (fps=30 du cadre) se fait AVANT la coupe, comme
 # quand cadre.py encodait tout le rush : sinon 1 coupe sur 11 tombait 1 image avant le son (mesuré sur c31). Recadrage APRÈS.
-snapped = []
-for a, b in segs:
-    a, b = math.floor(a * FPS + 1e-6) / FPS, math.ceil(b * FPS - 1e-6) / FPS
-    if snapped and a <= snapped[-1][1] + 1e-6: snapped[-1][1] = max(snapped[-1][1], b)
-    else: snapped.append([a, b])
-segs = [[round(a, 4), round(b, 4)] for a, b in snapped]
+def _caler(segs):
+    snapped = []
+    for a, b in segs:
+        a, b = math.floor(a * FPS + 1e-6) / FPS, math.ceil(b * FPS - 1e-6) / FPS
+        if snapped and a <= snapped[-1][1] + 1e-6: snapped[-1][1] = max(snapped[-1][1], b)
+        else: snapped.append([a, b])
+    return [[round(a, 4), round(b, 4)] for a, b in snapped]
+# Le filet passe APRÈS le calage (le Gardien mesure les bords calés : IMG_7023, début calé 1 image plus tôt = dans l'attaque),
+# puis on recale ; 3 tours au plus (un bord recalé peut retomber dans la voix).
+segs = _caler(segs)
+for _ in range(3):
+    _avant = [list(s) for s in segs]
+    segs = _caler(_filet_mots(segs))
+    if segs == _avant: break
+# 03/11 (IMG_7004 v1 bloquée par le Gardien « Zéro micro-coupure » (14.33, 0.3) et (25.93, 0.4)) : le filet recule les bords
+# des plages et peut ramener une coupe sous 0,45 s. Même mesure que le Gardien, au dernier moment : deux plages de la MÊME prise
+# (aucun mot supprimé entre elles) à moins de 0,45 s l'une de l'autre sont recollées, le petit blanc reste (comme plus haut).
+k = 0
+while k + 1 < len(segs):
+    b0, a1 = segs[k][1], segs[k + 1][0]
+    if 0 < a1 - b0 < 0.45 and not any(b0 - 0.05 <= W[i]["start"] < a1 for i in dead):
+        print(f"filet : coupe de {a1 - b0:.2f} s à {b0:.2f} s recollée (micro-coupure, mesure du Gardien)")
+        segs[k][1] = segs[k + 1][1]; segs.pop(k + 1); continue
+    k += 1
+# 03/11 : le calage et le filet peuvent encore laisser un bout < MINSEG isolé (début recalé sur la 1re vraie voix) : il saute
+# aussi, sauf s'il a été posé à la main (--plages, --bords : c'est la personne qui décide).
+k = 0
+while k < len(segs) and len(segs) > 1 and "--plages" not in sys.argv and not BORDS:
+    if segs[k][1] - segs[k][0] < MINSEG: _retire_bout(k, "après calage"); continue
+    k += 1
 HALF = 0.5 / FPS   # image : on prend les images de a à b exclu -> exactement (b - a) s, comme le son
 # 21/10 (CAM20033 v1, note à 0 s : « au début de chaque phrase, enlève la respiration ») : les petits blancs gardés pour ne
 # pas faire de micro-coupure (< MINCUT, recollés plus haut) et la marge LEAD du tout début gardaient l'inspiration. On ne coupe
@@ -414,6 +486,18 @@ _lw = keep[-1]["end"] if keep else 0
 # la cherche jusqu'à la fin de la vidéo : même limite que lui (fin de la dernière plage), sinon la voix s'éteint dans le mot.
 _se = speech_end(_lw, _lw + 0.35, segs[-1][1] if segs else None) if keep else None
 VOICE_END = (_se + 0.06 if _se else _lw + 0.1)   # +0,06 s : le « x » / « s » final reste entier
+# 03/11 (IMG_7022, Gardien « mot coupé » ('fin', 247.04) sur le dernier mot) : même filet que les bords de plages,
+# mesuré comme le Gardien (il contrôle VOICE_END - 0,06 contre queue_mot.fin_du_mot), 1 trame de marge, jamais après la vidéo.
+if keep and segs:
+    _db, _q = _env(); _k = int((VOICE_END - 0.06) * 100); _j = _k
+    while _j > max(0, _k - 60) and _db[_j] < _q + 6: _j -= 1
+    if _db[_j] >= _q + 6:
+        _nx = _k
+        while _nx < len(_db) - 1 and _nx < _k + 150 and _db[_nx] < _q + 6: _nx += 1
+        _f = fin_du_mot(_db, _voiced, _q, _floor(), _j / 100, _nx / 100)
+        if VOICE_END - 0.06 < _f - 0.02:
+            print(f"filet : fin de voix {VOICE_END:.2f} -> {min(_f + 0.09, segs[-1][1]):.2f} s (queue du dernier mot gardée)")
+            VOICE_END = min(_f + 0.09, segs[-1][1])
 if keep and str(W.index(keep[-1])) in BORDS.get("fin", {}):   # fin posée à la main sur le dernier mot : sa voix va jusque-là
     VOICE_END = max(VOICE_END, float(BORDS["fin"][str(W.index(keep[-1]))]))
 # 21/10 (CAM20033 v2 à 11 s, « bug ici ») puis 22/10 (IMG_6799 v1 : « dès que j'arrête de parler, il y a un gros silence, ce
@@ -448,6 +532,14 @@ RAMP = 0.015
 mute = "+".join(f"{1 - g:.3f}*clip(min((t-{m0})/{RAMP},({m1}-t)/{RAMP}),0,1)" for m0, m1, g in MUTE) or "0"
 print(f"{len(MUTE)} respiration(s) / blanc(s) baissés au niveau du bruit de la pièce (image intacte)")
 
+# 03/11 (IMG_7022 : « fais des cuts un poil plus serrés », blancs mesurés 0,14-0,17 s à chaque coupe) : --serre rogne le début
+# de chaque plage (0,03 s max), jamais dans l'attaque. La fin, non : elle est déjà au ras de la queue du mot (Gardien : 22 mots coupés).
+if "--serre" in sys.argv:
+    _db, _q = _env()
+    for k in range(len(segs) - 1):
+        a = segs[k + 1][0]; v = int(a * 100)
+        while v < int(segs[k + 1][1] * 100) and _db[v] < _floor() + 15: v += 1   # même seuil que le Gardien (« début » mangé)
+        segs[k + 1][0] = max(a, min(a + 0.03, v / 100 - 0.05))
 vexpr = "+".join(f"between(t,{a - HALF:.4f},{b - HALF:.4f})" for a, b in segs)   # demi-image de marge : insensible aux arrondis
 expr = "+".join(f"between(t,{a},{b})" for a, b in segs)
 # Anti-clic (experts 13/10, Vashi Nedomansky) : micro-fondu au début et à la fin de chaque plage gardée, sinon chaque coupe

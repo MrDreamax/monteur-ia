@@ -113,7 +113,7 @@ if not S: add("Face caméra", 1, "rien de spécial repéré")
 
 RECETTE = {"Tier list": "montage-viral", "Comparaison en T": "montage-viral", "Mauvais, bien, excellent": "montage-viral",
            "Liste": "face-cam", "Face caméra": "face-cam", "Vlog": "broll-texte", "Conférence": "a-plusieurs",
-           "Questions-réponses": "a-plusieurs", "Podcast": "a-plusieurs", "Débat": "a-plusieurs", "Clone": "a-plusieurs",
+           "Questions-réponses": "raw", "Podcast": "a-plusieurs", "Débat": "a-plusieurs", "Clone": "a-plusieurs",
            "Visio (Zoom)": "a-plusieurs", "Green screen": "green-screen", "Réaction": "green-screen",
            "Voix off": "voix-off", "B-roll + texte": "broll-texte", "Démonstration": "face-cam"}
 top = sorted(S, key=lambda k: -S[k])[:4]

@@ -26,6 +26,12 @@ def _font_faces(da, superda):
     return out
 
 
+def _sur_accent(h):
+    """Couleur du texte posé sur l'accent : noir sur un accent clair (blanc sur blanc = bouton vide, vu le 02/11/2026)."""
+    r, g, b = (int(h[i:i + 2], 16) for i in (1, 3, 5))
+    return "#0B0B0D" if (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6 else "#FFFFFF"
+
+
 def css_cinema(da, superda):
     duo, c, car = da["commun"]["duo"], da["commun"]["couleurs"], da["carrousels"]
     p, s = duo.get("principale", {}), duo.get("secondaire", {})
@@ -57,13 +63,13 @@ body{{margin:0;background:#000;-webkit-font-smoothing:antialiased;color:{txt}}}
 .steps{{display:flex;flex-direction:column;gap:22px;margin-top:34px}}
 .step{{display:flex;gap:26px;align-items:center;font:500 {corps}px/1.3 {fp}}}
 .n{{flex:0 0 64px;height:64px;border-radius:50%;border:2px solid {acc};color:{acc};font:700 30px {fp};display:flex;align-items:center;justify-content:center}}
-.glisse{{display:inline-block;margin-top:34px;background:{acc};color:#fff;font:700 30px {fp};padding:20px 34px;border-radius:60px}}
+.glisse{{display:inline-block;margin-top:34px;background:{acc};color:{_sur_accent(acc)};font:700 30px {fp};padding:20px 34px;border-radius:60px}}
 .arrow{{position:absolute;right:60px;bottom:54px;font:500 44px {fp};opacity:.6;z-index:5}}
 .art{{display:block;width:{W}px;height:820px}}
 .chat{{display:flex;flex-direction:column;gap:24px;font:500 42px/1.25 -apple-system,system-ui,sans-serif;margin-top:60px}}
 .b{{padding:24px 40px;max-width:800px}}
 .them{{align-self:flex-start;background:#2C2C2E;color:#fff;border-radius:42px 42px 42px 12px}}
-.me{{align-self:flex-end;background:{acc};color:#fff;font-weight:700;border-radius:42px 42px 12px 42px}}
+.me{{align-self:flex-end;background:{acc};color:{_sur_accent(acc)};font-weight:700;border-radius:42px 42px 12px 42px}}
 .rond{{width:200px;height:200px;border-radius:50%;background-size:{cad.get("zoom", 180)}%;background-position:{cad.get("x", 50)}% {cad.get("y", 20)}%;border:{car["derniere_slide"].get("contour", 8)}px solid #fff;margin-bottom:44px}}
 .fin{{font:500 36px {fp};opacity:.85;margin-top:48px}}
 .fin b{{color:{acc};font-weight:700}}

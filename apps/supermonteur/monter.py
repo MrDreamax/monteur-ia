@@ -14,6 +14,7 @@ APP = os.path.dirname(os.path.abspath(__file__))
 SK = os.path.expanduser("~/.claude/skills/supermonteur")
 S = os.path.join(SK, "scripts")
 ENV = dict(os.environ, PATH=os.path.expanduser("~/.local/bin") + ":" + os.path.expanduser("~/.local/node/bin") + ":" + os.environ.get("PATH", ""))
+os.environ["PATH"] = ENV["PATH"]   # 01/11 : a_du_son lançait ffprobe sans ENV, tout rush plantait quand le serveur démarre sans PATH
 sys.path.insert(0, APP)
 import da as DA
 import reglages_apps
@@ -121,21 +122,111 @@ def _regarder(D):
     if conseil == "Dynamique" and P and W[P[0][1]]["text"].strip().endswith("?") and d < 90:
         conseil, pourquoi = "Minimaliste", "tu poses une question au début : format FAQ"
     etat(D, statut="choix", etape="", conseil=conseil, pourquoi=pourquoi, duree_rush=round(d, 1))
+    preparer_prises(D)
+
+
+def cle_mots(D):
+    import hashlib
+    return hashlib.sha1(open(os.path.join(D, "words.rush.json"), "rb").read()).hexdigest()
+
+
+def mots_verifies(D, rush):
+    """Une seule fois par reel : passages mal calés retranscrits seuls (recaler). -> les mots du rush."""
+    W = lire(os.path.join(D, "words.rush.json"))["words"]
+    if not os.path.exists(os.path.join(D, "words.rush.brut.json")):
+        shutil.copy2(os.path.join(D, "words.rush.json"), os.path.join(D, "words.rush.brut.json"))
+        W, n = recaler(D, rush, W)
+        if n: ecrire(os.path.join(D, "words.rush.json"), dict(lire(os.path.join(D, "words.rush.json")), words=W))
+    return W
+
+
+def preparer_prises(D):
+    """03/11 (accélérer, IMG_7023) : pendant que l’utilisateur choisit son style à l'écran 0, les mots sont vérifiés et Claude choisit les
+    prises (~17 s au calme, 40 s Mac chargé) : rien de cela ne dépend du style. « Monter le reel » reprend drop.prepare.json
+    (même words.rush.json) ou attend la fin de ce travail (verrou), jamais en double. Une panne ici ne bloque rien."""
+    with open(os.path.join(D, ".prises.lock"), "w") as v:
+        fcntl.flock(v, fcntl.LOCK_EX)
+        try:
+            W = mots_verifies(D, lire(os.path.join(D, "etat.json"), {})["rush"])
+            ecrire(os.path.join(D, "drop.prepare.json"), {"cle": cle_mots(D), "drop": prises_par_claude(D, W) or drop_auto(W)})
+        except Exception as x:
+            log_erreur(f"SuperMonteur {os.path.basename(D)} : prises pas préparées à l'écran 0 : {str(x)[:200]}")
 
 
 # ------------------------------------------------------------------------------------------------- le dérush automatique
+# 03/11 (CAM28386, Claude à sa limite : le secours gardait la version anglaise lue de la référence et 20 prises ratées -> 2 min
+# de reel, 3 mots coupés) : mots-outils qui disent la langue d'un morceau
+MOTS_EN = set("the you your is are it it's will of to and a an that this if so in into which be gonna don't make sure type".split())
+MOTS_FR = set("tu te ta ton le la les de des du que qui et si ça ce c'est est une un en pour à il je mon ma va vas t'as".split())
+
+
 def drop_auto(words):
-    """Dernière prise gardée (SKILL étape 3) : une phrase reprise juste après (mêmes 3 premiers mots) = l'ancienne saute.
+    """Secours quand Claude ne répond pas (limite d'usage) : garder la dernière prise réussie de chaque idée, comme Claude.
+    Testé le 03/11 sur IMG_7023, IMG_7004, IMG_7022, CAM28386 : jamais un mot jeté que Claude garde.
     Coupe toujours sur une fin de phrase (jamais au milieu, règle du 23/10)."""
-    P = phrases(words)
-    drop = []
+    import difflib
+    P, F = phrases(words), fragments(words)
+    mots = lambda a, b: [x for x in (norm(words[i]["text"]) for i in range(a, b + 1)) if x]
+    morts = set()
+    # SKILL étape 3 : une phrase reprise juste après (mêmes 3 premiers mots) = l'ancienne saute
     for k, (a, b) in enumerate(P):
         tete = " ".join(norm(words[i]["text"]) for i in range(a, min(a + 3, b + 1)))
         if len(tete.split()) < 3: continue
         for a2, b2 in P[k + 1:k + 4]:
             if " ".join(norm(words[i]["text"]) for i in range(a2, min(a2 + 3, b2 + 1))) == tete:
-                drop.append([a, b])
+                morts |= set(range(a, b + 1))
                 break
+    # 03/11 (CAM28386) : un morceau dans l'autre langue que le reel (version anglaise de la référence lue) saute
+    lg = lambda a, b: (sum(x in MOTS_EN for x in mots(a, b)), sum(x in MOTS_FR for x in mots(a, b)))
+    tot = [sum(x) for x in zip(*(lg(a, b) for a, b in F))] or [0, 0]
+    autre = 0 if tot[1] >= tot[0] else 1   # langue minoritaire (0 = anglais)
+    for a, b in F:
+        L = lg(a, b)
+        if L[autre] >= 2 and L[autre] > L[1 - autre]: morts |= set(range(a, b + 1))
+    # 03/11 (CAM28386, IMG_7023) : dernière prise de chaque idée. Un morceau repris dans les 8 morceaux / 90 s suivants saute :
+    # même 1er mot et 60 % des mots dans l'ordre (« or ce que j'observe… » puis « Or de ce que j'observe… »), ou début de prise
+    # court (10 mots max) pas fini (sans . ? !) qui repart pareil (« Si tu mets /flash, »), ou morceau contenu en entier dans un
+    # suivant. Sinon, une phrase de 4 mots ou plus reprise dans un morceau suivant saute seule (« Autres codes. Et je t'envoie… »).
+    G = [(a, b) for a, b in F if not all(i in morts for i in range(a, b + 1))]
+    fini = lambda i: words[i]["text"].rstrip(" »\"'")[-1:] in ".?!"
+    dans = lambda p, q: len(p) <= len(q) and any(q[j:j + len(p)] == p for j in range(len(q) - len(p) + 1))
+    for k, (a, b) in enumerate(G):
+        p = mots(a, b)
+        if len(p) < 2: continue
+        suite = [(c, d) for c, d in G[k + 1:k + 9] if words[c]["start"] - words[b]["end"] <= 90]
+        for c, d in suite:
+            q = mots(c, d)
+            if not q: continue
+            debut2 = len(q) >= 2 and p[0] == q[0] and q[1].startswith(p[1])
+            if ((p[0] == q[0] and difflib.SequenceMatcher(None, p, q[:len(p)]).ratio() >= .6)
+                    or (debut2 and not fini(b) and len(p) <= 10) or (len(p) >= 3 and dans(p, q))):
+                morts |= set(range(a, b + 1))
+                break
+        else:
+            for pa, pb in P:
+                ph = mots(pa, pb)
+                ph = ph[1:] if ph and ph[0] in {"et", "mais", "donc", "alors", "or", "puis"} else ph   # « Et je t'envoie… »
+                if pa >= a and pb <= b and len(ph) >= 4 and any(dans(ph, mots(c, d)) for c, d in suite):
+                    morts |= set(range(pa, pb + 1))
+    drop = [[i, i] for i in sorted(morts)]
+    # 03/11 (IMG_7022 : Claude à sa limite d'usage -> ce repli, v1 bloquée par le Gardien « Micro-coupes » (0,47 et 0,2 s) et
+    # « flash ») : comme après le choix de Claude, une prise abandonnée encore gardée saute (reprises_restantes)
+    F = [(a, b) for a, b in F if not all(i in morts for i in range(a, b + 1))]
+    drop += [[i, i] for i in sorted(reprises_restantes(words, F)) if i not in morts]
+    morts = {i for a, b in drop for i in range(a, b + 1)}
+    runs, r = [], []   # morceaux gardés = mots gardés qui se suivent dans le rush sans blanc de plus de 0,5 s
+    for i in (k for k in range(len(words)) if k not in morts):
+        if r and (i != r[-1] + 1 or words[i]["start"] - words[r[-1]]["end"] > .5): runs.append(r); r = []
+        r.append(i)
+    runs += [r] if r else []
+    # un morceau isolé plus court que 0,6 s (« Oui. », mesure du Gardien) saute, et un morceau de moins de 2 s qui n'est pas
+    # une phrase entière (début de phrase, fin sur . ? ! … : ,) aussi : règle « Plans ≥ 2 s » du Gardien (29/10 phrase entière)
+    fin = lambda i: words[i]["text"].rstrip(" »\"'")[-1:] in ".?!…:,"
+    if len(runs) > 1:
+        for x in runs:
+            d = words[x[-1]]["end"] - words[x[0]]["start"]
+            entiere = (x[0] == 0 or fin(x[0] - 1) or x[0] - 1 in morts) and fin(x[-1])
+            if d < 0.6 or (d < 2 and not entiere): drop.append([x[0], x[-1]])
     # 28/10 (l’utilisateur, CAM20047 : « enlève les "euh" quand tu dérush ») : chaque « euh / heu / hum » seul saute
     gardes = {i for a, b in drop for i in range(a, b + 1)}
     drop += [[i, i] for i, w in enumerate(words) if i not in gardes and norm(w["text"]) in {"euh", "heu", "hum", "euhm", "bah"}]
@@ -227,6 +318,17 @@ def reprises_restantes(words, gardes):
     out = set()
     for (a, b), (c, d) in zip(gardes, gardes[1:]):
         p, q = mots(a, b), mots(c, d)
+        # 31/10 (jgvg) : « En sep... » puis « En septembre, des chercheurs… » = mot coupé net, repris juste après -> tout le 1er saute
+        if words[b]["text"].strip().endswith(("...", "…", "-")) and len(p) <= len(q) and p[:-1] == q[:len(p) - 1] and q[len(p) - 1].startswith(p[-1]):
+            out |= set(range(a, b + 1))
+            continue
+        # 03/11 (IMG_7022 : « …tu vas aller plus vite, mais si tu n'as pas de strat... » puis « mais si ta stratégie est
+        # mauvaise… ») : morceau coupé net, repris au milieu -> la fin depuis le dernier « mais si » (2 mots = le début du suivant) saute
+        if words[b]["text"].strip().endswith(("...", "…", "-")) and len(q) >= 2:
+            j = next((j for j in range(len(p) - 2, 0, -1) if p[j:j + 2] == q[:2]), None)
+            if j is not None:
+                out |= set(range(a + j, b + 1))
+                continue
         if 3 <= len(p) < len(q) and q[:len(p)] == p:
             out |= set(range(a, b + 1))
             continue
@@ -294,7 +396,7 @@ def titre_auto(words):
 
 
 def musique_auto(D, rid):
-    """Dossier REELS INSTA seulement (28/10) : jamais utilisées d'abord, jamais une des 3 derniers reels, tirage propre au reel."""
+    """Dossier music_reels seulement (DREAMAX MUSIC depuis le 02/11) : jamais utilisées d'abord, jamais une des 3 derniers reels, tirage propre au reel."""
     out = subprocess.run(["python3", os.path.join(S, "musiques.py")], capture_output=True, text=True, env=ENV).stdout
     dossier = None
     try:
@@ -309,13 +411,19 @@ def musique_auto(D, rid):
     nom = lambda l: next((f for f in fics if l.endswith(" " + f)), None)
     neuves = [nom(l) for l in L if l.startswith("jamais utilisée") and nom(l)]
     vieilles = [nom(l) for l in L if l.startswith("utilisée le") and nom(l)]
-    pool = (neuves or vieilles)[:6]
+    pool = neuves or vieilles
     if not pool or not dossier: raise RuntimeError("pas de musique : mets des musiques dans ~/Documents/Montage/MUSIQUE (music_reels du config.json du skill supermonteur)")
+    # 02/11 : « la musique qui correspond le mieux à l'ambiance » : mots du rush contre la fiche d'écoute de chaque morceau, à égalité tirage propre au reel
+    fiches = lire(os.path.join(dossier, "musiques-ambiance.json"), {}) or {}
+    texte = " ".join(w.get("text", "") for w in (lire(os.path.join(D, "words.rush.json"), {}) or {}).get("words", [])).lower()
+    score = lambda f: sum(m.lower() in texte for m in fiches.get(f, {}).get("mots", [])) - 3 * bool(fiches.get(f, {}).get("chant"))
+    top = max(map(score, pool))
+    pool = [f for f in pool if score(f) == top]
     src = os.path.join(dossier, pool[sum(map(ord, rid)) % len(pool)])
     att = subprocess.run(["python3", os.path.join(S, "attaque.py"), src, "0", "60"], capture_output=True, text=True, env=ENV).stdout
     m = re.search(r"^\s*([\d.]+) s", att, re.M)
     return {"src": src, "from": float(m.group(1)) if m else 0.0,
-            "emotion": f"choisie par SuperMonteur dans REELS INSTA (jamais utilisée d'abord), part sur son temps fort (attaque.py)"}
+            "emotion": f"choisie par SuperMonteur dans ton dossier de musiques (jamais utilisée d'abord, selon l'ambiance du rush), part sur son temps fort (attaque.py)"}
 
 
 # ------------------------------------------------------------------------------------------------------- le montage
@@ -371,8 +479,13 @@ def monte(D):
         zones = "brolltexte : zone sûre contrôlée"
     elif recette == "plan.json":
         monte_sh(D, D, lambda t: etat(D, etape=t))
-        zones = subprocess.run(["node", os.path.join(S, "zones.mjs"), "."], cwd=D, env=ENV, capture_output=True, text=True)
-        zones = (zones.stdout.strip().splitlines() or ["?"])[-1]
+        # 03/11 : le Gardien final vient de passer zones.mjs ; son verdict est repris (avant : 2e passage, Chrome relancé pour rien)
+        g = next((x for x in (lire(os.path.join(D, "gardien.json"), []) or []) if x.get("controle") == "Zones mortes Insta"), None)
+        if g:
+            zones = g.get("detail") or "?"
+        else:
+            zones = subprocess.run(["node", os.path.join(S, "zones.mjs"), "."], cwd=D, env=ENV, capture_output=True, text=True)
+            zones = (zones.stdout.strip().splitlines() or ["?"])[-1]
     else:
         verrou = attendre_le_mac(D, lambda t: etat(D, etape=t))
         try:
@@ -421,6 +534,30 @@ def attendre_derush(D, rush, vf, e):
         if x.get("derush_ok"): return True
 
 
+def rallonge_60(D, rush, vf):
+    """03/11 (IMG_7022 : dérush à 58,4 s, Gardien « plus d'1 minute » bloquant, montage arrêté sans que rien ne rallonge) :
+    entre 58 et 60 s (sous 58 s, plan_auto lève la règle), la fin passe seule au-dessus de 60 s (mémoire reels-61s-tiktok).
+    1) dérush relancé avec une traîne plus longue : vraie image après le dernier mot, coupe sur l'image immobile gardée ;
+    2) s'il manque encore (rush arrêté juste après le dernier mot), la dernière image est tenue, la musique finit dessus."""
+    clip = os.path.join(D, "clip.mp4")
+    d = duree(clip)
+    if d < 58 or d >= 60.3: return
+    run(D, ["python3", os.path.join(S, "derush.py"), rush, "words.rush.json", "cut.mp4", "--drop", "drop.json", "--vf", vf,
+            "--tail", f"{0.6 + 60.6 - d:.2f}"], "derush-tail.log")
+    os.replace(os.path.join(D, "cut.mp4"), clip)
+    shutil.copy2(os.path.join(D, "cut.words.json"), os.path.join(D, "words.json"))
+    d = duree(clip)
+    if d >= 60.3: return
+    x = f"{60.6 - d:.2f}"
+    tmp = os.path.join(D, "clip.tenu.mp4")
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", clip, "-vf", f"tpad=stop_mode=clone:stop_duration={x}", "-af", f"apad=pad_dur={x}",
+                    "-c:v", "h264_videotoolbox", "-q:v", "75", "-g", "60", "-color_range", "tv", "-color_primaries", "bt709",
+                    "-color_trc", "bt709", "-colorspace", "bt709", "-c:a", "aac", "-b:a", "192k", tmp], check=True)
+    os.replace(tmp, clip)
+    with open(os.path.join(D, "derush-tail.log"), "a") as f:
+        f.write(f"dernière image tenue {x} s -> {duree(clip):.1f} s\n")
+
+
 def monter(D):
     e = lire(os.path.join(D, "etat.json"), {})
     rid, rush, style, cases = e["id"], e["rush"], e.get("style", "Dynamique"), e.get("cases", {})
@@ -434,19 +571,19 @@ def monter(D):
         if not os.path.exists(os.path.join(D, "words.rush.json")):
             etat(D, etape="Je transcris ta vidéo…")
             run(D, ["python3", os.path.join(S, "transcribe.py"), rush, "words.rush.json"], "transcribe.log")
-        W = lire(os.path.join(D, "words.rush.json"))["words"]
-        if not os.path.exists(os.path.join(D, "words.rush.brut.json")):   # une seule fois : passages mal calés retranscrits seuls
-            etat(D, etape="Je vérifie chaque mot de ta vidéo…")
-            shutil.copy2(os.path.join(D, "words.rush.json"), os.path.join(D, "words.rush.brut.json"))
-            W, n = recaler(D, rush, W)
-            if n: ecrire(os.path.join(D, "words.rush.json"), dict(lire(os.path.join(D, "words.rush.json")), words=W))
-        etat(D, etape="Je dérushe : dernière prise gardée, blancs coupés…")
-        ecrire(os.path.join(D, "drop.json"), prises_par_claude(D, W) or drop_auto(W))
+        etat(D, etape="Je vérifie chaque mot de ta vidéo…")
+        with open(os.path.join(D, ".prises.lock"), "w") as v:   # 03/11 : préparé à l'écran 0 (preparer_prises) ? on attend sa fin
+            fcntl.flock(v, fcntl.LOCK_EX)
+            W = mots_verifies(D, rush)
+            prep = lire(os.path.join(D, "drop.prepare.json"), {}) or {}
+            etat(D, etape="Je dérushe : dernière prise gardée, blancs coupés…")
+            drop = prep["drop"] if prep.get("cle") == cle_mots(D) and "drop" in prep else (prises_par_claude(D, W) or drop_auto(W))
+        ecrire(os.path.join(D, "drop.json"), drop)
         # Minimaliste = cadre d'origine (styles/raw.md : le cadre serré met les cheveux dans le titre) ; sinon cadre.py
         st = json.loads(subprocess.check_output(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_streams", "-of", "json", rush]))["streams"][0]
         w, h = st["width"], st["height"]
         if any(abs(int(sd.get("rotation", 0))) == 90 for sd in st.get("side_data_list", [])): w, h = h, w
-        if style == "Minimaliste" and h > w:
+        if style == "Minimaliste" and h > w and cases.get("titre", True):   # 30/10 : sans titre, cadre serré (sous-titres sur le t-shirt)
             vf = "scale=1080:1920:flags=lanczos,fps=30"
         else:
             run(D, ["python3", os.path.join(S, "cadre.py"), rush], "cadre.log")
@@ -454,6 +591,7 @@ def monter(D):
         run(D, ["python3", os.path.join(S, "derush.py"), rush, "words.rush.json", "cut.mp4", "--drop", "drop.json", "--vf", vf], "derush.log")
         os.replace(os.path.join(D, "cut.mp4"), os.path.join(D, "clip.mp4"))
         shutil.copy2(os.path.join(D, "cut.words.json"), os.path.join(D, "words.json"))
+        rallonge_60(D, rush, vf)
         # 29/10 21h32 (l’utilisateur : « enlève le Derush Lab de SuperMonteur et reviens comme c'était avant, c'était ça le problème ») :
         # plus d'attente sous le Lab, le dérush de Claude part direct au montage. Pour le remettre : DERUSH_LAB = True.
         if DERUSH_LAB and not attendre_derush(D, rush, vf, e):
@@ -528,7 +666,7 @@ def monter_broll(D, e):
         log_erreur(f"SuperMonteur {rid} : B-roll + texte bloqué : {str(x)[:200]}")
         raise
     t = ("Reprends ce B-roll + texte pour ma vidéo : même mise en page (ex. tableau titre + 2 colonnes, ou 2-3 lignes), "
-                         "texte réécrit en français pour ma cible (styles/broll-texte.md, voix Brain 00-Moi/voix-contenu.md, faits vrais seulement). "
+                         "texte réécrit en français pour ma cible (styles/broll-texte.md, à ma voix, faits vrais seulement). "
                          "Écris \"text\" dans plan.json (et \"brolls\" = les images choisies plus bas, une par plan, s'il y en a ; rien d'autre), "
                          "puis monter.py remonter. Seule la police change : celle de ma DA.")
     if not demander_images(D, t):
@@ -600,12 +738,15 @@ def plan_auto(D, rid, style, cases, words):
     dur = duree(os.path.join(D, "clip.mp4"))
     plan = {"cam": "clip.mp4", "words": "words.json", "zoom": False, "fixes": {}, "keywords": [], "sfx": [],
             "cases": cases, "style_supermonteur": style}
+    if style == "Dynamique":   # 03/11 (IMG_7022 v1 cam fixe : « transforme en dynamique, ajoute des zoom/dézoom ») : zooms auto, rythme nerveux
+        plan.update({"zoom": True, "zoomGap": [2.5, 4]})
     T = titre_auto(words) if cases.get("titre", True) else None
     if T:
         # Minimaliste : le titre reste toute la vidéo ; les autres : pendant le hook (SKILL : title 0-4 s)
-        T.update({"start": 0, "end": 999 if style == "Minimaliste" else 4.0, "top": 280})
+        T.update({"start": 0, "end": 999 if style == "Minimaliste" else 4.0, "top": 250})
         plan["title"] = T
-    plan["music"] = musique_auto(D, rid)
+    if cases.get("musique", True):   # 30/10 (l’utilisateur : « juste un sous-titrage, sans titre et sans musique ») : case musique décochée = voix seule
+        plan["music"] = musique_auto(D, rid)
     # signature finale (« … avec le cœur. [temps] Mr Dreamax ») : son temps naturel est gardé (SKILL, Gardien pause_signature)
     P = phrases(words)
     if len(P) > 1:
@@ -618,11 +759,12 @@ def plan_auto(D, rid, style, cases, words):
         ecrire(os.path.join(D, "da-supermonteur.json"), dm)
         plan["da"] = os.path.join(D, "da-supermonteur.json")
         if dm.get("subMax"): plan["subMax"] = dm["subMax"]
+        if plan.get("title") and dm.get("titleTop"): plan["title"]["top"] = dm["titleTop"]   # 03/11 : hauteur du titre = SuperDA
     if dur < 58:
         plan["duree_min"] = 0     # rush trop court pour passer 60 s sans rallonge visible : on le dit, on ne bloque pas
         plan["_court"] = f"{dur:.1f} s : sous 1 min (pas de monétisation TikTok)"
     plan["_note"] = (f"{datetime.date.today():%d/%m} SuperMonteur v1 auto, style {style} : dernière prise gardée, titre = 1re phrase, "
-                     "musique REELS INSTA. Claude enrichit (mots forts, cartons, animations) au tour des retours.")
+                     "musique DREAMAX MUSIC. Claude enrichit (mots forts, cartons, animations) au tour des retours.")
     return plan
 
 

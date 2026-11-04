@@ -29,6 +29,7 @@ def controler(f):
     add(len(tags) == 0, "Aucun hashtag (règle du 20/10)", f"{len(tags)} hashtag(s) : aucun (règle du 20/10)")
     phr = [p for p in re.split(r"(?<=[.!?…])\s+", leg.strip()) if p.strip()]
     add(1 <= len(phr) <= 2, f"Légende courte : {len(phr)} phrase(s)", f"Légende de {len(phr)} phrases : 1 ou 2 max (règle du 20/10)")
+    add(len(l1.split()) <= 12, f"1re ligne super courte : {len(l1.split())} mots", f"1re ligne de {len(l1.split())} mots : une ligne super courte, 12 mots max (règle du 01/11)")
     add(len(leg) <= 2200, "Légende sous 2 200 caractères", f"Légende trop longue ({len(leg)} / 2 200)")
     cta = f.get("cta", "").strip()
     n_cta = len(re.findall(r"\b" + re.escape(cta) + r"\b", leg)) if cta else 0
@@ -43,7 +44,7 @@ def controler(f):
         f"CTA « {cta} » dans le 1er commentaire : merci ou valeur à la place (règle du 17/10)")
     add(bool(ig.get("alt", "").strip()), "Texte alternatif rempli", "Texte alternatif manquant", "alerte")
     yt = f.get("youtube", {})
-    add(0 < len(yt.get("titre", "")) <= 100, "Titre YouTube sous 100 caractères", f"Titre YouTube : {len(yt.get('titre',''))} caractères (1 à 100)")
+    add(0 < len(yt.get("titre", "")) <= 40, "Titre YouTube sous 40 caractères", f"Titre YouTube : {len(yt.get('titre',''))} caractères, 40 max pour le voir en entier à l'accueil (règle du 01/11)")
     tk = f.get("tiktok", {}).get("legende", "")
     add(0 < len(tk) <= 2200, "Légende TikTok prête", "Légende TikTok vide ou trop longue")
     tous = "\n".join([leg, ig.get("premier_commentaire", ""), yt.get("titre", ""), yt.get("description", ""), tk])

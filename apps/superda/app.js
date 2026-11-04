@@ -82,7 +82,7 @@
   function calcule() {
     const zi = C.zone_interdite, m = da.montage;
     const t = m.titre, s = m.sous_titres;
-    const ht = Math.round(t.taille * 0.5 * 1.05 + t.taille * 1.1);
+    const ht = Math.round(t.taille * (da.commun.duo.principale.ratio_ligne1 || 0.5) * 1.05 + t.taille * 1.1);
     const yt = C.positions.titre[t.position] + t.decalage;
     t._y = Math.max(zi.haut, Math.min(zi.bas - ht, yt));
     bloque.titre = t._y !== yt;
@@ -197,7 +197,7 @@
     const l1 = "L'erreur qui ruine", l2 = "ton image";
     const ombre = "text-shadow:0 4px 30px rgba(0,0,0,.35)";
     return `<div style="position:absolute;left:65px;right:65px;top:${t._y}px;text-align:center;${ombre}">
-      <div style="${f1()}font-size:${t.taille * 0.5}px;line-height:1.05;letter-spacing:${(p.interlettrage || 0) * 2}px;color:${cl.titre};${maj1() ? "text-transform:uppercase;" : ""}">${l1}</div>
+      <div style="${f1()}font-weight:${p.graisse_ligne1 || p.graisse || 700};font-size:${t.taille * (p.ratio_ligne1 || 0.5)}px;line-height:1.05;letter-spacing:${(p.interlettrage || 0) * 2}px;color:${cl.titre};${maj1() ? "text-transform:uppercase;" : ""}">${l1}</div>
       <div style="${f2()}font-size:${t.taille}px;line-height:1.1;color:${cl.ligne2};${maj2() ? "text-transform:uppercase;" : ""}">${l2}</div></div>`;
   }
   function sousTitre(ecranCoupe, fort) {

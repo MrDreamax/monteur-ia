@@ -141,6 +141,55 @@ plan = celles que l’utilisateur a choisies (liste dans le retour, détail dans
 Réponds en 1 ligne quand la nouvelle version est montée."""
 ESSAIS = {}  # (reel, version) -> nombre d'essais
 
+# 03/11 (IMG_7023 : Opus 15 min sur 4 retours, arrêté sans répondre) : les retours simples passent par Sonnet avec une fiche
+# d'1 page (FICHE-RETOURS.md) au lieu de CLAUDE.md + SKILL.md + feedback.md (~45 000 mots), 4 min max. Claude ne fait QUE corriger
+# plan.json / words.json et écrire reponses.json ; le serveur prend les images avant, remonte, répond à l’utilisateur et vide la boîte
+# lui-même (avant : 4 à 6 allers-retours de Claude, et un Claude qui s'arrête = retours jamais répondus).
+CONSIGNE_RAPIDE = """Tu es Claude dans l'appli SuperMonteur de l’utilisateur (dossier actuel). Ne publie rien. Ne lance aucune commande :
+le serveur remonte la version suivante tout seul dès que tu as fini. Va vite : 3 minutes en tout.
+Reel %s, dossier %s, version %s. Retours de l’utilisateur (t = seconde dans la version affichée) et l'image de cet instant :
+%s
+1. Lis FICHE-RETOURS.md (ici, 1 page), puis %s/plan.json, puis chaque image (Read).
+2. Corrige %s/plan.json (Edit), ou %s/words.json pour un mot courant mal écrit.
+3. Écris %s/reponses.json = {"<id>": "1 ligne pour l’utilisateur : ce qui a changé"} pour CHAQUE retour ; pas faisable ici = "pas fait : <pourquoi>".
+4. Ajoute 1 ligne datée par retour à feedback-retours.md (ici).
+Ne lis rien d'autre, sauf si un retour l'exige vraiment (~/.claude/skills/supermonteur/SKILL.md)."""
+
+
+def corriger_vite(dem):
+    """Retours simples : Sonnet corrige les fichiers, le serveur fait le reste. True = traité (bien ou mal, l'écran le dit)."""
+    rid, d, v = dem["reel"], dem["dossier"], dem.get("version")
+    vid = os.path.join(d, f"versions/v{v}.mp4") if os.path.exists(os.path.join(d, f"versions/v{v}.mp4")) else os.path.join(d, "final.mp4")
+    lignes = []
+    for r in dem.get("retours", []):
+        img = os.path.join(d, f"_retour-{r['id']}.jpg")
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{float(r.get('t') or 0):.2f}", "-i", vid, "-frames:v", "1",
+                        "-vf", "scale=540:-2", img])
+        lignes.append(f"- id {r['id']}, à {r.get('t')} s : « {r.get('texte')} » -> image {img}")
+    rep = os.path.join(d, "reponses.json")
+    if os.path.exists(rep): os.remove(rep)
+    sig = lambda: [os.path.getmtime(os.path.join(d, f)) if os.path.exists(os.path.join(d, f)) else 0 for f in ("plan.json", "words.json")]
+    avant = sig()
+    etat(d, etape="Claude lit tes retours…")
+    ok, sortie = ouvrier_claude.lancer(CONSIGNE_RAPIDE % (rid, d, v, "\n".join(lignes), d, d, d, d), APP,
+                                      ["Read", "Write", "Edit"], delai=240, modele="sonnet")
+    R = lire(rep, {}) or {}
+    if not R:
+        etat(d, statut="erreur", etape="", erreur="Claude n'a pas fini tes retours en 4 min. Écris « corrige mes retours » dans un chat Claude.")
+        return True
+    if sig() != avant:
+        r = subprocess.run([sys.executable, os.path.join(APP, "monter.py"), "remonter", d], cwd=APP,
+                           stdout=open(os.path.join(d, f"_remonter-v{(v or 0) + 1}.log"), "a"), stderr=subprocess.STDOUT)
+        if r.returncode: return True   # monter.py a déjà mis l'écran en erreur, avec la raison
+    tous = lire(os.path.join(d, "retours.json"), []) or []
+    for x in tous:
+        if str(x.get("id")) in R and x.get("statut") == "a_faire":
+            fait = not str(R[str(x["id"])]).startswith("pas fait")
+            x.update(statut="corrige" if fait else "a_faire", reponse=R[str(x["id"])])
+    ecrire(os.path.join(d, "retours.json"), tous)
+    if sig() == avant: etat(d, statut="retours", etape="")
+    return True
+
 
 def ouvrier():
     """Dès qu'un reel arrive dans a-corriger.json, Claude corrige et remonte la version suivante tout seul."""
@@ -157,6 +206,13 @@ def ouvrier():
                         etat(d, statut="erreur", etape="", erreur="Claude n'a pas réussi à corriger tes retours (détails : supermonteur/_claude.log). "
                                                                  "Demande « corrige mes retours » dans un chat Claude.")
                     continue
+                if not any(r.get("auto") for r in dem.get("retours", [])):   # retour auto (montage à reprendre) = ancien chemin, Opus
+                    try:
+                        corriger_vite(dem)
+                    finally:
+                        boite = lire(os.path.join(APP, "a-corriger.json"), []) or []
+                        ecrire(os.path.join(APP, "a-corriger.json"), [x for x in boite if x.get("reel") != rid or x.get("date") != dem.get("date")])
+                    break
                 retours = "\n".join(f"- à {r.get('t')} s : {r.get('texte')}" for r in dem.get("retours", []))
                 ouvrier_claude.lancer(CONSIGNE % (rid, d, dem.get("version"), retours), APP,
                                       ["Read", "Write", "Edit", "Glob", "Grep", "Bash(python3 monter.py remonter:*)", "Bash(ffmpeg -ss:*)"],

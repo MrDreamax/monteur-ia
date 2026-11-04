@@ -4,6 +4,8 @@ L'écran de montage de l’utilisateur. Lancer : `bash ~/Documents/SuperApps/sup
 
 Ne réécrit pas le moteur : tout passe par le skill `~/.claude/skills/supermonteur/` (transcribe, derush, build.mjs, monte.sh, Gardien).
 
+**31/10 : L'Œil.** Après chaque montage, `oeil-gemini.json` arrive dans le dossier du reel (~1 min après le final) : note et défauts vus par Gemini. Je le lis avant de corriger, mais il conseille seulement sur un reel, l’utilisateur gagne toujours. Voir `note-10.md` du skill.
+
 ## Le parcours
 1. **Écran 0 « Quel style pour ce reel ? »** : l’utilisateur glisse sa vidéo (ou Claude ouvre `POST /api/nouveau {"rush": "<chemin>"}`). `monter.py regarder` transcrit, lance `devine_format.py` et entoure le style conseillé. Il coche ses cases, « Monter le reel ».
 1 bis. **RETIRÉ le 29/10 21h32 (l’utilisateur : « enlève le Derush Lab de SuperMonteur et reviens comme c'était avant, parce que c'était ça, le problème ») : `DERUSH_LAB = False` dans monter.py, le dérush part direct au montage. Ce qui suit = l'ancien fonctionnement, gardé pour le remettre.** ~~Vérifie ton dérush = DERUSH LAB (29/10/2026, l’utilisateur : « pourquoi tu passes pas par Derush Lab avant de monter la version finale ? » puis « pour tous », clients compris)** : après le 1er dérush de Claude, `monter.py` passe en `statut: derush` et ATTEND. L'écran « Vérifie ton dérush » montre le Derush Lab du skill (`outils/cockpit/cockpit.py <dossier> --lab`, lancé par `serveur.py lab()` sur un port libre dès 8830, cadre `http://localhost:<port>`). l’utilisateur retouche au pixel, « ✓ Valider le dérush » (clip.mp4 recoupé + `gardien.py --derush`), puis « Monter le reel » (`POST /api/derush_ok/<id>`) : refusé tant que pas validé ; Gardien rouge = « Monter quand même » en 2 clics (faux positifs possibles). Puis `suite()` (plan.json, v1). monter.py mort pendant l'attente (Mac redémarré) = le serveur lance `monter.py suite`. Fichiers du Lab dans le dossier : cockpit.json, words_rush.json, cockpit-etat.json, _cockpit/, gardien-derush.json. Sauvegarde avant : `_backup/2026-10-29-avant-derushlab/`.
@@ -16,7 +18,8 @@ Ne réécrit pas le moteur : tout passe par le skill `~/.claude/skills/supermont
 l’utilisateur : « tout ce qui est en lien avec les reels d'essai, tu peux tout supprimer, je n'utilise pas ». Plus de repérage du mot « essai », plus de 2e hook, plus de TRIAL_REEL. Ne pas le remettre.
 
 ## Claude tout seul (28/10/2026)
-Le serveur lance lui-même Claude Code (`../ouvrier_claude.py`, Opus) dès qu'un reel arrive dans `a-corriger.json` : il suit la section ci-dessous, sans chat ouvert. Outils limités : lire / écrire, `python3 monter.py remonter`, `ffmpeg -ss` (pas le dérush du skill ni son feedback.md : ses lignes vont dans `feedback-retours.md`, à recopier dans le skill). 2 essais max par version, sinon le reel passe en « bloqué ». Journal : `_claude.log`.
+Le serveur lance lui-même Claude Code (`../ouvrier_claude.py`, Opus) dès qu'un reel arrive dans `a-corriger.json` : il suit la section ci-dessous, sans chat ouvert.
+**03/11 (IMG_7023 : Opus 15 min sur 4 retours, arrêté sans répondre) : retours simples = Sonnet, 4 min max.** `serveur.corriger_vite()` prend l'image de chaque retour (`_retour-<id>.jpg`), Claude lit seulement `FICHE-RETOURS.md` (1 page) + plan.json + les images, corrige plan.json / words.json et écrit `reels/<id>/reponses.json` ; le serveur remonte (`monter.py remonter`), passe les retours en « corrige » avec la réponse, vide la boîte. Retour sur le dérush (« cut plus serré ») = « pas fait : dérush », il reste à faire, visible. Pas de réponse en 4 min = écran « écris corrige mes retours dans un chat ». Les retours auto (montage à reprendre) gardent l'ancien chemin (Opus). Outils limités : lire / écrire, `python3 monter.py remonter`, `ffmpeg -ss` (pas le dérush du skill ni son feedback.md : ses lignes vont dans `feedback-retours.md`, à recopier dans le skill). 2 essais max par version, sinon le reel passe en « bloqué ». Journal : `_claude.log`.
 
 ## Quand l’utilisateur dit « corrige mes retours » (ou qu'`a-corriger.json` n'est pas vide)
 1. Lire `a-corriger.json` -> pour chaque reel : `dossier`, `version`, `retours` (`t` = seconde dans la version affichée, `texte`).
@@ -27,6 +30,9 @@ Le serveur lance lui-même Claude Code (`../ouvrier_claude.py`, Opus) dès qu'un
 
 ## Reels montés dans un chat (28/10/2026)
 À chaque ouverture de l'accueil, `importer_montages()` (serveur.py) range les dossiers `montages/<date>-<nom>/` qui ont un `final.mp4` dans « Tes reels » : `reels/<id>` = raccourci vers le dossier, `_v1…_vN` puis `final.mp4` = versions 1…N (`versions/vN.mp4`, lien dur), `etat.json` + `retours.json` ajoutés. Les dossiers test / cockpit / essai sont ignorés.
+
+## Style horizontal, pour du vertical (01/11/2026, validé)
+Pas encore de carte à l'écran 0 : il se monte depuis un chat avec `~/.claude/skills/supermonteur/styles/horizontal.md` et `scripts/horizontal.py`.
 
 ## Montage à reprendre (29/10/2026)
 **Règle de la reprise (29/10/2026, l’utilisateur : « on est d'abord fidèle à son concept, son style, et nous on vient juste mettre notre police »)** : on copie le concept, la mise en page, le rythme, les couleurs, le motion et les transitions de la référence. Une seule chose change : la police (duo de SuperDA). Jamais nos couleurs, nos cartons ni notre motion à la place des siens. Images et b-rolls : je les PROPOSE (avec ce que j'ai : le rush, ses b-rolls, ses photos) ou je les DEMANDE (« il me faut un plan de toi au bureau à 0:03 ») avant de monter, plan par plan, dans un retour visible à l'écran.

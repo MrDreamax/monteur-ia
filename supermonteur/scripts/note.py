@@ -1,5 +1,5 @@
 """Note auto /10 d'un reel monté (étape 5 du process client, 13/10 ; codé le 25/10/2026). Grille SEULE de note-10.md, sans
-vidéo de référence, + garde-fous BLOQUANTS. Sous 8/10 on refait (2 essais de plus max, visuels réutilisés), puis on livre avec la note.
+vidéo de référence, + garde-fous BLOQUANTS. Sous 9/10 on refait (2 essais de plus max, visuels réutilisés), puis on livre avec la note.
   python3 note.py <dossier du reel>
 1er passage : mesure tout (score.py, gardien.json, saccades, néon, visages des visuels générés), sort score/planche.jpg et
 score/hook.jpg, et écrit oeil.json À REMPLIR (ce qu'aucune mesure ne voit : fautes, chiffres, listes, B-rolls, hook, fini).
@@ -209,7 +209,7 @@ for k, (nom, v) in crit.items():
     print(f"  {'✅' if v == 1 else '🟠' if v == 0.5 else '❌'} {k:>2}. {nom:12} {v}" + (f"  {why[k].strip(' ,')}" if v < 1 and why[k].strip() else ""))
 for b in B: print("  ⛔ " + b)
 rates = [f"{nom} {v}" + (f" ({why[k].strip(' ,')})" if why[k].strip() else "") for k, (nom, v) in crit.items() if v < 1]
-if note >= 8 and not B:
+if note >= 9 and not B:   # 31/10, l’utilisateur : « minimum du 9 sur 10 à chaque fois »
     H["verdict"] = "LIVRER"; code = 0
     print(f"\n✅ LIVRER : {note}/10")
 elif n < 3:

@@ -250,13 +250,30 @@ if INTRO and INTRO.get("impact", False) and _imp and os.path.exists(_imp["src"])
     print("début : petit impact à 0 s + musique +%g dB pendant %g s (défaut 28/10)" % (INTRO["db"], INTRO["dur"]))
 LIM_DB = -2.3   # plafond du limiteur ; abaissé tout seul si l'AAC fait remonter la crête (voir boucle finale)
 inp, f, n_music_inp = graph()
-if segs:   # recalage automatique : chaque segment à sa cible ±1 LU (le ducking est piloté par la voix, donc la correction est linéaire)
+# 03/11 (IMG_7023 : mix de 21 s au calme, 109 à 139 s Mac chargé) : une version qui ne change ni la voix ni la musique (titre,
+# sous-titres) reprend les niveaux trouvés au mix d'avant au lieu de refaire 2 ou 3 passes de mesure. La clé = le graphe de
+# mesure exact + taille et date de chaque fichier son (la vidéo rendue n'y entre pas : elle est muette). La mesure étant
+# déterministe, le résultat est le même au réglage près. Un changement = mesure complète, comme avant.
+_sig = lambda a: f"{a}|{os.path.getsize(a)}|{int(os.path.getmtime(a))}" if os.path.isfile(a) else a
+CLE_MIX = json.dumps([[_sig(a) for a in inp[2:]], f, dur], ensure_ascii=False)
+MEMO_MIX = os.path.join(here, "mix-niveaux.json")
+try: _memo = json.load(open(MEMO_MIX))
+except Exception: _memo = {}
+if segs and _memo.get("cle") == CLE_MIX and len(_memo.get("lufs", [])) == len(segs):
+    for s_, l_ in zip(segs, _memo["lufs"]): s_["lufs"] = l_
+    got = _memo["got"]
+    inp, f, n_music_inp = graph()
+    print("niveaux de la musique repris du mix précédent (même voix, même musique)")
+elif segs:   # recalage automatique : chaque segment à sa cible ±1 LU (le ducking est piloté par la voix, donc la correction est linéaire)
     for tour in range(3):
         got = measure(inp, f, n_music_inp)
         off = [(s, g) for s, g in zip(segs, got) if g is not None and abs(g - s.get("target", TARGET)) > 1.0]
         if not off or tour == 2: break
         for s, g in off: s["lufs"] = round(s["lufs"] + s.get("target", TARGET) - g, 1)
         inp, f, n_music_inp = graph()
+    try: json.dump({"cle": CLE_MIX, "lufs": [s_["lufs"] for s_ in segs], "got": got}, open(MEMO_MIX, "w"))
+    except Exception: pass
+if segs:
     for i, (s, g) in enumerate(zip(segs, got)):
         tg = s.get("target", TARGET)
         verdict = "?" if g is None else ("  <- TROP BAS, inaudible" if g < tg - 3 else ("  <- trop fort" if g > tg + 1.5 else "  OK"))

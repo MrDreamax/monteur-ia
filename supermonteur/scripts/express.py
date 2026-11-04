@@ -20,7 +20,7 @@ def run(cmd, log):
     return r.returncode
 
 plan = json.load(open("plan.json"))
-EN_TROP = [k for k in ("brolls", "bigwords", "numbers", "motions", "lists", "proofs", "inserts", "silences", "keywords", "cta")
+EN_TROP = [k for k in ("brolls", "bigwords", "numbers", "motions", "lists", "proofs", "inserts", "silences", "keywords", "cta", "ctaMenu", "mini", "zooms")   # 30/10 : mini et zooms oubliés = cartons perdus sans alerte (CAM20063)
            if plan.get(k)]
 if EN_TROP: stop(f"ce plan a {', '.join(EN_TROP)} : pas un montage express, lancer monte.sh", 2)
 W, H, FPS = 1080, 1920, 30
@@ -59,16 +59,20 @@ if plan.get("title"):
     l1 = re.search(r'<div class="ht1">(.*?)</div>', page)[1]; l2 = re.search(r'<div class="ht2">(.*?)</div>', page)[1]
     st = {k: re.findall(rf"\.{k}\{{([^}}]*)\}}", page)[-1] for k in ("ht1", "ht2")}   # la DERNIÈRE règle gagne (comme le CSS)
     num = lambda k, p, d=0: float((re.search(p, st[k]) or [None, d])[1])
-    tf = lambda k: os.path.join("fonts", re.search(rf'font-family:"{k.upper().replace("HT", "T")}";src:url\("fonts/([^"]+)"', page)[1])
+    # 31/10 : police lue dans la règle CSS de la ligne, pas devinée (T1 / T2 n'existent qu'avec plan.typo : sans typo = plantage)
+    fam = lambda k: re.search(r'font-family:"([^"]+)"', st[k])[1]
+    tf = lambda k: os.path.join("fonts", re.search(rf'font-family:"{fam(k)}";src:url\("fonts/([^"]+)"', page)[1])
+    coul = lambda k: (re.search(r"color:(#\w+)", st[k]) or [None, "#FFFFFF"])[1]   # sans couleur : celle de .htitle, blanc
     box = re.search(r'id="htitle" style="top:(\d+)px[^"]*"><div style="display:inline-block;background:([^;]+);border-radius:(\d+)px;padding:(\d+)px (\d+)px (\d+)px', page)
     pad_top = int(css(r"\.htitle\{[^}]*?padding:(\d+)px", 30))
+    MAJ = lambda k, t: t.upper() if "text-transform:uppercase" in st[k] else t   # 30/10 : titre en majuscules (typo caps) perdu en express
     forte = 'class="htitle onlight"' in page or (plan.get("typo") or {}).get("shadow") == "forte"
     ombre = [(3, 0, .95), (8, 2, .85), (34, 0, .7), (70, 0, .45)] if forte else [(26, 4, .55), (3, 1, .35)]
-    title = dict(ombre=ombre, a=ta, b=tb, top=int(box[1]) + pad_top if box else int(T.get("top", 280)), box=box,
-                 lines=[(html.unescape(l1), tf("ht1"), num("ht1", r"font-size:(\d+)px"), num("ht1", r"line-height:([\d.]+)", 1.25),
-                         num("ht1", r"letter-spacing:([\d.]+)px"), int(num("ht1", r"font-weight:(\d+)", 700)), re.search(r"color:(#\w+)", st["ht1"])[1]),
-                        (html.unescape(l2), tf("ht2"), num("ht2", r"font-size:(\d+)px"), num("ht2", r"line-height:([\d.]+)", 1.1),
-                         num("ht2", r"letter-spacing:([\d.]+)px"), int(num("ht2", r"font-weight:(\d+)", 700)), re.search(r"color:(#\w+)", st["ht2"])[1])])
+    title = dict(ombre=ombre, a=ta, b=tb, top=int(box[1]) + pad_top if box else int(T.get("top", 250)), box=box,
+                 lines=[(MAJ("ht1", html.unescape(l1)), tf("ht1"), num("ht1", r"font-size:(\d+)px"), num("ht1", r"line-height:([\d.]+)", 1.25),
+                         num("ht1", r"letter-spacing:([\d.]+)px"), int(num("ht1", r"font-weight:(\d+)", 700)), coul("ht1")),
+                        (MAJ("ht2", html.unescape(l2)), tf("ht2"), num("ht2", r"font-size:(\d+)px"), num("ht2", r"line-height:([\d.]+)", 1.1),
+                         num("ht2", r"letter-spacing:([\d.]+)px"), int(num("ht2", r"font-weight:(\d+)", 400)), coul("ht2"))])
 print(f"{len(caps)} sous-titres · titre {'oui' if title else 'non'} · police {os.path.basename(FONT)} {SUBSIZE} px · y {SUBY}")
 
 # ---------- dessin (mêmes mesures que le CSS : interlignage centré, espacement des lettres, ombre douce) ----------
@@ -95,14 +99,17 @@ def calque_sous_titre(img, txt, top):
         if cur and largeur(essai, f, SUBTRACK) > W - 240: lignes.append(cur); cur = m
         else: cur = essai
     lignes.append(cur)
-    texte = Image.new("L", (W, H), 0); dt = ImageDraw.Draw(texte)
+    # 03/11 (IMG_7023 : 50 s de dessin) : tout se dessine dans une bande de 80 px autour du texte, plus sur l'écran entier :
+    # le flou (portée ~30 px) n'atteint jamais le bord de la bande, donc même image au pixel près, ~8 x moins de calcul
+    y0 = max(0, int(top) - 80); y1 = min(H, int(top + len(lignes) * SUBSIZE * lh) + 80)
+    texte = Image.new("L", (W, y1 - y0), 0); dt = ImageDraw.Draw(texte)
     for i, l in enumerate(lignes):
-        ecrit(dt, (W - largeur(l, f, SUBTRACK)) / 2, baseline(top + i * SUBSIZE * lh, SUBSIZE, lh, f), l, f, SUBTRACK, 255)
+        ecrit(dt, (W - largeur(l, f, SUBTRACK)) / 2, baseline(top + i * SUBSIZE * lh, SUBSIZE, lh, f) - y0, l, f, SUBTRACK, 255)
     if SUBOMBRE:
         ombre = texte.filter(ImageFilter.GaussianBlur(9)).point(lambda v: int(v * 0.55))   # text-shadow 0 3px 18px rgba(0,0,0,.55)
-        noir = Image.new("RGBA", (W, H), (0, 0, 0, 0)); noir.putalpha(ombre)
-        img.alpha_composite(noir, (0, 3))
-    blanc = Image.new("RGBA", (W, H), SUBCOL + (0,)); blanc.putalpha(texte); img.alpha_composite(blanc)
+        noir = Image.new("RGBA", texte.size, (0, 0, 0, 0)); noir.putalpha(ombre)
+        img.alpha_composite(noir, (0, y0 + 3))
+    blanc = Image.new("RGBA", texte.size, SUBCOL + (0,)); blanc.putalpha(texte); img.alpha_composite(blanc, (0, y0))
 
 def calque_titre(img):
     t = title; box = t["box"]
@@ -140,7 +147,7 @@ dur = float(subprocess.check_output(["ffprobe", "-v", "error", "-show_entries", 
 bornes = sorted({0.0, dur, *[x for a, b, *_ in caps for x in (a, b)], *([title["a"], min(title["b"], dur)] if title else [])})
 bornes = [round(round(x * FPS) / FPS, 4) for x in bornes if x <= dur]   # calé sur les images : pas de demi-image
 bornes = sorted(set(bornes))
-liste, vu = [], {}
+liste, vu, TITRE_SEUL = [], {}, []
 for i, (a, b) in enumerate(zip(bornes, bornes[1:])):
     if b - a < 1e-6: continue
     mid = (a + b) / 2
@@ -148,8 +155,9 @@ for i, (a, b) in enumerate(zip(bornes, bornes[1:])):
     tit = bool(title and title["a"] <= mid < title["b"])
     cle = (tuple((c[2], c[3]) for c in on), tit)
     if cle not in vu:
-        img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        if tit: calque_titre(img)
+        # 03/11 : le titre (4 flous sur tout l'écran) se dessine UNE fois, puis chaque état part d'une copie
+        if tit and not TITRE_SEUL: TITRE_SEUL.append(Image.new("RGBA", (W, H), (0, 0, 0, 0))); calque_titre(TITRE_SEUL[0])
+        img = TITRE_SEUL[0].copy() if tit else Image.new("RGBA", (W, H), (0, 0, 0, 0))
         for c in on: calque_sous_titre(img, c[2], c[3])
         p = f"express/e{len(vu):03d}.png"; img.save(p, compress_level=1); vu[cle] = p
     liste.append((vu[cle], b - a))
@@ -178,6 +186,7 @@ G = run(["python3", f"{S}/gardien.py", "."], "gardien.log")
 print("\n".join(l for l in open("gardien.log").read().splitlines() if "❌" in l or "GARDIEN" in l))
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", "final.mp4", "-vf", "fps=1,scale=144:-1,tile=10x7", "-frames:v", "1", "planche.jpg"])
 if G: stop("le Gardien final bloque : NE PAS LIVRER")
+subprocess.Popen(["python3", f"{S}/oeil_gemini.py", "final.mp4", "--sortie", "oeil-gemini.json"], stdout=open("oeil-gemini.log", "w"), stderr=subprocess.STDOUT, start_new_session=True)   # 31/10 : Gemini juge à côté, ne bloque pas la livraison
 fd = float(subprocess.check_output(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", "final.mp4"]))
 t = time.time() - T0
 print(f"✅ final.mp4 ({fd:.2f} s) en {int(t // 60)} min {int(t % 60)} s · planche.jpg")

@@ -1,0 +1,36 @@
+# Goûts de l’utilisateur pour juger un reel (tirés de ses retours)
+- [31/10] Un défaut ne compte que s'il existe pour le style choisi : l’utilisateur choisit son style reel par reel, donc un reel simple sans motion, sans b-roll ou sans titre n'est PAS un défaut.
+- [31/10] Ne jamais demander d'étalonner son image, ni d'ajouter du motion, des b-rolls ou des effets à un reel qui n'en a pas.
+- [30/10] Entre deux phrases, y a-t-il un blanc qu'on entend ? Oui = défaut : il veut des coupes « plus serrées », au ras de la voix.
+- [22/10] Chaque mot s'entend-il en entier, avec sa dernière syllabe et ses petites consonnes finales (« script », « Dreamax », « d'avance ») ? Un mot mangé = défaut.
+- [21/10] Entend-on une respiration ou une inspiration avant une phrase ou après la dernière ? Oui = défaut (« enlève la respiration au début de chaque phrase »).
+- [20/10] Voit-on ou entend-on une micro-coupure, un saut, ou une image de la tête qui flashe entre deux plans ? Oui = défaut (« la vidéo bugue »).
+- [29/10] Une coupe tombe-t-elle en plein milieu d'une phrase ? Oui = défaut : on coupe au début ou à la fin d'une phrase.
+- [29/10] Un plan dure-t-il moins de 2 secondes sans être une phrase entière ? Oui = défaut (plan éclair, ça saccade).
+- [17/10] Y a-t-il une pause muette avant la punchline, ou un moment où la musique s'arrête et on dirait un bug ? Oui = défaut.
+- [28/10] La fin tombe-t-elle juste après le dernier mot, sans silence, sans regard figé, sans microseconde de trop, la musique s'éteignant en fondu sans coup de basse sous le dernier mot ? Non = défaut.
+- [22/10] La musique avance-t-elle d'un seul passage continu, sans raccord ni saut audible ? Non = défaut (« laisse la musique défiler »).
+- [28/10] La musique s'entend-elle clairement mais reste-t-elle nettement sous la voix, même sur un téléphone ? Inaudible, ou qui couvre la voix = défaut.
+- [28/10] Au début, la musique démarre-t-elle sec sur un temps fort, un peu plus forte les 2 premières secondes, sans bruitage d'impact ajouté ? Non = défaut.
+- [18/10] La musique colle-t-elle à l'ambiance du sujet avec une vraie mélodie et de l'émotion (cordes, piano, tension dark qui monte), pas une nappe plate ? Un conseil court ou un tuto simple ne veut pas d'épique.
+- [22/10] Y a-t-il des bruitages parasites (whoosh sur chaque coupe, clics, sons collés) ? Oui = défaut : seuls les gros événements ont un son.
+- [28/10] Si le reel a des b-rolls : montrent-ils exactement ce qui est dit, beaux, stables, sans filtre, premium (scène, costume, montre, hôtel), jamais du sport dans un reel business ? Non = défaut.
+- [19/10] Voit-on une image ou une vidéo générée par IA, ou une personne qui n'est pas l’utilisateur, ou l’utilisateur crâne rasé ou avec son ancien visage ? Oui = défaut.
+- [31/10] Le cadre est-il celui d'origine, sans zoom ajouté pour cacher un défaut, avec la tête bien cadrée et un plan vertical entier dans sa carte ? Non = défaut (« je suis trop zoomé »).
+- [27/10] Si un titre reste affiché, la tête touche-t-elle ou passe-t-elle sous le titre ? Oui = défaut.
+- [30/10] Y a-t-il du texte lisible dès la toute première image ? Si le reel a un titre, il doit être net dès l'image 0, sans fondu d'entrée.
+- [28/10] Le titre se lit-il sans effort (jamais blanc sur fond clair), avec une ombre douce et sans bande noire derrière, sauf encadré demandé sur fond clair ? Non = défaut.
+- [21/10] Le titre contient-il une virgule, un point ou deux-points ? Oui = défaut (seul le « ? » est permis).
+- [21/10] Un texte (titre, carton, sous-titre) passe-t-il dans la zone des boutons Insta ou sur les bords ? Oui = défaut : tout reste dans une colonne centrale d'environ 840 px.
+- [29/10] Les sous-titres sont-ils sans faute, fidèles à ce qu'il dit, 3 mots par bloc, sans « euh » ? Une faute ou un mot inventé = défaut.
+- [29/10] Les sous-titres sont-ils sur le buste ou le t-shirt noir (jamais sur le cou, jamais au-dessus de la tête sans son accord, sous le visage sur un selfie) ? Non = défaut. Lisibles, pas trop gros, sans animation de texte (fondu de sortie seulement).
+- [28/10] Quand il dit « clique sur les deux petits traits, ça m'intéresse », y a-t-il l'animation du bouton ≡ puis du menu « Ça m'intéresse » ? Non = défaut. Aucun texte « ABONNE-TOI » écrit par-dessus la tête.
+- [23/10] Un carton plein écran est-il en dégradé propre ? Couleur unie = défaut (« dégueulasse »).
+- [21/10] Un carton démarre-t-il au début d'une phrase, couvre-t-il la phrase entière, se cale-t-il sur la voix, et ses lignes arrivent-elles quand elles sont dites ? Non = défaut.
+- [28/10] Les mots géants derrière la tête arrivent-ils pile sur le mot dit, sur le concept entier (« AI slop », « 10 ans »), sans être cachés par la tête, jamais en blanc sur fond clair ? Non = défaut.
+- [29/10] Les animations ou motion sont-elles propres et collées à ce qui est dit (style écrans iPhone Apple), sans dessin basique (cœur, trait, ellipse), jamais plus de 2 d'affilée ? Non = défaut.
+- [14/10] Y a-t-il un zoom brusque ou un mouvement qui saccade ? Oui = défaut : zooms lents et doux seulement.
+- [28/10] Voit-on une image figée au milieu du reel, ou un écran noir au départ ? Oui = défaut.
+- [29/10] Reste-t-il une reprise, une répétition ou une fausse prise (phrase dite deux fois, prise chuchotée au lieu de la parlée) ? Oui = défaut.
+- [16/10] La voix sonne-t-elle naturelle, comme l'originale, sans effet déformé ou robotique ? Non = défaut (« ma voix est bizarre et déformée »).
+- [31/10] La police est-elle la même partout et la sienne, jamais copiée d'un autre créateur ? Non = défaut.

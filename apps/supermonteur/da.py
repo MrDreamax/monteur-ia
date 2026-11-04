@@ -85,7 +85,7 @@ def pour_moteur():
     fs = s.get("fichier") if s.get("fichier") and os.path.exists(os.path.join(fonts_dir, s["fichier"])) else "InstrumentSerif-Italic.ttf"
     # contrat SuperDA (note du 28/10 01:50) : titre.taille = ligne 2 (police secondaire) ; ligne 1 = taille x 0,5
     t2 = int(m.get("titre", {}).get("taille") or 120)
-    t1 = round(t2 * 0.5)
+    t1 = round(t2 * p.get("ratio_ligne1", 0.5))   # 02/11 duo Moderne : ligne 1 fine et presque aussi grande que la ligne 2
     sub = int(m.get("sous_titres", {}).get("taille") or 52)
     accent = co.get("accent") or co.get("titre") or "#FFFFFF"
     car = m.get("cartons", {})
@@ -96,13 +96,16 @@ def pour_moteur():
                    "list": [car.get("depart") or "#161D2F", car.get("arrivee") or "#0B0B0D"]},
         "subSize": sub,
         "typo": {
-            "t1": {"font": fp, "weight": p.get("graisse", 700), "size": t1, "color": co.get("titre") or "#FFFFFF", "caps": bool(p.get("majuscules", True))},
+            "t1": {"font": fp, "weight": p.get("graisse_ligne1", p.get("graisse", 700)), "size": t1, "color": co.get("titre") or "#FFFFFF", "caps": True},   # 02/11 (l’utilisateur : « mets toujours le titre en majuscule ») : quel que soit le duo
             "t2": {"font": fs, "weight": s.get("graisse", 400), "size": t2, "color": co.get("ligne2") or "#FFFFFF",
-                   "italic": bool(s.get("italique", True)), "caps": bool(s.get("majuscules", False))},
+                   "italic": bool(s.get("italique", True)), "caps": True},
             "sub": {"font": fp, "weight": p.get("graisse", 700), "caps": bool(m.get("sous_titres", {}).get("majuscules", True)), "scale": 1, "color": co.get("sous_titres") or "#FFFFFF",
                     "track": 0.5},   # sous-titres du moteur : majuscules, 0,5 px (moteur.md, Style Lab 13/10)
             "shadow": "douce", "align": "center"},
         "subMax": max(1, min(4, int(m.get("mots_par_ligne") or 4))),   # le moteur plafonne à 4 mots (plan.subMax)
+        # 03/11 (l’utilisateur : « un peu plus bas ») : la hauteur du titre de SuperDA (_y = haut des lettres) arrive au moteur ;
+        # avant, monter.py posait top 250 en dur et le réglage de SuperDA ne servait à rien. top = _y - 20 (marge du bloc).
+        "titleTop": int(m.get("titre", {}).get("_y", 270)) - 20,
     }
     return out
 

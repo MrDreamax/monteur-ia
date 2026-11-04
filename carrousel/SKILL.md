@@ -3,6 +3,8 @@ name: carrousel
 description: Le Carrousel. Carrousel Instagram de 8 slides (1080x1440) au modèle validé - bleu-blanc, vraies photos de l'utilisateur + illustrations 2D SVG, jamais d'image IA. Livre PNG + légende, ne publie jamais. Use when "carrousel", "carousel", "fais-moi un carrousel", "carrousel de la semaine", "transforme ce reel en carrousel", "carrousel sur X", "carousel maker".
 ---
 
+**Réflexe 9/10 (03/11/2026, l’utilisateur : « il faut que ce soit un réflexe pour tout ce que tu fais de me montrer que du 9/10 ») : rien ne lui est montré sous 9/10, échantillon, maquette et version intermédiaire compris. Juge séparé avant chaque envoi, 3 tours max, sinon la vraie note et ce qui bloque. Méthode : Brain `09-SOP/boucle-9-sur-10.md`.**
+
 **RÈGLE 28/10/2026 : premier geste de toute demande de carrousel = ouvrir SuperCarrousel** (`bash ~/Documents/SuperApps/supercarrousel/lancer.sh` puis http://localhost:8797 dans le navigateur intégré), avant toute question.
 
 

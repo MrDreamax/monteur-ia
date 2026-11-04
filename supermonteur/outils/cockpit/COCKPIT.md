@@ -1,5 +1,7 @@
 # Le Cockpit v3 « Claude te guide » (23/10/2026) : la page où la personne retouche le reel que Claude a monté
 
+**31/10 : Cockpit et Derush Lab PÉRIMÉS depuis le 29/10 (Derush Lab retiré, retours dans l'appli SuperMonteur). Voir `SKILL.md`. Ce fichier reste pour l'historique et la réparation.**
+
 Remplace **Style Lab ET Cut Notes** (décision de l'utilisateur, 23/10). Maquette validée en 2 rounds (Brain `01-Projets/cockpit-montage.md`,
 images `Stratosphere/livrables/cockpit-montage/complet-r1/C.png`, `complet-r2/1c.png` et `2b.png`). Ancienne page v2 (panneau de cartes)
 et ancien serveur : `supermonteur/_backup/2026-10-23-cockpit-v2/`. Look Apple clair. Utilisable par un client SANS bibliothèque de B-rolls

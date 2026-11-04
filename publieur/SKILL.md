@@ -52,13 +52,13 @@ Dossier : `<config.json → publication>/<AAAA-MM-JJ>-<slug>/` (date de publicat
 ```
 Comment l'écrire (modèle validé : `livrables/publication/2026-10-16-echantillon/fiche-publication.png`) :
 - **Mot-clé** : 1 principal (ce que la cible tape : « formats Instagram », « trouver des clients coach »). En 1re ligne de légende, dit à voix haute (vérifie dans la transcription). Plus écrit sur la cover (cover sans texte, 17/10). Règles 6 à 10 de la fiche experts.
-- **Légende Instagram + Facebook (20/10)** : COURTE, 1 ou 2 phrases, c'est tout. Phrase 1 = mot-clé + promesse. S'il y a un CTA DANS la vidéo, il devient la phrase 2 ; sinon, pas de CTA. **Aucun hashtag.** (Remplace l'ancienne légende en 4 blocs + hashtags.)
+- **Légende Instagram + Facebook (01/11, l’utilisateur : « juste une ligne super court »)** : UNE ligne super courte, 8 mots environ, avec le mot-clé. S'il y a un CTA DANS la vidéo, il devient la ligne 2 ; sinon, pas de CTA. **Aucun hashtag.** (Remplace la légende de 1 ou 2 phrases du 20/10.)
 - **CTA** : seulement s'il est dit dans la vidéo (champ `cta_dans_video`), repris tel quel en phrase 2. Sinon aucun. Celui du script si la vidéo le dit. Sinon `cta_defaut` de `config.json` (vide = `mot_cle` de 00-Moi/marque.json), dans le dosage que donne son carnet. Un mot-clé freebie seulement si son automatisation (ManyChat ou GoHighLevel) répond ; dans le doute : `cta_defaut`, et alerte dans la fiche.
 - **1er commentaire : AUCUN** (20/10 : « pas de commentaire »). Ne pas envoyer `firstCommentText`.
 - **Texte alternatif** : ce qu'on voit vraiment dans la vidéo.
-- **YouTube Shorts** : titre de 100 caractères max (mot-clé + bénéfice), description = la même règle que la légende (1 ou 2 phrases, CTA en phrase 2 seulement s'il est dans la vidéo, aucun hashtag).
+- **YouTube Shorts (01/11, l’utilisateur : « accrocheur et court pour qu'on voie tout le titre sur l'écran d'accueil »)** : titre de 40 caractères max, 30 si possible, accrocheur et vrai (un chiffre de la vidéo, une tension), jamais coupé à l'écran d'accueil. Rien que la vidéo ne dise pas. Description = la même règle que la légende.
 - **TikTok** : même règle : 1 ou 2 phrases, CTA en phrase 2 seulement s'il est dans la vidéo, aucun hashtag.
-- **Trial reel : SUPPRIMÉ le 29/10** (l’utilisateur : « tout ce qui est en lien avec les reels d'essai, tu peux tout supprimer »). Jamais de `TRIAL_REEL`, jamais de reel d'essai.
+- **Trial reel : SUPPRIMÉ le 29/10** (l’utilisateur : « tout ce qui est en lien avec les reels d'essai, tu peux tout supprimer »). Jamais de `TRIAL_REEL` ni de reel d'essai, sauf demande explicite de l’utilisateur (02/11, Instagram seul, `instagramData.type: TRIAL_REEL`).
 - Dernière passe : les règles du skill `anti-ia` (pas de tiret cadratin, pas de « ce n'est pas X, c'est Y », pas de triade forcée), voix posée, tutoiement, zéro argot.
 
 ## 3. La cover : LA MEILLEURE IMAGE DU REEL (28/10/2026, remplace « aucune cover » du 22/10)

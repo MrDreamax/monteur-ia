@@ -408,7 +408,10 @@ class H(BaseHTTPRequestHandler):
             if p.startswith("/fonts/"): return self.fichier(os.path.join(WEB, "fonts", os.path.basename(p)))
             if p == "/api/alerte":   # 29/10 : ElevenLabs refuse (mots.py) -> bandeau rouge en haut de l'écran
                 f = os.path.expanduser("~/.claude/skills/supermonteur/.alerte-elevenlabs.json")
-                return self.envoyer(200, json.load(open(f)) if os.path.exists(f) else {})
+                if os.path.exists(f): return self.envoyer(200, json.load(open(f)))
+                sm = os.path.join(APP, ".sans-musique.json")  # reel monté sans musique (monter.py)
+                frais = os.path.exists(sm) and time.time() - os.path.getmtime(sm) < 2 * 3600  # 2 h après le montage, puis plus rien
+                return self.envoyer(200, json.load(open(sm)) if frais else {})
             if p == "/api/reels":
                 importer_montages()
                 L = [carte(r) for r in sorted(os.listdir(REELS), reverse=True) if os.path.isdir(os.path.join(REELS, r))]

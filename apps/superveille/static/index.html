@@ -234,7 +234,6 @@ select.ajoutJ{flex:1;padding:12px;border-radius:999px;font-weight:600;border:1px
     <button data-o="recherche" class="on">Recherche</button>
     <button data-o="enregistres">Mes enregistrés</button>
     <button data-o="a_tourner">À tourner</button>
-    <button data-o="jour">Tournage du jour</button>
     <button data-o="tourne">Tourné</button>
   </nav>
   <form class="transpo" id="transpo" autocomplete="off">
@@ -308,7 +307,7 @@ function dessinerEnreg() {
   const g = $("#contenu");
   const lu = E.lu ? new Date(E.lu * 1000).toLocaleTimeString("fr-FR", {hour: "2-digit", minute: "2-digit"}) : "";
   const etat = E.lecture ? `<span class="rond"></span><small>Je lis tes enregistrés…</small>` : lu ? `<small>Lu à ${lu}</small>` : "";
-  let haut = `<div class="tete"><h2>Mes enregistrés</h2><span class="sous">${E.items.length} reels · tes 2 comptes mélangés, les 100 derniers</span>
+  let haut = `<div class="tete"><h2>Mes enregistrés</h2><span class="sous">${E.items.length} reels · tes comptes, les 100 derniers</span>
     <div class="act">${etat}<select id="triE" aria-label="Trier"><option value="recent" ${triE === "recent" ? "selected" : ""}>Derniers enregistrés</option>
       <option value="likes" ${triE === "likes" ? "selected" : ""}>Plus de likes</option>
       <option value="vues" ${triE === "vues" ? "selected" : ""}>Plus de vues</option></select>
@@ -664,9 +663,7 @@ function dessinerPanneau() {
   const sup = `<button class="lien-petit" data-a="supprime">Supprimer</button>`;
   const boutons = r.tournage === "tourne"
     ? `<button class="contour" data-a="a_tourner">Remettre à tourner</button><button class="contour" data-a="copier">Copier le script</button>${sup}`
-    : `<select class="ajoutJ" id="ajoutJ" aria-label="Ajouter au Tournage du jour"><option value="">+ Tournage du jour</option>${J.formats.map(f =>
-        `<option value="${f.n}">${deux(f.n)} · ${esc(f.nom)}${f.idees.some(x => x.code === r.code) ? " ✓" : ""}</option>`).join("")}</select>
-      <button class="vert" data-a="tourne">Tourné ✓</button><button class="contour" data-a="copier">Copier</button>${sup}`;
+    : `<button class="vert" data-a="tourne">Tourné ✓</button><button class="contour" data-a="copier">Copier</button>${sup}`;
   p.innerHTML = `<div class="ph"><div class="mini" style="background-image:url('${r.miniature || ""}')"></div>
     <div><h3>@${esc(r.createur)}</h3><div class="meta">${esc(r.langue ? LANGUES[r.langue] || r.langue : "")}${date ? " · " + date : ""}${r.format ? " · " + esc(r.format) : ""}</div>
       <div class="chiffres"><div><b>${plein(r.likes)}</b><span>likes</span></div><div><b>${plein(r.vues)}</b><span>vues</span></div></div>
@@ -781,8 +778,8 @@ async function suivre() {
 }
 (async () => {
   [E, TR, T, R, J] = await Promise.all([api("/api/enregistres"), api("/api/traduits"), api("/api/tournage"), api("/api/recherche"), api("/api/jour")]);
-  let o = "recherche"; try { o = localStorage.getItem("sv-onglet") || o; } catch (_) {}  // 28/10 : il rouvre là où il était
-  montrerOnglet(["recherche", "enregistres", "a_tourner", "jour", "tourne"].includes(o) ? o : "recherche");
+  let o = "enregistres"; try { o = localStorage.getItem("sv-onglet") || o; } catch (_) {}  // 28/10 : il rouvre là où il était
+  montrerOnglet(["recherche", "enregistres", "a_tourner", "tourne"].includes(o) ? o : "enregistres");
   try { E = await api("/api/enregistres/actualiser", {force: false}); dessiner(); } catch (_) {}
   suivre();
 })();

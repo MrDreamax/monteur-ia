@@ -206,9 +206,9 @@ def resume(da, c):
             {"cle": "mots", "ligne": "Mots par ligne", "valeur": str(m["mots_par_ligne"])},
             {"cle": "couleurs", "ligne": "Couleur de marque", "valeur": marque},
             {"cle": "texte", "ligne": "Couleurs du texte", "valeur": nom_couleur(cl["titre"], c).capitalize()},
-            {"cle": "cartons", "ligne": "Cartons", "valeur": "%s → %s" % (dep, arr)},
-            {"cle": "univers", "ligne": "Univers du motion", "valeur": uni},
-            {"cle": "motion", "ligne": "Réglages du motion", "valeur": "%s · %s" % (pal, mo["mode"].capitalize())},
+            {"cle": "cartons", "ligne": "Écrans de transition", "valeur": "%s → %s" % (dep, arr)},
+            {"cle": "univers", "ligne": "Style des animations", "valeur": uni},
+            {"cle": "motion", "ligne": "Couleurs des animations", "valeur": "%s · %s" % (pal, mo["mode"].capitalize())},
         ],
         "carrousels": [
             {"cle": "duo", "ligne": "Duo de polices", "valeur": duo},

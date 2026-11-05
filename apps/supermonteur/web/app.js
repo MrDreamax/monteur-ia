@@ -179,6 +179,8 @@ async function alerte() {
   const a = await api("/api/alerte").catch(() => ({}));
   const el = $("#alerte");
   el.hidden = !a.raison;
+  el.style.background = "";
+  if (!a.raison && a.texte) { el.hidden = false; el.textContent = a.texte; el.style.background = "#1D5FBF"; }  // info (bleu), pas une alarme
   if (a.raison) el.innerHTML = `ElevenLabs : ${esc(a.raison)} depuis le ${esc(a.depuis)}. Tes montages passent sur le Mac (plus lent, plus de fautes). <a href="https://elevenlabs.io/app/subscription" target="_blank">Recharger</a>`;
 }
 alerte(); setInterval(alerte, 60000);

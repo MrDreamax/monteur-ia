@@ -202,6 +202,7 @@ L'écran attend que tu fasses ceci pour le projet %s : %s.
    slide projetée, panneau) : il se bat avec le titre. Titres sans point final (« ? » et « ! » ok).
 Réponds en 1 ligne quand c'est posé."""
 TENTATIVES = {}  # (projet, quoi, version) -> nombre d'essais
+DERNIERE = {}  # (projet, quoi, version) -> fin de la sortie du dernier essai raté
 
 
 def ouvrier():
@@ -217,11 +218,18 @@ def ouvrier():
                     if TENTATIVES[cle] > 2:
                         if m.etat(pid).get("statut") != "erreur":
                             m.maj_etat(pid, statut="erreur", message="Claude n'a pas réussi à écrire ce carrousel.",
-                                       detail="Détails dans supercarrousel/_claude.log. Réessaie, ou demande-le dans un chat Claude.")
+                                       detail=(DERNIERE.get(cle) or "Réessaie") + " Ou demande-le dans un chat Claude.")
                         continue
                     tache = "écrire la version 1" if quoi == "texte" else "corriger ses retours (version suivante)"
-                    ouvrier_claude.lancer(CONSIGNE % (pid, tache, pid, pid, pid, pid), m.ICI,
-                                          ["Read", "Write", "Edit", "Glob", "Grep", "Skill", "Bash(python3 sc.py:*)"])
+                    ok, sortie = ouvrier_claude.lancer(CONSIGNE % (pid, tache, pid, pid, pid, pid), m.ICI,
+                                                       ["Read", "Write", "Edit", "Glob", "Grep", "Skill", "Bash(python3 sc.py:*)"])
+                    # 05/11 (juge Super 1.7) : Claude absent ou déconnecté = dit à l'écran tout de suite, sans 2 essais pour rien
+                    if not ok and ("Je ne trouve pas Claude" in sortie or "pas connecté" in sortie):
+                        TENTATIVES[cle] = 99
+                        DERNIERE[cle] = sortie
+                        m.maj_etat(pid, statut="erreur", message="Claude n'a pas pu écrire ce carrousel.", detail=sortie)
+                    elif not ok:
+                        DERNIERE[cle] = sortie[-200:].strip()
                     break  # une demande à la fois, puis on relit la liste
         except Exception:
             traceback.print_exc()

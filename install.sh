@@ -88,6 +88,25 @@ if [[ -d "$ASRC" ]]; then
     [[ -f "$ADEST/${a}config.json" ]] || cp "$ADEST/${a}config.exemple.json" "$ADEST/${a}config.json"
   done
   [[ -f "$ADEST/superda/da.json" ]] || cp "$ADEST/superda/da.defaut.json" "$ADEST/superda/da.json"
+  # 1.7 : tailles par défaut revues (titre 62 px en une seule taille, sous-titres 54 px). Seulement si la personne
+  # n'a jamais touché aux tailles (encore 104 · 52 de la 1.6) : sinon ses réglages restent.
+  python3 - "$ADEST/superda/da.json" <<'PYDA' || true
+import json, sys
+p = sys.argv[1]
+d = json.load(open(p))
+m, duo = d.get("montage", {}), d.get("commun", {}).get("duo", {})
+if m.get("titre", {}).get("taille") == 104 and m.get("sous_titres", {}).get("taille") == 52:
+    m["titre"].update(taille=62, decalage=60, _y=350)
+    m["sous_titres"].update(taille=54, majuscules=False)
+    if duo.get("id") == "moderne" and "ratio_ligne1" not in duo.get("principale", {}):
+        duo["principale"].update(graisse_ligne1=700, ratio_ligne1=1)
+        duo.get("secondaire", {})["graisse"] = 700
+    for r in d.get("_resume", {}).get("montage", []):
+        if r.get("cle") == "tailles":
+            r["valeur"] = "62 · 54 px"
+    json.dump(d, open(p, "w"), ensure_ascii=False, indent=1)
+    print("Tailles du titre et des sous-titres mises à jour (62 · 54 px).")
+PYDA
   [[ -f "$ADEST/superveille/ma-marque.md" ]] || cp "$ADEST/superveille/ma-marque.exemple.md" "$ADEST/superveille/ma-marque.md"
   mkdir -p "$ADEST/superda/img" "$MONT/MONTAGES" "$MONT/PUBLICATION"
   [[ -f "$ADEST/superda/img/frame.jpg" ]] || cp "$ASRC/superda/img/frame.jpg" "$ADEST/superda/img/frame.jpg"
@@ -106,6 +125,9 @@ mkdir -p "$HOME/.local/bin"
 /usr/bin/python3 -c "import yt_dlp" 2>/dev/null || /usr/bin/python3 -m pip install --user -q yt-dlp || echo "Attention : module yt-dlp pas installé (SuperVeille)."
 # modules en plus pour les carrousels (lecture d'un reel, détourage)
 python3 -c "import scipy, cv2" 2>/dev/null || python3 -m pip install --user -q scipy opencv-python-headless || echo "Attention : scipy / opencv pas installés (carrousels depuis un reel)."
+# 1.7 (juge 1.6 : 1er démarrage du Carrousel = 188 s) : le tout 1er chargement de ces modules est long, on le fait ici
+echo "Préparation du Carrousel (jusqu'à 3 min la première fois)…"
+/usr/bin/python3 -c "import numpy, scipy.ndimage, PIL" 2>/dev/null || true
 echo "Super installé (version $(cat "$DEST/VERSION")). Dans Claude, onglet Code : « Ouvre Super »."
 if [[ -d "$PDEST" ]]; then echo "Publieur installé. Dans Claude : « Programme ma semaine »."; fi
 if [[ -d "$ADEST" ]]; then echo "Super installé dans ~/Documents/SuperApps. Double-clic sur ouvrir.command (ou dans Claude : « Ouvre Super »). Publication en mode essai : rien ne part tant que tu ne l'actives pas."; fi

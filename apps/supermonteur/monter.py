@@ -53,6 +53,9 @@ def run(D, cmd, log):
         fin = open(os.path.join(D, log)).read().strip().splitlines()[-6:]
         if r.returncode == 3 and fin and fin[-1].startswith("ElevenLabs"):   # 29/10 : montage bloqué sans ElevenLabs
             raise RuntimeError(fin[-1])
+        if any(re.search(r"Error|Traceback|File \"", l) for l in fin):
+            raise RuntimeError(f"Le montage a planté ({os.path.basename(cmd[1]) if len(cmd) > 1 else cmd[0]}). Réessaie, ou écris « répare mon montage » "
+                               f"dans Claude : le détail est dans {log}, dans le dossier du reel.")
         raise RuntimeError(f"{os.path.basename(cmd[1]) if len(cmd) > 1 else cmd[0]} : " + " / ".join(fin))
 
 
@@ -381,11 +384,43 @@ def titre_auto(words):
     """Titre = 1re phrase (la question du hook), 2 lignes équilibrées, sans , . : (build.mjs les retire de toute façon)."""
     P = phrases(words)
     if not P: return None
+    # 05/11 (juge Super 1.7 : « SALUT À TOUS AUJOURD 'HUI JE VOUS ») : une phrase de salut n'est pas un titre, on prend la suivante
+    # salut seul (« Salut à tous. ») = phrase suivante ; salut + virgule (« Salut à tous, aujourd'hui… ») = on retire le salut
+    salut = lambda ab: re.match(r"(salut|bonjour|hello|coucou|hey|yo)\b", words[ab[0]]["text"].strip().lower())
     a, b = P[0]
-    mots = [re.sub(r"[,.:;…?!]", "", words[i]["text"].strip()) for i in range(a, b + 1)]
+    for x in P[:3]:
+        a, b = x
+        if not salut(x): break
+        v = next((i for i in range(a, b) if words[i]["text"].strip()[-1:] == ","), None)
+        if v is not None and b - v >= 4:
+            a = v + 1
+            break
+    brut = []
+    for i in range(a, b + 1):   # « aujourd » + « 'hui » (Whisper) = un seul mot
+        t = words[i]["text"].strip()
+        if brut and t[:1] in "'’": brut[-1] += t
+        elif t: brut.append(t)
+    # « Aujourd'hui je vous montre l'erreur qui… » -> « L'erreur qui… » : l'annonce n'est pas le titre, la promesse l'est
+    ann = re.match(r"((aujourd['’]hui|dans cette vidéo)\W+)?(je|on) (vais |va )?(vous|te) (montre|montrer|explique|expliquer|dis|dire|donne|donner|partage|partager)\b\W*",
+                   " ".join(brut).lower())
+    if ann and len(" ".join(brut)) - ann.end() >= 12:
+        n = len(" ".join(brut)[:ann.end()].split())
+        brut = brut[n:]
+    mots = [re.sub(r"[,.:;…?!]", "", m) for m in brut]
     mots = [m for m in mots if m]
-    if len(mots) > 9: mots = mots[:7]
     q = words[b]["text"].strip().endswith("?") and len(mots) <= 9
+    if len(mots) > 9:   # trop long : coupe à une virgule, sinon avant « mais / et / car / parce / donc / alors »
+        virg = [k + 1 for k, m in enumerate(brut[:9]) if m[-1:] in ",;:" and k >= 2]
+        liens = [k for k, m in enumerate(mots[:10]) if k >= 3 and m.lower() in ("mais", "et", "car", "parce", "donc", "alors", "sauf")]
+        if virg or liens:
+            mots = mots[:virg[-1]] if virg else mots[:liens[0]]
+        else:   # sinon le plus de mots qui tiennent en 2 lignes (48 signes), sans finir sur un petit mot (« votre », « de »…)
+            k = 0
+            while k < len(mots) and len(" ".join(mots[:k + 1])) <= 48: k += 1
+            faibles = {"le", "la", "les", "l", "un", "une", "des", "de", "du", "d", "à", "au", "aux", "et", "ou", "qui", "que", "qu",
+                       "ton", "ta", "tes", "votre", "vos", "mon", "ma", "mes", "son", "sa", "ses", "ce", "cette", "ces", "en", "pour", "sur", "dans", "avec"}
+            while k > 3 and mots[k - 1].lower().strip("'’") in faibles: k -= 1
+            mots = mots[:max(k, 3)]
     if mots: mots[0] = mots[0][:1].upper() + mots[0][1:]
     best, cut = 9e9, 1
     for c in range(1, len(mots)):
@@ -628,7 +663,7 @@ def suite(D, ref=None):
         raise
     try:  # rush renommé « date titre - CAM20058.MP4 » pour le retrouver (28/10) ; jamais bloquant pour le reel
         import renommer_rush
-        renommer_rush.renommer(D)
+        pass  # version clients : le rush garde son nom
     except Exception as x:
         log_erreur(f"SuperMonteur {rid} : rush pas renommé : {str(x)[:200]}")
     if ref and not ref.get("erreur") and not demander_images(D):
@@ -745,8 +780,14 @@ def plan_auto(D, rid, style, cases, words):
         # Minimaliste : le titre reste toute la vidéo ; les autres : pendant le hook (SKILL : title 0-4 s)
         T.update({"start": 0, "end": 999 if style == "Minimaliste" else 4.0, "top": 250})
         plan["title"] = T
-    if cases.get("musique", True):   # 30/10 (l’utilisateur : « juste un sous-titrage, sans titre et sans musique ») : case musique décochée = voix seule
-        plan["music"] = musique_auto(D, rid)
+    if cases.get("musique", True):   # case musique décochée = voix seule
+        sans = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".sans-musique.json")
+        try:
+            plan["music"] = musique_auto(D, rid)
+            if os.path.exists(sans): os.remove(sans)
+        except RuntimeError as x:  # pas encore de musiques : le reel est monté sans, un bandeau le dit
+            if "pas de musique" not in str(x): raise
+            ecrire(sans, {"texte": "Reel monté sans musique : mets tes musiques (mp3) dans Documents/Montage/MUSIQUE pour en avoir."})
     # signature finale (« … avec le cœur. [temps] Mr Dreamax ») : son temps naturel est gardé (SKILL, Gardien pause_signature)
     P = phrases(words)
     if len(P) > 1:

@@ -1011,6 +1011,9 @@ if (plan.title) {
   // le titre le plus long sortait dans la zone morte de droite -> on mesure dans 940 - 96 px quand il y a un encadré.
   const TW = T.box ? 940 - 96 : 940;
   FS1 = fitLigne(TP(T.l1), T1S.font, T1S.size, T1S, TW); FS2 = fitLigne(TP(T.l2), T2S.font, T2S.size, T2S, TW);
+  // 05/11 (IMG_7045 : ligne 1 rétrécie seule = 2 tailles, contre la règle « titre 1 taille » du 03/11) : une ligne trop longue
+  // fait rétrécir les DEUX lignes à la même taille.
+  if (T1S.size === T2S.size) FS1 = FS2 = Math.min(FS1, FS2);
   if (FS1 < T1S.size || FS2 < T2S.size) console.log(`titre rétréci pour tenir sur 2 lignes : ${T1S.size} -> ${FS1} px, ${T2S.size} -> ${FS2} px`);
   const tz = (plan.subYAt || []).find(z => (T.start ?? 0) >= z.start - 0.02 && (T.start ?? 0) < z.end);   // fond clair = pas de voile (14/10)
   // 28/10 (CAM20047, écran de projection blanc derrière : « blanc sur blanc ») : T.light = ombre forte, prime sur la DA

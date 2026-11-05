@@ -165,6 +165,8 @@ def recherche_rapide(vid):
         fin.update(statut="erreur", erreur="Apify est à sec ce mois-ci. Monte la limite : console.apify.com > Billing > Limits.")
     elif etape.startswith("MANQUE:"):
         fin["manque"] = etape[7:].strip()
+    elif not n and not ok:  # 05/11 (juge 1.6) : Claude absent ou déconnecté = le dire, pas « rien trouvé »
+        fin.update(statut="erreur", erreur=(sortie or "Claude n'a pas répondu.")[-240:])
     elif not n:
         fin.update(statut="erreur", erreur="Rien trouvé cette fois. Essaie une autre phrase, ou un autre marché.")
     c.maj_veille(vid, **fin)
@@ -594,7 +596,7 @@ def accueil():
 def lancer(d):
     p = c.reglages(d.get("pour", ""))
     if not p:
-        return None, "Personne inconnue : ajoute sa ligne dans Brain/07-Clients/veille-reglages.md."
+        return None, "Personne inconnue : recharge la page."
     marches = [m for m in c.MARCHES if m in (d.get("marches") or p["marches"])]
     periode = int(d.get("periode") or p["periode"])
     likes = int(d.get("likes_min") or p["likes_min"])

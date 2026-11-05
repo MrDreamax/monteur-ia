@@ -73,6 +73,8 @@ if plan.get("title"):
                          num("ht1", r"letter-spacing:([\d.]+)px"), int(num("ht1", r"font-weight:(\d+)", 700)), coul("ht1")),
                         (MAJ("ht2", html.unescape(l2)), tf("ht2"), num("ht2", r"font-size:(\d+)px"), num("ht2", r"line-height:([\d.]+)", 1.1),
                          num("ht2", r"letter-spacing:([\d.]+)px"), int(num("ht2", r"font-weight:(\d+)", 400)), coul("ht2"))])
+    # 05/11 (IMG_7045 « L'antiviralité ? » sur une ligne) : une ligne vide gardait sa hauteur = encadré blanc trop haut, texte collé en haut
+    title["lines"] = [l for l in title["lines"] if l[0].strip()] or title["lines"][:1]
 print(f"{len(caps)} sous-titres · titre {'oui' if title else 'non'} · police {os.path.basename(FONT)} {SUBSIZE} px · y {SUBY}")
 
 # ---------- dessin (mêmes mesures que le CSS : interlignage centré, espacement des lettres, ombre douce) ----------

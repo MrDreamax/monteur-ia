@@ -27,9 +27,9 @@
       { id: "mots", nom: "Mots par ligne" },
       { id: "couleurs", nom: "Couleur de marque", partage: true },
       { id: "texte", nom: "Couleurs du texte" },
-      { id: "cartons", nom: "Cartons" },
-      { id: "univers", nom: "Univers du motion" },
-      { id: "motion", nom: "Réglages du motion" },
+      { id: "cartons", nom: "Écrans de transition" },
+      { id: "univers", nom: "Style des animations" },
+      { id: "motion", nom: "Couleurs des animations" },
       { id: "inspiration", nom: "Inspiration" },
     ],
     carrousels: [
@@ -197,8 +197,8 @@
     const l1 = "L'erreur qui ruine", l2 = "ton image";
     const ombre = "text-shadow:0 4px 30px rgba(0,0,0,.35)";
     return `<div style="position:absolute;left:65px;right:65px;top:${t._y}px;text-align:center;${ombre}">
-      <div style="${f1()}font-weight:${p.graisse_ligne1 || p.graisse || 700};font-size:${t.taille * (p.ratio_ligne1 || 0.5)}px;line-height:1.05;letter-spacing:${(p.interlettrage || 0) * 2}px;color:${cl.titre};${maj1() ? "text-transform:uppercase;" : ""}">${l1}</div>
-      <div style="${f2()}font-size:${t.taille}px;line-height:1.1;color:${cl.ligne2};${maj2() ? "text-transform:uppercase;" : ""}">${l2}</div></div>`;
+      <div style="${f1()}font-weight:${p.graisse_ligne1 || p.graisse || 700};font-size:${t.taille * (p.ratio_ligne1 || 0.5)}px;line-height:1.05;letter-spacing:${(p.interlettrage || 0) * 2}px;color:${cl.titre};text-transform:uppercase;">${l1}</div>
+      <div style="${f2()}font-size:${t.taille}px;line-height:1.1;color:${cl.ligne2};text-transform:uppercase;">${l2}</div></div>`;  // 05/11 : le Monteur met toujours le titre en majuscules (da.py), l'aperçu aussi
   }
   function sousTitre(ecranCoupe, fort) {
     const s = da.montage.sous_titres, cl = da.commun.couleurs;
@@ -431,14 +431,14 @@
         return { t: "Couleurs du texte", s: "Le texte posé sur ta vidéo. Propre aux reels.", h:
           `<h3>Titre</h3>${dots("commun.couleurs.titre", C.couleurs.texte_reel, cl.titre)}<h3>Ligne 2 du titre</h3>${dots("commun.couleurs.ligne2", C.couleurs.texte_reel, cl.ligne2)}<h3>Sous-titres</h3>${dots("commun.couleurs.sous_titres", C.couleurs.texte_reel, cl.sous_titres)}` };
       case "montage:cartons":
-        return { t: "Cartons plein écran", s: "Le dégradé derrière tes cartons. Jamais de couleur unie.", h:
+        return { t: "Écrans de transition", s: "Le fond de tes écrans de texte plein écran. Jamais de couleur unie.", h:
           `<h3>Couleur de départ</h3>${dots("montage.cartons.depart", C.cartons.depart, m.cartons.depart)}<h3>Couleur d'arrivée</h3>${dots("montage.cartons.arrivee", C.cartons.arrivee, m.cartons.arrivee)}${m.cartons.depart.toUpperCase() === m.cartons.arrivee.toUpperCase() ? `<div class="alerte">Départ et arrivée identiques = couleur unie. Change l'une des deux.</div>` : ""}` };
       case "montage:univers":
         return { t: "Univers de motion design", s: "Formes, traits, couleurs et rythme. Le texte prend ton duo de polices. Toutes les animations sont dispo : SuperMonteur choisit la bonne à chaque moment.", h: choixUnivers("montage.univers", m.univers) };
       case "montage:motion": {
         const mo = m.motion;
         const pals = C.palettes.map((p) => `<button class="choix" data-set="montage.motion.palette" data-val="${esc(JSON.stringify(p.id))}" aria-pressed="${mo.palette === p.id}" style="padding:8px 12px"><b style="font-size:14px">${p.nom}</b><span class="pal">${["fond", "texte", "touche", "touche2"].map((x) => `<span style="background:${p[mo.mode][x]}"></span>`).join("")}</span></button>`).join("");
-        return { t: "Réglages du motion", s: "Ton univers « " + par(C.univers, m.univers).nom + " », à ta main. Le texte reste dans ton duo de polices.", h:
+        return { t: "Couleurs des animations", s: "Ton univers « " + par(C.univers, m.univers).nom + " », à ta main. Le texte reste dans ton duo de polices.", h:
           `<h3>Mode</h3>${seg("montage.motion.mode", [["sombre", "Sombre"], ["clair", "Clair"]], mo.mode)}<h3>Palette (fond, traits, petites touches)</h3>${pals}
            <h3>Trait</h3>${seg("montage.motion.trait", [["fin", "Fin"], ["moyen", "Moyen"], ["epais", "Épais"]], mo.trait)}
            <h3>Formes</h3>${seg("montage.motion.formes", [["arrondies", "Arrondies"], ["carrees", "Carrées"]], mo.formes)}
@@ -467,7 +467,7 @@
            <button class="choix" data-set="carrousels.dessins.style" data-val='"comme_motion"' aria-pressed="${de.style === "comme_motion"}"><b>Comme ton motion design</b><small>univers ${par(C.univers, m.univers).nom}</small></button>
            <button class="choix" data-set="carrousels.dessins.style" data-val='"autre"' aria-pressed="${de.style === "autre"}"><b>Autre univers</b><small>juste pour les carrousels</small></button>
            ${de.style === "autre" ? `<div style="margin-top:8px">${choixUnivers("carrousels.dessins.univers", de.univers)}</div>` : ""}
-           <p class="note">Lié à « Univers du motion » (onglet Montage) : changer l'un change l'autre.</p>` };
+           <p class="note">Lié à « Style des animations » (onglet Montage) : changer l'un change l'autre.</p>` };
       }
       case "carrousels:derniere": {
         const ds = k.derniere_slide;

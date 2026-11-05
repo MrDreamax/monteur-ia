@@ -68,7 +68,7 @@ def _voiced(k):
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from queue_mot import fin_du_mot       # même définition que le Gardien
 def word_tail(e, cap):                  # fin réelle du mot dont la voix forte s'arrête juste avant e (queue comprise)
-    db, q = _env(); j = int(e * 100)
+    db, q = _env(); j = min(int(e * 100), len(db) - 1)
     while j > max(0, int(e * 100) - 60) and db[j] < q + 6: j -= 1
     return fin_du_mot(db, _voiced, q, _floor(), j / 100 if db[j] >= q + 6 else e, cap)
 def speech_end(t, lim, cap=None):    # vraie fin du mot qui finit vers t : 1er blanc >= 120 ms qui COMMENCE entre t - 0,05 et lim
@@ -416,7 +416,7 @@ def _filet_mots(segs):
     for s in segs:
         a, b = s
         if not any(abs(b - x) < 0.005 for x in SERRE):
-            k = int((b - AFADE) * 100); j = k
+            k = min(int((b - AFADE) * 100), n - 1); j = k   # 05/11 IMG_7059 : coupe après la fin du son (vidéo plus longue que l'audio) = index hors limites
             while j > max(0, k - 60) and db[j] < q + 6: j -= 1
             if db[j] >= q + 6:
                 nx = k
@@ -431,7 +431,7 @@ def _filet_mots(segs):
                         SERRE.append(round(nb, 3))   # collé au mot suivant supprimé, sans blanc : coupe serrée, signalée au Gardien
                         print(f"filet : fin {nb:.2f} s collée au mot suivant (coupe serrée, à écouter)")
         if not any(abs(a - x) < 0.005 for x in SERRE_D):
-            k = int((a + AFADE) * 100) - 1
+            k = min(int((a + AFADE) * 100) - 1, n - 1)
             lo = int(max([w["end"] for w in W if w["end"] < a + AFADE - 0.02] or [0]) * 100) + 2
             if k > lo and db[k] >= fl + 15 and _voiced(k):
                 while k > lo and db[k] >= fl + 15 and _voiced(k): k -= 1
@@ -489,7 +489,7 @@ VOICE_END = (_se + 0.06 if _se else _lw + 0.1)   # +0,06 s : le « x » / « s �
 # 03/11 (IMG_7022, Gardien « mot coupé » ('fin', 247.04) sur le dernier mot) : même filet que les bords de plages,
 # mesuré comme le Gardien (il contrôle VOICE_END - 0,06 contre queue_mot.fin_du_mot), 1 trame de marge, jamais après la vidéo.
 if keep and segs:
-    _db, _q = _env(); _k = int((VOICE_END - 0.06) * 100); _j = _k
+    _db, _q = _env(); _k = min(int((VOICE_END - 0.06) * 100), len(_db) - 1); _j = _k   # 05/11 : rush qui finit sur le dernier mot (IndexError)
     while _j > max(0, _k - 60) and _db[_j] < _q + 6: _j -= 1
     if _db[_j] >= _q + 6:
         _nx = _k

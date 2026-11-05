@@ -34,8 +34,11 @@ def trouver_claude():
 def lancer(prompt, dossier, outils, delai=900, modele="opus", autres_dossiers=(), attendre_son_tour=True):
     """Lance `claude -p` dans le dossier de l'appli, avec seulement les outils donnés. Renvoie (ok, fin de la sortie)."""
     exe = trouver_claude()
-    if not exe:
-        return False, "Je ne trouve pas Claude Code sur ce Mac."
+    if not exe:  # 05/11 (juge 1.6) : noté aussi dans _claude.log, l'écran y renvoie
+        sortie = "Je ne trouve pas Claude Code sur ce Mac : installe l'appli Claude (claude.ai/download), onglet Code."
+        with open(os.path.join(dossier, "_claude.log"), "a", encoding="utf-8") as f:
+            f.write("\n===== %s (ÉCHEC)\n%s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), sortie))
+        return False, sortie
     cmd = [exe, "-p", prompt, "--model", modele, "--output-format", "text", "--permission-mode", "acceptEdits",
            "--allowedTools", ",".join(outils), "--disallowedTools", "WebFetch,WebSearch,Agent,NotebookEdit"]
     for a in autres_dossiers:  # dossiers où Claude a aussi le droit d'écrire (ex. le carnet du skill)
@@ -51,7 +54,7 @@ def lancer(prompt, dossier, outils, delai=900, modele="opus", autres_dossiers=()
         except subprocess.TimeoutExpired:
             sortie, ok = "Claude a mis plus de %d min." % (delai // 60), False
     if "Not logged in" in sortie or "/login" in sortie:
-        sortie, ok = "Claude n'est pas connecté sur ce Mac : double-clique apps/superda/connecter-claude.command.", False
+        sortie, ok = "Claude n'est pas connecté sur ce Mac : double-clique connecter-claude.command (dossier superda), puis réessaie.", False
     with open(os.path.join(dossier, "_claude.log"), "a", encoding="utf-8") as f:
         f.write("\n===== %s -> %s (%s)\n%s\n" % (debut, time.strftime("%H:%M:%S"), "ok" if ok else "ÉCHEC", sortie[-4000:]))
     return ok, sortie.strip()[-400:]

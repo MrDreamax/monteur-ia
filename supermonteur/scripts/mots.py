@@ -68,6 +68,7 @@ def _alerter(e):
     import json
     texte = str(e)
     if "quota" in texte: raison = "plus de crédit"
+    elif "pas de clé" in texte: return  # pas de clé = la personne monte sur son Mac, ce n'est pas une panne
     elif "clé" in texte or " 401" in texte: raison = "clé refusée"
     else: return
     vieux = {}
@@ -76,7 +77,7 @@ def _alerter(e):
     a = {"raison": raison, "depuis": vieux.get("depuis") or time.strftime("%d/%m à %Hh%M"), "detail": texte[:200],
          "sonne": vieux.get("sonne", 0)}
     if time.time() - a["sonne"] > 3 * 3600:
-        topic = subprocess.run(["security", "find-generic-password", "-s", "ntfy-topic-ventes", "-w"],
+        topic = subprocess.run(["security", "find-generic-password", "-s", "ntfy-topic", "-w"],
                                capture_output=True, text=True).stdout.strip()
         if topic:
             r = subprocess.run(["curl", "-s", "-m", "10", "-o", "/dev/null", "-w", "%{http_code}",
@@ -104,8 +105,8 @@ def transcrire(src, debut=None, fin=None, langue="fr", modele="small", mac=False
         except Exception as e:
             try: _alerter(e)
             except Exception: pass
-            if not secours:
+            if not secours and "pas de clé" not in str(e):
                 raison = "plus de crédit" if "quota" in str(e) else str(e)[:160]
-                raise SansElevenLabs(f"ElevenLabs : {raison}. Recharge sur elevenlabs.io/app/subscription puis clique « Monter le reel »")
+                raise SansElevenLabs(f"ElevenLabs : {raison}. Ajoute du crédit sur elevenlabs.io/app/subscription (ou retire ta clé pour monter sur le Mac), puis clique « Monter le reel »")
             print(f"ElevenLabs indisponible ({e}) -> secours Whisper du Mac", file=sys.stderr)
     return whisper(src, debut, fin, langue, modele, **opts), "Mac (Whisper)"

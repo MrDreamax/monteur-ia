@@ -81,12 +81,12 @@ def pour_moteur():
     c, m = d.get("commun", {}), d.get("montage", {})
     p, s, co = c.get("duo", {}).get("principale", {}), c.get("duo", {}).get("secondaire", {}), c.get("couleurs", {})
     fonts_dir = os.path.join(SK, "fonts")
-    fp = p.get("fichier") if p.get("fichier") and os.path.exists(os.path.join(fonts_dir, p["fichier"])) else "Montserrat.ttf"
-    fs = s.get("fichier") if s.get("fichier") and os.path.exists(os.path.join(fonts_dir, s["fichier"])) else "InstrumentSerif-Italic.ttf"
+    fp = p.get("fichier") if p.get("fichier") and os.path.exists(os.path.join(fonts_dir, p["fichier"])) else "Outfit.ttf"   # 05/11 : police par défaut = Outfit (duo Moderne)
+    fs = s.get("fichier") if s.get("fichier") and os.path.exists(os.path.join(fonts_dir, s["fichier"])) else "Outfit.ttf"
     # contrat SuperDA (note du 28/10 01:50) : titre.taille = ligne 2 (police secondaire) ; ligne 1 = taille x 0,5
-    t2 = int(m.get("titre", {}).get("taille") or 120)
+    t2 = int(m.get("titre", {}).get("taille") or 62)   # 05/11 : défauts = ceux de SuperDA (62 · 54)
     t1 = round(t2 * p.get("ratio_ligne1", 0.5))   # 02/11 duo Moderne : ligne 1 fine et presque aussi grande que la ligne 2
-    sub = int(m.get("sous_titres", {}).get("taille") or 52)
+    sub = int(m.get("sous_titres", {}).get("taille") or 54)
     accent = co.get("accent") or co.get("titre") or "#FFFFFF"
     car = m.get("cartons", {})
     out = {
@@ -105,7 +105,7 @@ def pour_moteur():
         "subMax": max(1, min(4, int(m.get("mots_par_ligne") or 4))),   # le moteur plafonne à 4 mots (plan.subMax)
         # 03/11 (l’utilisateur : « un peu plus bas ») : la hauteur du titre de SuperDA (_y = haut des lettres) arrive au moteur ;
         # avant, monter.py posait top 250 en dur et le réglage de SuperDA ne servait à rien. top = _y - 20 (marge du bloc).
-        "titleTop": int(m.get("titre", {}).get("_y", 270)) - 20,
+        "titleTop": int(m.get("titre", {}).get("_y", 350)) - 20,
     }
     return out
 

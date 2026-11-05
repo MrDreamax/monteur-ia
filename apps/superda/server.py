@@ -83,13 +83,14 @@ def normaliser(da):
     co = da.setdefault("commun", {})
     duo = co.setdefault("duo", {})
     if duo.get("id") != "perso":
-        ref = par_id(c["duos"], duo.get("id")) or c["duos"][0]
+        ref = par_id(c["duos"], duo.get("id")) or par_id(c["duos"], "moderne") or c["duos"][0]  # 05/11 : défaut = Moderne (Outfit, une taille)
         duo.update({"id": ref["id"], "nom": ref["nom"],
                     "principale": copy.deepcopy(ref["principale"]), "secondaire": copy.deepcopy(ref["secondaire"])})
     else:
         duo["nom"] = "Mon combo perso"
-        duo.setdefault("principale", copy.deepcopy(c["duos"][0]["principale"]))
-        duo.setdefault("secondaire", copy.deepcopy(c["duos"][0]["secondaire"]))
+        _mod = par_id(c["duos"], "moderne") or c["duos"][0]
+        duo.setdefault("principale", copy.deepcopy(_mod["principale"]))
+        duo.setdefault("secondaire", copy.deepcopy(_mod["secondaire"]))
     cl = co.setdefault("couleurs", {})
     for k, d in (("titre", "#FFFFFF"), ("ligne2", "#FFFFFF"), ("sous_titres", "#FFFFFF"), ("texte", "#FFFFFF")):
         cl.setdefault(k, d)
@@ -98,15 +99,15 @@ def normaliser(da):
 
     m = da.setdefault("montage", {})
     t = m.setdefault("titre", {})
-    t["taille"] = borne(t.get("taille"), 40, 200, 104)
+    t["taille"] = borne(t.get("taille"), 40, 200, 62)   # 05/11 : défaut = titre 62 px (règle du 03/11), plus 104
     if t.get("position") not in ("haut", "milieu", "bas"):
         t["position"] = "haut"
-    t["decalage"] = borne(t.get("decalage"), -600, 600, 0)
-    hauteur_titre = int(round(t["taille"] * 0.5 * 1.05 + t["taille"] * 1.1))
+    t["decalage"] = borne(t.get("decalage"), -600, 600, 60)   # 05/11 : défaut = haut des lettres à 350 px
+    hauteur_titre = int(round(t["taille"] * duo.get("principale", {}).get("ratio_ligne1", 0.5) * 1.05 + t["taille"] * 1.1))
     y = c["positions"]["titre"][t["position"]] + t["decalage"]
     t["_y"] = max(zi["haut"], min(zi["bas"] - hauteur_titre, y))
     s = m.setdefault("sous_titres", {})
-    s["taille"] = borne(s.get("taille"), 24, 120, 52)
+    s["taille"] = borne(s.get("taille"), 24, 120, 54)   # 05/11 : défaut = sous-titres 54 px
     if s.get("position") not in ("col", "poitrine", "bas"):
         s["position"] = "col"
     s["decalage"] = borne(s.get("decalage"), -600, 600, 0)

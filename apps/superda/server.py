@@ -83,12 +83,12 @@ def normaliser(da):
     co = da.setdefault("commun", {})
     duo = co.setdefault("duo", {})
     if duo.get("id") != "perso":
-        ref = par_id(c["duos"], duo.get("id")) or par_id(c["duos"], "moderne") or c["duos"][0]  # 05/11 : défaut = Moderne (Outfit, une taille)
+        ref = par_id(c["duos"], duo.get("id")) or par_id(c["duos"], "apple") or c["duos"][0]  # 05/11 : défaut = Moderne (Outfit, une taille)
         duo.update({"id": ref["id"], "nom": ref["nom"],
                     "principale": copy.deepcopy(ref["principale"]), "secondaire": copy.deepcopy(ref["secondaire"])})
     else:
         duo["nom"] = "Mon combo perso"
-        _mod = par_id(c["duos"], "moderne") or c["duos"][0]
+        _mod = par_id(c["duos"], "apple") or c["duos"][0]
         duo.setdefault("principale", copy.deepcopy(_mod["principale"]))
         duo.setdefault("secondaire", copy.deepcopy(_mod["secondaire"]))
     cl = co.setdefault("couleurs", {})
@@ -103,7 +103,8 @@ def normaliser(da):
     if t.get("position") not in ("haut", "milieu", "bas"):
         t["position"] = "haut"
     t["decalage"] = borne(t.get("decalage"), -600, 600, 60)   # 05/11 : défaut = haut des lettres à 350 px
-    hauteur_titre = int(round(t["taille"] * duo.get("principale", {}).get("ratio_ligne1", 0.5) * 1.05 + t["taille"] * 1.1))
+    _pp = duo.get("principale", {})
+    hauteur_titre = int(round((t["taille"] * _pp.get("ratio_ligne1", 0.5) * 1.05 + t["taille"] * 1.1) * _pp.get("echelle", 1)))
     y = c["positions"]["titre"][t["position"]] + t["decalage"]
     t["_y"] = max(zi["haut"], min(zi["bas"] - hauteur_titre, y))
     s = m.setdefault("sous_titres", {})

@@ -82,7 +82,7 @@
   function calcule() {
     const zi = C.zone_interdite, m = da.montage;
     const t = m.titre, s = m.sous_titres;
-    const ht = Math.round(t.taille * (da.commun.duo.principale.ratio_ligne1 || 0.5) * 1.05 + t.taille * 1.1);
+    const ht = Math.round((t.taille * (da.commun.duo.principale.ratio_ligne1 || 0.5) * 1.05 + t.taille * 1.1) * (da.commun.duo.principale.echelle || 1));  // 05/11 : echelle = police étroite agrandie (Bebas x1,35)
     const yt = C.positions.titre[t.position] + t.decalage;
     t._y = Math.max(zi.haut, Math.min(zi.bas - ht, yt));
     bloque.titre = t._y !== yt;
@@ -197,8 +197,8 @@
     const l1 = "L'erreur qui ruine", l2 = "ton image";
     const ombre = "text-shadow:0 4px 30px rgba(0,0,0,.35)";
     return `<div style="position:absolute;left:65px;right:65px;top:${t._y}px;text-align:center;${ombre}">
-      <div style="${f1()}font-weight:${p.graisse_ligne1 || p.graisse || 700};font-size:${t.taille * (p.ratio_ligne1 || 0.5)}px;line-height:1.05;letter-spacing:${(p.interlettrage || 0) * 2}px;color:${cl.titre};text-transform:uppercase;">${l1}</div>
-      <div style="${f2()}font-size:${t.taille}px;line-height:1.1;color:${cl.ligne2};text-transform:uppercase;">${l2}</div></div>`;  // 05/11 : le Monteur met toujours le titre en majuscules (da.py), l'aperçu aussi
+      <div style="${f1()}font-weight:${p.graisse_ligne1 || p.graisse || 700};font-size:${t.taille * (p.ratio_ligne1 || 0.5) * (p.echelle || 1)}px;line-height:1.05;letter-spacing:${(p.interlettrage || 0) * 2}px;color:${cl.titre};text-transform:uppercase;">${l1}</div>
+      <div style="${f2()}font-size:${t.taille * (da.commun.duo.secondaire.echelle || 1)}px;line-height:1.1;color:${cl.ligne2};text-transform:uppercase;">${l2}</div></div>`;  // 05/11 : le Monteur met toujours le titre en majuscules (da.py), l'aperçu aussi
   }
   function sousTitre(ecranCoupe, fort) {
     const s = da.montage.sous_titres, cl = da.commun.couleurs;
@@ -206,7 +206,7 @@
     const l = SUB.split(" ").slice(0, da.montage.mots_par_ligne);
     if (fort && cl.accent) l[l.length - 1] = `<span style="color:${cl.accent}">${l[l.length - 1]}</span>`; // mot fort = couleur de marque
     const mots = l.join(" ");
-    return `<div style="position:absolute;left:65px;right:65px;top:${y}px;transform:translateY(-50%);text-align:center;${f1()}font-size:${s.taille}px;line-height:1.15;color:${cl.sous_titres};${s.majuscules !== false ? "text-transform:uppercase;" : ""}text-shadow:0 3px 18px rgba(0,0,0,.45)">${mots}</div>`;
+    return `<div style="position:absolute;left:65px;right:65px;top:${y}px;transform:translateY(-50%);text-align:center;${f1()}font-size:${s.taille * (da.commun.duo.principale.echelle || 1)}px;line-height:1.15;color:${cl.sous_titres};${s.majuscules !== false ? "text-transform:uppercase;" : ""}text-shadow:0 3px 18px rgba(0,0,0,.45)">${mots}</div>`;
   }
   function reel(sec) {
     const m = da.montage;

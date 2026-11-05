@@ -4,20 +4,20 @@
  "nom": "",
  "commun": {
   "duo": {
-   "id": "moderne",
-   "nom": "Moderne",
+   "id": "apple",
+   "nom": "Apple",
    "principale": {
-    "famille": "Outfit",
-    "fichier": "Outfit.ttf",
+    "famille": "SF Pro",
+    "fichier": "SF-Pro.ttf",
     "graisse": 700,
-    "majuscules": false,
-    "interlettrage": 0,
+    "majuscules": true,
+    "interlettrage": 0.5,
     "graisse_ligne1": 700,
     "ratio_ligne1": 1
    },
    "secondaire": {
-    "famille": "Outfit",
-    "fichier": "Outfit.ttf",
+    "famille": "SF Pro",
+    "fichier": "SF-Pro.ttf",
     "graisse": 700,
     "italique": false,
     "majuscules": false
@@ -118,7 +118,7 @@
    {
     "cle": "duo",
     "ligne": "Duo de polices",
-    "valeur": "Moderne"
+    "valeur": "Apple"
    },
    {
     "cle": "tailles",
@@ -160,7 +160,7 @@
    {
     "cle": "duo",
     "ligne": "Duo de polices",
-    "valeur": "Moderne"
+    "valeur": "Apple"
    },
    {
     "cle": "couleurs",

@@ -106,6 +106,16 @@ if m.get("titre", {}).get("taille") == 104 and m.get("sous_titres", {}).get("tai
             r["valeur"] = "62 · 54 px"
     json.dump(d, open(p, "w"), ensure_ascii=False, indent=1)
     print("Tailles du titre et des sous-titres mises à jour (62 · 54 px).")
+# 1.7.2 : duo Apple (SF Pro) par défaut. Seulement si la DA n'a jamais été enregistrée (« maj » d'origine).
+if d.get("maj") == "2026-10-28T10:53:06+01:00" and duo.get("id") == "moderne":
+    cat = json.load(open(p.replace("da.json", "catalogue.json")))
+    apple = next(x for x in cat["duos"] if x["id"] == "apple")
+    d["commun"]["duo"] = {k: apple[k] for k in ("id", "nom", "principale", "secondaire")}
+    for r in d.get("_resume", {}).get("montage", []) + d.get("_resume", {}).get("carrousels", []):
+        if r.get("cle") == "duo":
+            r["valeur"] = "Apple"
+    json.dump(d, open(p, "w"), ensure_ascii=False, indent=1)
+    print("Police par défaut : SF Pro (duo Apple).")
 PYDA
   [[ -f "$ADEST/superveille/ma-marque.md" ]] || cp "$ADEST/superveille/ma-marque.exemple.md" "$ADEST/superveille/ma-marque.md"
   mkdir -p "$ADEST/superda/img" "$MONT/MONTAGES" "$MONT/PUBLICATION"
@@ -119,6 +129,12 @@ for s in super superveille; do
 done
 
 bash "$DEST/scripts/setup.sh"
+# SF Pro (police Apple) : jamais livrée avec Super, prise sur CE Mac (elle y est déjà), pour le Monteur et SuperDA
+if [[ -f /System/Library/Fonts/SFNS.ttf ]]; then
+  for f in "$DEST/fonts" "$ADEST/superda/fonts"; do [[ -d "$f" ]] && cp /System/Library/Fonts/SFNS.ttf "$f/SF-Pro.ttf"; done
+else
+  echo "Attention : SF Pro introuvable sur ce Mac, le duo Apple utilisera une autre police."
+fi
 # SuperVeille : yt-dlp (télécharge les reels) et son module Python (lit les enregistrés Instagram)
 mkdir -p "$HOME/.local/bin"
 [[ -x "$HOME/.local/bin/yt-dlp" ]] || curl -fsSL https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos -o "$HOME/.local/bin/yt-dlp" && chmod +x "$HOME/.local/bin/yt-dlp" || echo "Attention : yt-dlp pas installé (SuperVeille)."

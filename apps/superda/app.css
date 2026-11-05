@@ -3,6 +3,7 @@
 @font-face{font-family:"Instrument Serif";src:url(fonts/InstrumentSerif-Italic.ttf)}
 @font-face{font-family:"Bebas Neue";src:url(fonts/BebasNeue-Regular.ttf)}
 @font-face{font-family:"Outfit";src:url(fonts/Outfit.ttf);font-weight:100 900}
+@font-face{font-family:"SF Pro";src:url(fonts/SF-Pro.ttf),local("SF Pro Display"),local(".AppleSystemUIFont");font-weight:100 900}
 @font-face{font-family:"Archivo";src:url(fonts/Archivo.ttf);font-weight:100 900;font-stretch:62% 125%}
 @font-face{font-family:"Figtree";src:url(fonts/Figtree.ttf);font-weight:300 900}
 @font-face{font-family:"Caveat";src:url(fonts/Caveat.ttf);font-weight:400 700}

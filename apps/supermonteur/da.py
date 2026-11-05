@@ -87,6 +87,8 @@ def pour_moteur():
     t2 = int(m.get("titre", {}).get("taille") or 62)   # 05/11 : défauts = ceux de SuperDA (62 · 54)
     t1 = round(t2 * p.get("ratio_ligne1", 0.5))   # 02/11 duo Moderne : ligne 1 fine et presque aussi grande que la ligne 2
     sub = int(m.get("sous_titres", {}).get("taille") or 54)
+    # 05/11 (l’utilisateur : « Bebas Neue est un peu petit ») : police étroite = « echelle » du catalogue (Bebas x1,35), même présence à réglage égal
+    t1, t2, sub = round(t1 * p.get("echelle", 1)), round(t2 * s.get("echelle", 1)), round(sub * p.get("echelle", 1))
     accent = co.get("accent") or co.get("titre") or "#FFFFFF"
     car = m.get("cartons", {})
     out = {
